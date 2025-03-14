@@ -24,6 +24,19 @@ void Server::execute_command(cmd cmd, User &user)
 		user.setNickname(cmd.arguments);
 	if(cmd.command == "USER")
 		user.setInfo(cmd.arguments);
+	if(cmd.command == "PRIVMSG")
+	{
+		string recipient_nick;
+		string message;
+		istringstream stream(cmd.arguments);
+		stream >> recipient_nick;
+		stream >> message;
+		const User *recipient = getUser(recipient_nick);
+		if (recipient != nullptr)
+			user.privmsg(*recipient, message);
+		else
+			cout << recipient_nick << " not found" << endl;
+	}
 	cout << "Print user: " << endl;
 	cout << user;
 	cout << "--------" << endl;
@@ -140,10 +153,33 @@ Server::Server(const int port) : port(port), max_clients(10)
 	fds.push_back({create_socket(), POLLIN, 0});
 }
 
-void Server::print_status() const
+void Server::print_status()
 {
 	cout << "Server status: " << endl;
 	cout << "Connections: " << fds.size() - 1 << endl; // dont count serverSocket
 	cout << "Users: " << users.size() << endl;
+	for (pollfd pfd : fds)
+	{
+		const User *u = getUser(pfd.fd);
+		if (u != nullptr)
+			cout << *u << endl;
+	}
 	cout << "--------" << endl;
+}
+
+const User* Server::getUser(const string &nickname)
+{
+	for (const auto &pair : users)
+	{
+		if (pair.second.getNickname() == nickname)
+			return &pair.second;
+	}
+	return nullptr;
+}
+
+const User* Server::getUser(int fd)
+{
+	if (users.find(fd) != users.end())
+		return &users[fd];
+	return nullptr;
 }

@@ -8,6 +8,8 @@
 
 using namespace std;
 
+class User;
+
 typedef struct
 {
 	string prefix;
@@ -27,16 +29,17 @@ class Server
 		void handle_client_messages();
 		void cleanup();
 		void process_message(int clientFd, char *buffer);
+		int create_socket();
+		void execute_command(cmd cmd, User &user);
 	public:
 		Server(const int port);
 
 		void main_loop();
-		int create_socket();
-		void execute_command(cmd cmd, User &user);
 
-		User &getUser(int fd) { return users[fd]; }
+		const User* getUser(int fd);
+		const User* getUser(const string &nickname);
 
-		void print_status() const;
+		void print_status();
 };
 
 #endif

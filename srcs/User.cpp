@@ -1,4 +1,5 @@
 #include "User.hpp"
+#include "Server.hpp"
 #include <sstream>
 
 using namespace std;
@@ -39,7 +40,7 @@ void User::setInfo(string &args)
 	getline(stream, realname);
 }
 
-ostream& operator<<(ostream &os, User &user)
+ostream& operator<<(ostream &os, const User &user)
 {
 	os << "Nickname: " << user.getNickname() << endl;
 	os << "Username: " << user.getUsername() << endl;
@@ -49,4 +50,17 @@ ostream& operator<<(ostream &os, User &user)
 	os << "fd: " << user.getFd() << endl;
 	os << "isOperator: " << user.getIsOperator() << endl;
 	return os;
+}
+
+string User::getFullIdentifier() const
+{
+	return ":" + nickname + "!" + username + "@" + hostname;
+}
+
+void User::privmsg(const User &recipient, string &message)
+{
+	string prefix = getFullIdentifier();
+	(void) recipient;
+	(void) message;
+	// server is gonna send the recipient client "<prefix> PRIVMSG <recipient nick> :<message>"
 }

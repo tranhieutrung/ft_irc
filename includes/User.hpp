@@ -4,6 +4,7 @@
 #include <string>
 #include <poll.h>
 #include <iostream>
+#include "Server.hpp"
 
 using namespace std;
 
@@ -20,6 +21,8 @@ class User
 		User(const User &other);
 		User &operator=(const User &other);
 
+		void privmsg(const User &recipient, string &args);
+
 		// getters
 		string getNickname() const { return nickname; }
 		string getUsername() const { return username; }
@@ -28,6 +31,7 @@ class User
 		string getRealname() const { return realname; }
 		int getFd() const { return fd; }
 		bool getIsOperator() const { return isOperator; }
+		string getFullIdentifier() const;
 
 		// setters
 		void setInfo(string &args);
@@ -37,8 +41,9 @@ class User
 		void setServername(string servername) { this->servername = servername; }
 		void setRealname(string realname) { this->realname = realname; }
 		void setIsOperator(bool isOperator) { this->isOperator = isOperator; }
+		
+		friend ostream &operator<<(ostream &os, const User &user);
 };
 
-ostream &operator<<(ostream &os, User &user);
 
 #endif
