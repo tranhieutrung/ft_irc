@@ -30,7 +30,7 @@ void Server::execute_command(cmd cmd, User &user)
 		string message;
 		istringstream stream(cmd.arguments);
 		stream >> recipient_nick;
-		stream >> message;
+		getline(stream, message);
 		const User *recipient = getUser(recipient_nick);
 		if (recipient != nullptr)
 			user.privmsg(*recipient, message);
@@ -112,7 +112,7 @@ void Server::cleanup()
 
 void Server::main_loop()
 {
-	while (cin)
+	while (true)
 	{
 		print_status();
 		if (poll(fds.data(), fds.size(), -1) < 0)
