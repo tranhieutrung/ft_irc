@@ -30,7 +30,7 @@ string Server::handle_line(string &message, User &user)
 	string prefix, command, arguments;
 	istringstream stream(message);
 	if (message[0] == ':')
-	stream >> prefix;
+		stream >> prefix;
 	stream >> command;
 	getline(stream, arguments);
 	
