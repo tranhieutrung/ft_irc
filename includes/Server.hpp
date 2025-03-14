@@ -35,6 +35,8 @@ class Server
 		void execute_command(cmd cmd, User &user);
 
 		User &getUser(int fd) { return users[fd]; }
+
+		void print_status() const;
 };
 
 #endif

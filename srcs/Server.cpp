@@ -14,16 +14,19 @@ using namespace std;
 
 void Server::execute_command(cmd cmd, User &user)
 {
+	cout << "Executing command:" << endl;
 	cout << "Prefix: " << cmd.prefix << endl;
 	cout << "Command: " << cmd.command << endl;
 	cout << "Arguments: " << cmd.arguments << endl;
+	cout << "--------" << endl;
 
 	if(cmd.command == "NICK")
 		user.setNickname(cmd.arguments);
 	if(cmd.command == "USER")
 		user.setInfo(cmd.arguments);
 	cout << "Print user: " << endl;
-	cout << user << endl;
+	cout << user;
+	cout << "--------" << endl;
 }
 
 static cmd parse_line(string &message)
@@ -43,14 +46,14 @@ void Server::handle_new_client()
 	{
 		int clientSocket = accept(fds[0].fd, nullptr, nullptr);
 		if (clientSocket == -1)
-			cerr << "Error accepting connection\n";
-		else
 		{
-			cout << "New client connected!\n";
-			pollfd new_pfd = {clientSocket, POLLIN, 0};
-			fds.push_back(new_pfd);
-			users[new_pfd.fd] = User(new_pfd.fd);
+			cerr << "Error accepting connection" << endl;
+			return;
 		}
+		cout << "New client connected!" << endl;
+		pollfd new_pfd = {clientSocket, POLLIN, 0};
+		fds.push_back(new_pfd);
+		users[new_pfd.fd] = User(new_pfd.fd);
 	}
 }
 
@@ -79,6 +82,7 @@ void Server::handle_client_messages()
 				cout << "Client disconnected\n";
 				close(fds[i].fd);
 				fds.erase(fds.begin() + i);
+				users.erase(fds[i].fd);
 				i--;
 			}
 		}
@@ -97,6 +101,7 @@ void Server::main_loop()
 {
 	while (cin)
 	{
+		print_status();
 		if (poll(fds.data(), fds.size(), -1) < 0)
 			throw runtime_error("Poll error");
 
@@ -133,4 +138,12 @@ int Server::create_socket()
 Server::Server(const int port) : port(port), max_clients(10)
 {
 	fds.push_back({create_socket(), POLLIN, 0});
+}
+
+void Server::print_status() const
+{
+	cout << "Server status: " << endl;
+	cout << "Connections: " << fds.size() - 1 << endl; // dont count serverSocket
+	cout << "Users: " << users.size() << endl;
+	cout << "--------" << endl;
 }
