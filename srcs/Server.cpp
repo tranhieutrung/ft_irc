@@ -12,7 +12,7 @@
 
 using namespace std;
 
-void Server::do_command(cmd cmd, User &user)
+void Server::execute_command(cmd cmd, User &user)
 {
 	cout << "Prefix: " << cmd.prefix << endl;
 	cout << "Command: " << cmd.command << endl;
@@ -22,6 +22,7 @@ void Server::do_command(cmd cmd, User &user)
 		user.setNickname(cmd.arguments);
 	if(cmd.command == "USER")
 		user.setInfo(cmd.arguments);
+	cout << "Print user: " << endl;
 	cout << user << endl;
 }
 
@@ -59,7 +60,7 @@ void Server::process_message(int clientFd, char *buffer)
 	message << buffer;
 	string line;
 	while (getline(message, line))
-		do_command(parse_line(line), users[clientFd]);
+		execute_command(parse_line(line), users[clientFd]);
 }
 
 void Server::handle_client_messages()
