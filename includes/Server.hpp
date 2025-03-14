@@ -29,7 +29,6 @@ class Server
 		void main_loop();
 		int create_socket();
 		void do_command(cmd cmd, User &user);
-		string handle_line(string &message, User &user);
 
 		User &getUser(int fd) { return users[fd]; }
 };
