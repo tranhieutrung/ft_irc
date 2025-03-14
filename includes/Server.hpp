@@ -4,6 +4,16 @@
 #include "User.hpp"
 #include <map>
 #include <vector>
+#include <cstring>
+
+using namespace std;
+
+typedef struct
+{
+	string prefix;
+	string command;
+	string arguments;
+} cmd;
 
 class Server
 {
@@ -18,7 +28,7 @@ class Server
 
 		void main_loop();
 		int create_socket();
-		void do_command(string &prefix, string &command, string &arguments, User &user);
+		void do_command(cmd cmd, User &user);
 		string handle_line(string &message, User &user);
 
 		User &getUser(int fd) { return users[fd]; }

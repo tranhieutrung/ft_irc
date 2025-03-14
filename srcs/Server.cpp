@@ -12,34 +12,28 @@
 
 using namespace std;
 
-void Server::do_command(string &prefix, string &command, string &arguments, User &user)
+void Server::do_command(cmd cmd, User &user)
 {
-	cout << "Prefix: " << prefix << endl;
-	cout << "Command: " << command << endl;
-	cout << "Arguments: " << arguments << endl;
+	cout << "Prefix: " << cmd.prefix << endl;
+	cout << "Command: " << cmd.command << endl;
+	cout << "Arguments: " << cmd.arguments << endl;
 
-	if(command == "NICK")
-		user.setNickname(arguments);
-	if(command == "USER")
-		user.setInfo(arguments);
+	if(cmd.command == "NICK")
+		user.setNickname(cmd.arguments);
+	if(cmd.command == "USER")
+		user.setInfo(cmd.arguments);
 	cout << user << endl;
 }
 
-string Server::handle_line(string &message, User &user)
+static cmd parse_line(string &message)
 {
-	string prefix, command, arguments;
+	cmd cmd;
 	istringstream stream(message);
 	if (message[0] == ':')
-		stream >> prefix;
-	stream >> command;
-	getline(stream, arguments);
-	
-	do_command(prefix, command, arguments, user);
-	
-	size_t nlpos = message.find("\n");
-	if (nlpos == string::npos)
-		return "";
-	return message.substr(nlpos + 1, message.size() - nlpos - 1);
+		stream >> cmd.prefix;
+	stream >> cmd.command;
+	getline(stream, cmd.arguments);
+	return cmd;
 }
 
 void Server::main_loop()
@@ -72,10 +66,11 @@ void Server::main_loop()
 
 				if (bytesReceived > 0)
 				{
-					string message = string(buffer);
-					cout << "------------" << endl;
-					while (!message.empty())
-						message = handle_line(message, users[fds[i].fd]); // read one line and return the rest of the message
+					stringstream message;
+					message << buffer;
+					string line;
+					while (getline(message, line))
+						do_command(parse_line(line), getUser(fds[i].fd));
 				}
 				else
 				{
