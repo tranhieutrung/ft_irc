@@ -36,6 +36,62 @@ static cmd parse_line(string &message)
 	return cmd;
 }
 
+void Server::handle_new_client()
+{
+	if (fds[0].revents & POLLIN)
+	{
+		int clientSocket = accept(fds[0].fd, nullptr, nullptr);
+		if (clientSocket == -1)
+			cerr << "Error accepting connection\n";
+		else
+		{
+			cout << "New client connected!\n";
+			pollfd new_pfd = {clientSocket, POLLIN, 0};
+			fds.push_back(new_pfd);
+			users[new_pfd.fd] = User(new_pfd.fd);
+		}
+	}
+}
+
+void Server::process_message(int clientFd, char *buffer)
+{
+	stringstream message;
+	message << buffer;
+	string line;
+	while (getline(message, line))
+		do_command(parse_line(line), users[clientFd]);
+}
+
+void Server::handle_client_messages()
+{
+	for (size_t i = 1; i < fds.size(); i++)
+	{
+		if (fds[i].revents & POLLIN)
+		{
+			char buffer[1024] = {0};
+			int bytesReceived = recv(fds[i].fd, buffer, sizeof(buffer), 0);
+
+			if (bytesReceived > 0)
+				process_message(fds[i].fd, buffer);
+			else
+			{
+				cout << "Client disconnected\n";
+				close(fds[i].fd);
+				fds.erase(fds.begin() + i);
+				i--;
+			}
+		}
+	}
+}
+
+void Server::cleanup()
+{
+	for (pollfd pfd : fds)
+	{
+		close(pfd.fd);
+	}
+}
+
 void Server::main_loop()
 {
 	while (cin)
@@ -43,50 +99,10 @@ void Server::main_loop()
 		if (poll(fds.data(), fds.size(), -1) < 0)
 			throw runtime_error("Poll error");
 
-		if (fds[0].revents & POLLIN)
-		{
-			int clientSocket = accept(fds[0].fd, nullptr, nullptr);
-			if (clientSocket == -1)
-				cerr << "Error accepting connection\n";
-			else
-			{
-				cout << "New client connected!\n";
-				pollfd new_pfd = {clientSocket, POLLIN, 0};
-				fds.push_back(new_pfd);
-				users[new_pfd.fd] = User(new_pfd.fd);
-			}
-		}
-
-		for (size_t i = 1; i < fds.size(); i++)
-		{
-			if (fds[i].revents & POLLIN)
-			{
-				char buffer[1024] = {0};
-				int bytesReceived = recv(fds[i].fd, buffer, sizeof(buffer), 0);
-
-				if (bytesReceived > 0)
-				{
-					stringstream message;
-					message << buffer;
-					string line;
-					while (getline(message, line))
-						do_command(parse_line(line), getUser(fds[i].fd));
-				}
-				else
-				{
-					cout << "Client disconnected\n";
-					close(fds[i].fd);
-					fds.erase(fds.begin() + i);
-					i--;
-				}
-			}
-		}
+		handle_new_client();
+		handle_client_messages();
 	}
-
-	for (pollfd pfd : fds)
-	{
-		close(pfd.fd);
-	}
+	cleanup();
 }
 
 int Server::create_socket()

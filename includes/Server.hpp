@@ -22,7 +22,11 @@ class Server
 		vector<pollfd> fds;
 		const int port;
 		const int max_clients;
-	
+
+		void handle_new_client();
+		void handle_client_messages();
+		void cleanup();
+		void process_message(int clientFd, char *buffer);
 	public:
 		Server(const int port);
 
