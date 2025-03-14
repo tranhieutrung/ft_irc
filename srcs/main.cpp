@@ -2,16 +2,11 @@
 #include <iostream>
 
 using namespace std;
+#define PORT 8080
 
 int main()
 {
-	int serverSocket = server_socket();
-	if (serverSocket == -1)
-	{
-		cerr << "Couldn't create socket\n";
-		return (1);
-	}
-
-	main_loop(serverSocket);
+	Server server = Server(PORT);
+	server.main_loop();
 	return 0;
 }

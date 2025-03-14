@@ -10,27 +10,37 @@ using namespace std;
 class User
 {
 	private:
-		string nickname, username, hostname, domain, realname;
-		pollfd pfd;
+		string nickname, username, hostname, servername, realname;
+		int fd;
 		bool isOperator;
 	public:
-		User(pollfd pfd) : nickname(""), username(""), hostname(""), domain(""), realname(""), isOperator(false) { cout << "User created with pfd: " << pfd.fd << endl; }
+		// constructors
+		User();
+		User(int fd);
+		User(const User &other);
+		User &operator=(const User &other);
+
+		void do_command(string &prefix, string &command, string &args, User &user);
+
 		// getters
 		string getNickname() const { return nickname; }
 		string getUsername() const { return username; }
 		string getHostname() const { return hostname; }
-		string getDomain() const { return domain; }
+		string getServername() const { return servername; }
 		string getRealname() const { return realname; }
-		pollfd getPfd() const { return pfd; }
+		int getFd() const { return fd; }
 		bool getIsOperator() const { return isOperator; }
 
 		// setters
+		void setInfo(string &args);
 		void setNickname(string nickname) { this->nickname = nickname; }
 		void setUsername(string username) { this->username = username; }
 		void setHostname(string hostname) { this->hostname = hostname; }
-		void setDomain(string domain) { this->domain = domain; }
+		void setServername(string servername) { this->servername = servername; }
 		void setRealname(string realname) { this->realname = realname; }
 		void setIsOperator(bool isOperator) { this->isOperator = isOperator; }
 };
+
+ostream &operator<<(ostream &os, User &user);
 
 #endif

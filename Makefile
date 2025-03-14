@@ -8,7 +8,7 @@ OBJ_DIR		=	./objs
 
 SRC_FILES	=	main.cpp \
 				Server.cpp \
-				Client.cpp
+				User.cpp
 
 SRCS		=	$(addprefix $(SRC_DIR)/, $(SRC_FILES))
 

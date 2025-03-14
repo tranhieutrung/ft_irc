@@ -6,26 +6,26 @@
 #include <unistd.h>
 #include <poll.h>
 #include <sstream>
+#include <map>
 #include "../includes/User.hpp"
 #include "../includes/Server.hpp"
 
 using namespace std;
 
-#define PORT 8090
-#define MAX_CLIENTS 10
-
-vector<User> users;
-
-void do_command(string &prefix, string &command, string &arguments, pollfd &pfd)
+void Server::do_command(string &prefix, string &command, string &arguments, User &user)
 {
-	(void) pfd;
-	cout << "do_command" << endl;
 	cout << "Prefix: " << prefix << endl;
 	cout << "Command: " << command << endl;
 	cout << "Arguments: " << arguments << endl;
+
+	if(command == "NICK")
+		user.setNickname(arguments);
+	if(command == "USER")
+		user.setInfo(arguments);
+	cout << user << endl;
 }
 
-string handle_line(string &message, pollfd &pfd)
+string Server::handle_line(string &message, User &user)
 {
 	size_t nlpos = message.find("\n");
 
@@ -36,37 +36,31 @@ string handle_line(string &message, pollfd &pfd)
 	stream >> command;
 	getline(stream, arguments);
 
-	cout << "Message: " << message << endl;
-	do_command(prefix, command, arguments, pfd);
+	do_command(prefix, command, arguments, user);
 
 	if (nlpos == string::npos)
 		return "";
 	return message.substr(nlpos + 1, message.size() - nlpos - 1);
 }
 
-void main_loop(int serverSocket)
+void Server::main_loop()
 {
-	vector<pollfd> fds;
-	fds.push_back({serverSocket, POLLIN, 0});
-
-	while (true)
+	while (cin)
 	{
-		int activity = poll(fds.data(), fds.size(), -1);
-		if (activity < 0)
-		{
-			cerr << "Poll error\n";
-			break;
-		}
+		if (poll(fds.data(), fds.size(), -1) < 0)
+			throw runtime_error("Poll error");
 
 		if (fds[0].revents & POLLIN)
 		{
-			int clientSocket = accept(serverSocket, nullptr, nullptr);
+			int clientSocket = accept(fds[0].fd, nullptr, nullptr);
 			if (clientSocket == -1)
 				cerr << "Error accepting connection\n";
 			else
 			{
 				cout << "New client connected!\n";
-				fds.push_back({clientSocket, POLLIN, 0});
+				pollfd new_pfd = {clientSocket, POLLIN, 0};
+				fds.push_back(new_pfd);
+				users[new_pfd.fd] = User(new_pfd.fd);
 			}
 		}
 
@@ -82,7 +76,7 @@ void main_loop(int serverSocket)
 					string message = string(buffer);
 					cout << "------------" << endl;
 					while (!message.empty())
-						message = handle_line(message, fds[i]); // read one line and return the rest of the message
+						message = handle_line(message, users[fds[i].fd]); // read one line and return the rest of the message
 				}
 				else
 				{
@@ -95,38 +89,37 @@ void main_loop(int serverSocket)
 		}
 	}
 
-	close(serverSocket);
+	for (pollfd pfd : fds)
+	{
+		close(pfd.fd);
+	}
 }
 
-int server_socket()
+int Server::create_socket()
 {
 	int serverSocket = socket(AF_INET, SOCK_STREAM, 0);
 	if (serverSocket == -1)
-	{
-		cerr << "Error creating socket\n";
-		return -1;
-	}
+		throw runtime_error("Error creating socket");
 
 	int opt = 1;
 	setsockopt(serverSocket, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
 
 	sockaddr_in serverAddress;
 	serverAddress.sin_family = AF_INET;
-	serverAddress.sin_port = htons(PORT);
+	serverAddress.sin_port = htons(port);
 	serverAddress.sin_addr.s_addr = INADDR_ANY;
 
 	if (bind(serverSocket, (struct sockaddr *)&serverAddress, sizeof(serverAddress)) == -1)
-	{
-		cerr << "Error binding socket\n";
-		return -1;
-	}
+		throw runtime_error("Error binding socket");
 
-	if (listen(serverSocket, MAX_CLIENTS) == -1)
-	{
-		cerr << "Error listening on socket\n";
-		return -1;
-	}
+	if (listen(serverSocket, max_clients) == -1)
+		throw runtime_error("Error listening to socket");
 
-	cout << "Server listening on port " << PORT << "...\n";
+	cout << "Server listening on port " << port << "...\n";
 	return serverSocket;
+}
+
+Server::Server(const int port) : port(port), max_clients(10)
+{
+	fds.push_back({create_socket(), POLLIN, 0});
 }
