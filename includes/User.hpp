@@ -20,8 +20,6 @@ class User
 		User(const User &other);
 		User &operator=(const User &other);
 
-		void do_command(string &prefix, string &command, string &args, User &user);
-
 		// getters
 		string getNickname() const { return nickname; }
 		string getUsername() const { return username; }

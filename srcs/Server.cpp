@@ -27,17 +27,16 @@ void Server::do_command(string &prefix, string &command, string &arguments, User
 
 string Server::handle_line(string &message, User &user)
 {
-	size_t nlpos = message.find("\n");
-
 	string prefix, command, arguments;
 	istringstream stream(message);
 	if (message[0] == ':')
-		stream >> prefix;
+	stream >> prefix;
 	stream >> command;
 	getline(stream, arguments);
-
+	
 	do_command(prefix, command, arguments, user);
-
+	
+	size_t nlpos = message.find("\n");
 	if (nlpos == string::npos)
 		return "";
 	return message.substr(nlpos + 1, message.size() - nlpos - 1);
