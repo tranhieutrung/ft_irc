@@ -17,6 +17,8 @@ typedef struct
 	string arguments;
 } cmd;
 
+enum log_level { INFO, WARN, ERROR };
+
 class Server
 {
 	private:
@@ -31,6 +33,8 @@ class Server
 		void process_message(int clientFd, char *buffer);
 		int create_socket();
 		void execute_command(cmd cmd, User &user);
+		void process_privmsg(cmd cmd, const User &user);
+		string client_info(struct sockaddr_in &client_addr);
 	public:
 		Server(const int port);
 
@@ -38,6 +42,8 @@ class Server
 
 		const User* getUser(int fd);
 		const User* getUser(const string &nickname);
+
+		void log(log_level level, const string &event, const string &details);
 
 		void print_status();
 };

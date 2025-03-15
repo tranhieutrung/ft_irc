@@ -2,44 +2,81 @@
 #include <cstring>
 #include <vector>
 #include <netinet/in.h>
+#include <arpa/inet.h>
 #include <sys/socket.h>
 #include <unistd.h>
 #include <poll.h>
 #include <sstream>
 #include <map>
+#include <iomanip>
+#include <ctime>
 #include "../includes/User.hpp"
 #include "../includes/Server.hpp"
 
 using namespace std;
 
+void Server::process_privmsg(cmd cmd, const User &user)
+{
+	string target;
+	string message;
+	istringstream stream(cmd.arguments);
+	stream >> target;
+	getline(stream, message);
+
+	(void) user;
+
+	// if (target[0] == '#')
+	// {
+	// 	const Channel *recipient = getChannel(target);
+	// 	if (recipient != nullptr)
+	// 		user.privmsg(*recipient, message);
+	// 	else
+	// 		cout << target << " not found" << endl;
+	// }
+	// else
+	// {
+	// 	const User *recipient = getUser(target);
+	// 	if (recipient != nullptr)
+	// 		user.privmsg(*recipient, message);
+	// 	else
+	// 		cout << target << " not found" << endl;
+	// }
+}
+
 void Server::execute_command(cmd cmd, User &user)
 {
-	cout << "Executing command:" << endl;
-	cout << "Prefix: " << cmd.prefix << endl;
-	cout << "Command: " << cmd.command << endl;
-	cout << "Arguments: " << cmd.arguments << endl;
-	cout << "--------" << endl;
-
+	int code = 2; // 2 = unknown cmd, 1 = error, 0 = success
 	if(cmd.command == "NICK")
-		user.setNickname(cmd.arguments);
-	if(cmd.command == "USER")
-		user.setInfo(cmd.arguments);
-	if(cmd.command == "PRIVMSG")
 	{
-		string recipient_nick;
-		string message;
-		istringstream stream(cmd.arguments);
-		stream >> recipient_nick;
-		getline(stream, message);
-		const User *recipient = getUser(recipient_nick);
-		if (recipient != nullptr)
-			user.privmsg(*recipient, message);
+		if (getUser(cmd.arguments) == nullptr)
+		{
+			user.setNickname(cmd.arguments);
+			code = 0;
+		}
 		else
-			cout << recipient_nick << " not found" << endl;
+			code = 1;
 	}
-	cout << "Print user: " << endl;
-	cout << user;
-	cout << "--------" << endl;
+	if(cmd.command == "USER")
+	{
+		user.setInfo(cmd.arguments);
+		code = 0;
+	}
+	// if(cmd.command == "PRIVMSG")
+	// 	process_privmsg(cmd, user);
+	// if(cmd.command == "JOIN")
+	// 	user.join(cmd.arguments);
+	switch (code)
+	{
+		case 2:
+			log(WARN, "Command", "Unknown command received: " + cmd.command);
+			break;
+		case 1:
+			log(ERROR, "Command", "Could not execute command: " + cmd.command);
+			break;
+		case 0:
+			log(INFO, "Command", "User \"" + user.getNickname() + "\" executed command " + cmd.command);
+			break;
+	}
 }
 
 static cmd parse_line(string &message)
@@ -49,24 +86,34 @@ static cmd parse_line(string &message)
 	if (message[0] == ':')
 		stream >> cmd.prefix;
 	stream >> cmd.command;
-	getline(stream, cmd.arguments);
+	stream.ignore(1); // skip space
+	getline(stream, cmd.arguments, '\r');
 	return cmd;
+}
+
+string Server::client_info(struct sockaddr_in &client_addr)
+{
+	inet_ntoa(client_addr.sin_addr);
+	int client_port = ntohs(client_addr.sin_port);
+	return "IP: " + string(inet_ntoa(client_addr.sin_addr)) + " Port: " + to_string(client_port);
 }
 
 void Server::handle_new_client()
 {
 	if (fds[0].revents & POLLIN)
 	{
-		int clientSocket = accept(fds[0].fd, nullptr, nullptr);
+		struct sockaddr_in client_addr;
+        socklen_t client_len = sizeof(client_addr);
+        int clientSocket = accept(fds[0].fd, (struct sockaddr *)&client_addr, &client_len);
 		if (clientSocket == -1)
 		{
 			cerr << "Error accepting connection" << endl;
 			return;
 		}
-		cout << "New client connected!" << endl;
 		pollfd new_pfd = {clientSocket, POLLIN, 0};
 		fds.push_back(new_pfd);
 		users[new_pfd.fd] = User(new_pfd.fd);
+		log(INFO, "Connection", "New client connected: " + client_info(client_addr));
 	}
 }
 
@@ -92,7 +139,7 @@ void Server::handle_client_messages()
 				process_message(fds[i].fd, buffer);
 			else
 			{
-				cout << "Client disconnected\n";
+				log(INFO, "Connection", "Client disconnected: " + users[fds[i].fd].getNickname());
 				close(fds[i].fd);
 				fds.erase(fds.begin() + i);
 				users.erase(fds[i].fd);
@@ -114,7 +161,6 @@ void Server::main_loop()
 {
 	while (true)
 	{
-		print_status();
 		if (poll(fds.data(), fds.size(), -1) < 0)
 			throw runtime_error("Poll error");
 
@@ -144,27 +190,13 @@ int Server::create_socket()
 	if (listen(serverSocket, max_clients) == -1)
 		throw runtime_error("Error listening to socket");
 
-	cout << "Server listening on port " << port << "...\n";
+	log(INFO, "Server", "Server started on port " + to_string(port));
 	return serverSocket;
 }
 
 Server::Server(const int port) : port(port), max_clients(10)
 {
 	fds.push_back({create_socket(), POLLIN, 0});
-}
-
-void Server::print_status()
-{
-	cout << "Server status: " << endl;
-	cout << "Connections: " << fds.size() - 1 << endl; // dont count serverSocket
-	cout << "Users: " << users.size() << endl;
-	for (pollfd pfd : fds)
-	{
-		const User *u = getUser(pfd.fd);
-		if (u != nullptr)
-			cout << *u << endl;
-	}
-	cout << "--------" << endl;
 }
 
 const User* Server::getUser(const string &nickname)
@@ -182,4 +214,34 @@ const User* Server::getUser(int fd)
 	if (users.find(fd) != users.end())
 		return &users[fd];
 	return nullptr;
+}
+
+void Server::log(log_level level, const string &event, const string &details)
+{
+	time_t now = time(nullptr);
+	tm *ltm = localtime(&now);
+
+	const string RESET = "\033[0m";
+    const string RED = "\033[31m";
+    const string ORANGE = "\033[38;5;214m";
+    const string GREEN = "\033[32m";
+
+	cout << "[" << put_time(ltm, "%d.%m.%Y %H:%M:%S") << "] ";
+	switch (level)
+	{
+		case INFO:
+			cout << GREEN;
+			cout << "[INFO] ";
+			break;
+		case WARN:
+			cout << ORANGE;
+			cout << "[WARN] ";
+			break;
+		case ERROR:
+			cout << RED;
+			cout << "[ERROR] ";
+			break;
+	}
+	cout << RESET;
+	cout << "[" << event << "] " << details << endl;
 }

@@ -6,7 +6,7 @@ using namespace std;
 
 User::User() : nickname(""), username(""), hostname(""), servername(""), realname(""), fd(-1), isOperator(false) {}
 
-User::User(int fd) : nickname(""), username(""), hostname(""), servername(""), realname(""), fd(fd), isOperator(false) {}
+User::User(int fd) : nickname("User" + to_string(fd)), username(""), hostname(""), servername(""), realname(""), fd(fd), isOperator(false) {}
 
 User::User(const User &other) :
 						nickname(other.nickname),
@@ -64,3 +64,18 @@ void User::privmsg(const User &recipient, string &message)
 	(void) message;
 	// server is gonna send the recipient client "<prefix> PRIVMSG <recipient nick> :<message>"
 }
+
+// void User::privmsg_channel(const Channel &channel, string &message)
+// {
+// 	for (User u : channel.users)
+// 	{
+// 		privmsg(u, message);
+// 	}
+// }
+
+// void User::join(const string &channel)
+// {
+// 	string prefix = getFullIdentifier();
+// 	(void) channel;
+// 	// server is going to send everyone in this channel "<prefix> JOIN #<channel>"
+// }
