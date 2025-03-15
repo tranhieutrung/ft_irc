@@ -48,7 +48,7 @@ User& User::operator=(const User &other)
 
 int	User::setNickname(string &nickname)
 {
-	regex nick_regex("^[A-Za-z\\[\\]\\\\`_^{}|][-A-Za-z0-9\\[\\]\\\\`_^{}|]{0,8}$");
+	regex nick_regex(R"(^[A-Za-z\[\]\\`_^{}|][-A-Za-z0-9\[\]\\`_^{}|]{0,8}$)");
 	if (regex_match(nickname, nick_regex) == false)
 		return 1;
 	this->nickname = nickname;
@@ -57,7 +57,7 @@ int	User::setNickname(string &nickname)
 
 int User::setUsername(string &username)
 {
-	regex user_regex("^[^\\s@]{1,10}$");
+	regex user_regex(R"(^[^\s@]{1,10}$)");
 	if (regex_match(username, user_regex) == false)
 		return 1;
 	this->username = username;
@@ -66,7 +66,7 @@ int User::setUsername(string &username)
 
 int User::setHostname(string &hostname)
 {
-	regex host_regex("^(?=.{1,255}$)([a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(\\.[a-zA-Z0-9]{1,})*)$");
+	regex host_regex(R"(^(?=.{1,255}$)([a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(\.[a-zA-Z0-9]{1,})*)$)");
 	if (regex_match(hostname, host_regex) == false)
 		return 1;
 	this->hostname = hostname;
@@ -75,7 +75,7 @@ int User::setHostname(string &hostname)
 
 int User::setServername(string &servername)
 {
-	regex server_regex("^(?=.{1,255}$)([a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(\\.[a-zA-Z0-9]{1,})*)$");
+	regex server_regex(R"(^(?=.{1,255}$)([a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(\.[a-zA-Z0-9]{1,})*)$)");
 	if (regex_match(servername, server_regex) == false)
 		return 1;
 	this->servername = servername;
@@ -84,7 +84,7 @@ int User::setServername(string &servername)
 
 int User::setRealname(string &realname)
 {
-	regex real_regex("^[\\x20-\\x7E]{1,50}$");
+	regex real_regex(R"(^[\x20-\x7E]{1,50}$)");
 	if (regex_match(realname, real_regex) == false)
 		return 1;
 	this->realname = realname;
