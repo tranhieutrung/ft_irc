@@ -87,6 +87,12 @@ static cmd parse_line(string &message)
 	return cmd;
 }
 
+string Server::client_info(struct sockaddr_in &client_addr)
+{
+	return "IP: " + string(inet_ntoa(client_addr.sin_addr)) 
+	+ " Port: " + to_string(ntohs(client_addr.sin_port));
+}
+
 void Server::handle_new_client()
 {
 	if (fds[0].revents & POLLIN)
@@ -96,15 +102,14 @@ void Server::handle_new_client()
 		int clientSocket = accept(fds[0].fd, (struct sockaddr *)&client_addr, &client_len);
 		if (clientSocket == -1)
 		{
+			log(ERROR, "Connection", "Error accepting connection " + client_info(client_addr));
 			cerr << "Error accepting connection" << endl;
 			return;
 		}
 		pollfd new_pfd = {clientSocket, POLLIN, 0};
 		fds.push_back(new_pfd);
 		users[new_pfd.fd] = User(new_pfd.fd);
-		log(INFO, "Connection", "New client connected: IP: " 
-			+ string(inet_ntoa(client_addr.sin_addr)) 
-			+ " Port: " + to_string(ntohs(client_addr.sin_port)));
+		log(INFO, "Connection", "New client connected: " + client_info(client_addr));
 	}
 }
 

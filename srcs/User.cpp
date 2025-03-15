@@ -5,18 +5,32 @@
 
 using namespace std;
 
-User::User() : nickname("Unknown"), username(""), hostname(""), servername(""), realname(""), fd(-1), isOperator(false) {}
+User::User() :
+	nickname("Unknown"),
+	username(""),
+	hostname(""),
+	servername(""),
+	realname(""),
+	fd(-1),
+	isOperator(false) {}
 
-User::User(int fd) : nickname("User" + to_string(fd)), username(""), hostname(""), servername(""), realname(""), fd(fd), isOperator(false) {}
+User::User(int fd) :
+	nickname("User" + to_string(fd)),
+	username(""),
+	hostname(""),
+	servername(""),
+	realname(""),
+	fd(fd),
+	isOperator(false) {}
 
 User::User(const User &other) :
-						nickname(other.nickname),
-						username(other.username),
-						hostname(other.hostname),
-						servername(other.servername),
-						realname(other.realname),
-						fd(other.fd),
-						isOperator(other.isOperator) {}
+	nickname(other.nickname),
+	username(other.username),
+	hostname(other.hostname),
+	servername(other.servername),
+	realname(other.realname),
+	fd(other.fd),
+	isOperator(other.isOperator) {}
 
 User& User::operator=(const User &other)
 {
