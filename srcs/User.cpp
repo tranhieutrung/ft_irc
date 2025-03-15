@@ -4,7 +4,7 @@
 
 using namespace std;
 
-User::User() : nickname(""), username(""), hostname(""), servername(""), realname(""), fd(-1), isOperator(false) {}
+User::User() : nickname("Unknown"), username(""), hostname(""), servername(""), realname(""), fd(-1), isOperator(false) {}
 
 User::User(int fd) : nickname("User" + to_string(fd)), username(""), hostname(""), servername(""), realname(""), fd(fd), isOperator(false) {}
 

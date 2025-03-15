@@ -61,6 +61,8 @@ void Server::execute_command(cmd cmd, User &user)
 		user.setInfo(cmd.arguments);
 		code = 0;
 	}
+	// if(cmd.command == "CAP" && cmd.arguments == "LS")
+	// 	send_cap_ls();
 	// if(cmd.command == "PRIVMSG")
 	// 	process_privmsg(cmd, user);
 	// if(cmd.command == "JOIN")
@@ -91,20 +93,13 @@ static cmd parse_line(string &message)
 	return cmd;
 }
 
-string Server::client_info(struct sockaddr_in &client_addr)
-{
-	inet_ntoa(client_addr.sin_addr);
-	int client_port = ntohs(client_addr.sin_port);
-	return "IP: " + string(inet_ntoa(client_addr.sin_addr)) + " Port: " + to_string(client_port);
-}
-
 void Server::handle_new_client()
 {
 	if (fds[0].revents & POLLIN)
 	{
 		struct sockaddr_in client_addr;
-        socklen_t client_len = sizeof(client_addr);
-        int clientSocket = accept(fds[0].fd, (struct sockaddr *)&client_addr, &client_len);
+		socklen_t client_len = sizeof(client_addr);
+		int clientSocket = accept(fds[0].fd, (struct sockaddr *)&client_addr, &client_len);
 		if (clientSocket == -1)
 		{
 			cerr << "Error accepting connection" << endl;
@@ -113,7 +108,9 @@ void Server::handle_new_client()
 		pollfd new_pfd = {clientSocket, POLLIN, 0};
 		fds.push_back(new_pfd);
 		users[new_pfd.fd] = User(new_pfd.fd);
-		log(INFO, "Connection", "New client connected: " + client_info(client_addr));
+		log(INFO, "Connection", "New client connected: IP: " 
+			+ string(inet_ntoa(client_addr.sin_addr)) 
+			+ " Port: " + to_string(ntohs(client_addr.sin_port)));
 	}
 }
 
@@ -141,8 +138,8 @@ void Server::handle_client_messages()
 			{
 				log(INFO, "Connection", "Client disconnected: " + users[fds[i].fd].getNickname());
 				close(fds[i].fd);
-				fds.erase(fds.begin() + i);
 				users.erase(fds[i].fd);
+				fds.erase(fds.begin() + i);
 				i--;
 			}
 		}
@@ -222,9 +219,9 @@ void Server::log(log_level level, const string &event, const string &details)
 	tm *ltm = localtime(&now);
 
 	const string RESET = "\033[0m";
-    const string RED = "\033[31m";
-    const string ORANGE = "\033[38;5;214m";
-    const string GREEN = "\033[32m";
+	const string RED = "\033[31m";
+	const string ORANGE = "\033[38;5;214m";
+	const string GREEN = "\033[32m";
 
 	cout << "[" << put_time(ltm, "%d.%m.%Y %H:%M:%S") << "] ";
 	switch (level)
