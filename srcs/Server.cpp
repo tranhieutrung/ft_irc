@@ -49,10 +49,7 @@ void Server::execute_command(cmd cmd, User &user)
 	if(cmd.command == "NICK")
 	{
 		if (getUser(cmd.arguments) == nullptr)
-		{
-			user.setNickname(cmd.arguments);
-			code = 0;
-		}
+			code = user.setNickname(cmd.arguments);
 		else
 			code = 1;
 	}

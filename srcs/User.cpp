@@ -1,6 +1,7 @@
 #include "User.hpp"
 #include "Server.hpp"
 #include <sstream>
+#include <regex>
 
 using namespace std;
 
@@ -29,6 +30,15 @@ User& User::operator=(const User &other)
 	fd = other.fd;
 	isOperator = other.isOperator;
 	return *this;
+}
+
+int	User::setNickname(string &nickname)
+{
+	regex nick_regex("^[A-Za-z\\[\\]\\\\`_^{}|][A-Za-z0-9\\[\\]\\\\`_^{}|-]{0,8}$");
+	if (regex_match(nickname, nick_regex) == false)
+		return 1;
+	this->nickname = nickname;
+	return 0;
 }
 
 void User::setInfo(string &args)

@@ -35,7 +35,7 @@ class User
 
 		// setters
 		void setInfo(string &args);
-		void setNickname(string nickname) { this->nickname = nickname; }
+		int setNickname(string &nickname);
 		void setUsername(string username) { this->username = username; }
 		void setHostname(string hostname) { this->hostname = hostname; }
 		void setServername(string servername) { this->servername = servername; }
