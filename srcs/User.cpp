@@ -34,20 +34,64 @@ User& User::operator=(const User &other)
 
 int	User::setNickname(string &nickname)
 {
-	regex nick_regex("^[A-Za-z\\[\\]\\\\`_^{}|][A-Za-z0-9\\[\\]\\\\`_^{}|-]{0,8}$");
+	regex nick_regex("^[A-Za-z\\[\\]\\\\`_^{}|][-A-Za-z0-9\\[\\]\\\\`_^{}|]{0,8}$");
 	if (regex_match(nickname, nick_regex) == false)
 		return 1;
 	this->nickname = nickname;
 	return 0;
 }
 
-void User::setInfo(string &args)
+int User::setUsername(string &username)
 {
+	regex user_regex("^[^\\s@]{1,10}$");
+	if (regex_match(username, user_regex) == false)
+		return 1;
+	this->username = username;
+	return 0;
+}
+
+int User::setHostname(string &hostname)
+{
+	regex host_regex("^(?=.{1,255}$)([a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(\\.[a-zA-Z0-9]{1,})*)$");
+	if (regex_match(hostname, host_regex) == false)
+		return 1;
+	this->hostname = hostname;
+	return 0;
+}
+
+int User::setServername(string &servername)
+{
+	regex server_regex("^(?=.{1,255}$)([a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(\\.[a-zA-Z0-9]{1,})*)$");
+	if (regex_match(servername, server_regex) == false)
+		return 1;
+	this->servername = servername;
+	return 0;
+}
+
+int User::setRealname(string &realname)
+{
+	regex real_regex("^[\\x20-\\x7E]{1,50}$");
+	if (regex_match(realname, real_regex) == false)
+		return 1;
+	this->realname = realname;
+	return 0;
+}
+
+int User::setInfo(string &args)
+{
+	string user, host, server, real;
 	istringstream stream(args);
-	stream >> username;
-	stream >> hostname;
-	stream >> servername;
-	getline(stream, realname);
+	stream >> user;
+	stream >> host;
+	stream >> server;
+	getline(stream, real);
+	if (setUsername(user) == 1)
+		return 1;
+	if (setHostname(host) == 1)
+		return 1;
+	if (setServername(server) == 1)
+		return 1;
+	return setRealname(real);
 }
 
 ostream& operator<<(ostream &os, const User &user)

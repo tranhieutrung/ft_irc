@@ -34,12 +34,12 @@ class User
 		string getFullIdentifier() const;
 
 		// setters
-		void setInfo(string &args);
+		int setInfo(string &args);
 		int setNickname(string &nickname);
-		void setUsername(string username) { this->username = username; }
-		void setHostname(string hostname) { this->hostname = hostname; }
-		void setServername(string servername) { this->servername = servername; }
-		void setRealname(string realname) { this->realname = realname; }
+		int setUsername(string &username);
+		int setHostname(string &hostname);
+		int setServername(string &servername);
+		int setRealname(string &realname);
 		void setIsOperator(bool isOperator) { this->isOperator = isOperator; }
 		
 		friend ostream &operator<<(ostream &os, const User &user);

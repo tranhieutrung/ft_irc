@@ -54,10 +54,7 @@ void Server::execute_command(cmd cmd, User &user)
 			code = 1;
 	}
 	if(cmd.command == "USER")
-	{
-		user.setInfo(cmd.arguments);
-		code = 0;
-	}
+		code = user.setInfo(cmd.arguments);
 	// if(cmd.command == "CAP" && cmd.arguments == "LS")
 	// 	send_cap_ls();
 	// if(cmd.command == "PRIVMSG")
