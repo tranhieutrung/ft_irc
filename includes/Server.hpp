@@ -5,6 +5,7 @@
 #include <map>
 #include <vector>
 #include <cstring>
+#include <csignal>
 
 using namespace std;
 
@@ -26,6 +27,7 @@ class Server
 		vector<pollfd> fds;
 		const int port;
 		const int max_clients;
+		static volatile sig_atomic_t running;
 
 		void handle_new_client();
 		void handle_client_messages();
@@ -37,8 +39,9 @@ class Server
 		string client_info(struct sockaddr_in &client_addr);
 	public:
 		Server(const int port);
-
+		
 		void main_loop();
+		static void signal_handler(int signal);
 
 		const User* getUser(int fd);
 		const User* getUser(const string &nickname);

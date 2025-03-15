@@ -12,8 +12,11 @@
 #include <ctime>
 #include "../includes/User.hpp"
 #include "../includes/Server.hpp"
+#include <csignal>
 
 using namespace std;
+
+volatile sig_atomic_t Server::running = 1;
 
 void Server::process_privmsg(cmd cmd, const User &user)
 {
@@ -155,15 +158,20 @@ void Server::cleanup()
 
 void Server::main_loop()
 {
-	while (true)
+
+	signal(SIGINT, signal_handler);
+	signal(SIGTERM, signal_handler);
+
+	while (running)
 	{
-		if (poll(fds.data(), fds.size(), -1) < 0)
+		if (poll(fds.data(), fds.size(), -1) < 0 && errno != EINTR)
 			throw runtime_error("Poll error");
 
 		handle_new_client();
 		handle_client_messages();
 	}
 	cleanup();
+	log(INFO, "Server", "Shutting down server");
 }
 
 int Server::create_socket()
@@ -240,4 +248,10 @@ void Server::log(log_level level, const string &event, const string &details)
 	}
 	cout << RESET;
 	cout << "[" << event << "] " << details << endl;
+}
+
+void Server::signal_handler(int signal)
+{
+	if (signal == SIGINT || signal == SIGTERM)
+		running = 0;
 }
