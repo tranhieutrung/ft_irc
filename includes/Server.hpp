@@ -28,6 +28,7 @@ class Server
 		const int port;
 		const int max_clients;
 		static volatile sig_atomic_t running;
+		const string password;
 
 		void handle_new_client();
 		void handle_client_messages();
@@ -37,8 +38,9 @@ class Server
 		void execute_command(cmd cmd, User &user);
 		void process_privmsg(cmd cmd, const User &user);
 		string client_info(struct sockaddr_in &client_addr);
+		int check_password(const string &args);
 	public:
-		Server(const int port);
+		Server(const int port, const string &password);
 		
 		void main_loop();
 		static void signal_handler(int signal);

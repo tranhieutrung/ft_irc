@@ -46,6 +46,13 @@ void Server::process_privmsg(cmd cmd, const User &user)
 	// }
 }
 
+int Server::check_password(const string &args)
+{
+	if (args == password)
+		return 0;
+	return 1;
+}
+
 void Server::execute_command(cmd cmd, User &user)
 {
 	int code = 2; // 2 = unknown cmd, 1 = error, 0 = success
@@ -58,6 +65,8 @@ void Server::execute_command(cmd cmd, User &user)
 	}
 	if(cmd.command == "USER")
 		code = user.setInfo(cmd.arguments);
+	if (cmd.command == "PASS")
+		code = check_password(cmd.arguments);
 	// if(cmd.command == "CAP" && cmd.arguments == "LS")
 	// 	send_cap_ls();
 	// if(cmd.command == "PRIVMSG")
@@ -164,9 +173,13 @@ void Server::main_loop()
 
 	while (running)
 	{
-		if (poll(fds.data(), fds.size(), -1) < 0 && errno != EINTR)
-			throw runtime_error("Poll error");
-
+		if (poll(fds.data(), fds.size(), -1) < 0) 
+		{
+			if (errno != EINTR) {
+				log(ERROR, "Server", "Poll error: " + std::string(strerror(errno)));
+				throw runtime_error("Poll error");
+			}
+		}
 		handle_new_client();
 		handle_client_messages();
 	}
@@ -198,7 +211,7 @@ int Server::create_socket()
 	return serverSocket;
 }
 
-Server::Server(const int port) : port(port), max_clients(10)
+Server::Server(const int port, const string &password) : port(port), max_clients(10), password(password)
 {
 	fds.push_back({create_socket(), POLLIN, 0});
 }

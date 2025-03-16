@@ -46,6 +46,8 @@ User& User::operator=(const User &other)
 	return *this;
 }
 
+// These regexes are translated from BNF in RFC 2.3.1 to regex by AI. R("...") is a raw string literal
+
 int	User::setNickname(string &nickname)
 {
 	regex nick_regex(R"(^[A-Za-z\[\]\\`_^{}|][-A-Za-z0-9\[\]\\`_^{}|]{0,8}$)");
