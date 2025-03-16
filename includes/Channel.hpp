@@ -17,7 +17,7 @@ class Channel
             string ChannelName;
             string ChannelTopic;
             string password;
-            map<std::string, User> UserList;
+            map<int, User> UserList;
             bool        inviteOnly;
             bool        topic_restriction;
 
@@ -29,7 +29,7 @@ class Channel
         std::string getChannelName() const { return ChannelName; }
         std::string getChannelTopic() const { return ChannelTopic; }
         std::string getPassword() const { return password; }
-        const std::map<std::string, User>& getUserList() const { return UserList; }
+        const std::map<int, User>& getUserList() const { return UserList; }
         bool isInviteOnly() const { return inviteOnly; }
         bool isTopicRestricted() const { return topic_restriction; }
 
@@ -41,9 +41,8 @@ class Channel
         void setTopicRestriction(bool status) { topic_restriction = status; }
 
         // User management
-        void addUser(const std::string& nickname, const User& user) { UserList[nickname] = user; }
-        void removeUser(const std::string& nickname) { UserList.erase(nickname); }
-        
+        void addUser(const int& user_fd, const User& user) { UserList[user_fd] = user; }
+        void removeUser(int& user_fd) { UserList.erase(user_fd); }
 };
 
 
