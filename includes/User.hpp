@@ -4,33 +4,46 @@
 #include <string>
 #include <poll.h>
 #include <iostream>
+#include "Server.hpp"
 
 using namespace std;
 
 class User
 {
 	private:
-		string nickname, username, hostname, domain, realname;
-		pollfd pfd;
+		string nickname, username, hostname, servername, realname;
+		int fd;
 		bool isOperator;
 	public:
-		User(pollfd pfd) : nickname(""), username(""), hostname(""), domain(""), realname(""), isOperator(false) { cout << "User created with pfd: " << pfd.fd << endl; }
+		// constructors
+		User();
+		User(int fd);
+		User(const User &other);
+		User &operator=(const User &other);
+
+		void privmsg(const User &recipient, string &args);
+
 		// getters
 		string getNickname() const { return nickname; }
 		string getUsername() const { return username; }
 		string getHostname() const { return hostname; }
-		string getDomain() const { return domain; }
+		string getServername() const { return servername; }
 		string getRealname() const { return realname; }
-		pollfd getPfd() const { return pfd; }
+		int getFd() const { return fd; }
 		bool getIsOperator() const { return isOperator; }
+		string getFullIdentifier() const;
 
 		// setters
-		void setNickname(string nickname) { this->nickname = nickname; }
-		void setUsername(string username) { this->username = username; }
-		void setHostname(string hostname) { this->hostname = hostname; }
-		void setDomain(string domain) { this->domain = domain; }
-		void setRealname(string realname) { this->realname = realname; }
+		int setInfo(string &args);
+		int setNickname(string &nickname);
+		int setUsername(string &username);
+		int setHostname(string &hostname);
+		int setServername(string &servername);
+		int setRealname(string &realname);
 		void setIsOperator(bool isOperator) { this->isOperator = isOperator; }
+		
+		friend ostream &operator<<(ostream &os, const User &user);
 };
+
 
 #endif

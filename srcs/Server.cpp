@@ -2,131 +2,256 @@
 #include <cstring>
 #include <vector>
 #include <netinet/in.h>
+#include <arpa/inet.h>
 #include <sys/socket.h>
 #include <unistd.h>
 #include <poll.h>
 #include <sstream>
+#include <map>
+#include <iomanip>
+#include <ctime>
 #include "../includes/User.hpp"
 #include "../includes/Server.hpp"
+#include <csignal>
 
 using namespace std;
 
-#define PORT 8090
-#define MAX_CLIENTS 10
+volatile sig_atomic_t Server::running = 1;
 
-vector<User> users;
-
-void do_command(string &prefix, string &command, string &arguments, pollfd &pfd)
+void Server::process_privmsg(cmd cmd, const User &user)
 {
-	(void) pfd;
-	cout << "do_command" << endl;
-	cout << "Prefix: " << prefix << endl;
-	cout << "Command: " << command << endl;
-	cout << "Arguments: " << arguments << endl;
+	string target;
+	string message;
+	istringstream stream(cmd.arguments);
+	stream >> target;
+	getline(stream, message);
+
+	(void) user;
+
+	// if (target[0] == '#')
+	// {
+	// 	const Channel *recipient = getChannel(target);
+	// 	if (recipient != nullptr)
+	// 		user.privmsg(*recipient, message);
+	// 	else
+	// 		cout << target << " not found" << endl;
+	// }
+	// else
+	// {
+	// 	const User *recipient = getUser(target);
+	// 	if (recipient != nullptr)
+	// 		user.privmsg(*recipient, message);
+	// 	else
+	// 		cout << target << " not found" << endl;
+	// }
 }
 
-string handle_line(string &message, pollfd &pfd)
+void Server::execute_command(cmd cmd, User &user)
 {
-	size_t nlpos = message.find("\n");
+	int code = 2; // 2 = unknown cmd, 1 = error, 0 = success
+	if(cmd.command == "NICK")
+	{
+		if (getUser(cmd.arguments) == nullptr)
+			code = user.setNickname(cmd.arguments);
+		else
+			code = 1;
+	}
+	if(cmd.command == "USER")
+		code = user.setInfo(cmd.arguments);
+	// if(cmd.command == "CAP" && cmd.arguments == "LS")
+	// 	send_cap_ls();
+	// if(cmd.command == "PRIVMSG")
+	// 	process_privmsg(cmd, user);
+	// if(cmd.command == "JOIN")
+	// 	user.join(cmd.arguments);
+	switch (code)
+	{
+		case 2:
+			log(WARN, "Command", "Unknown command received: " + cmd.command);
+			break;
+		case 1:
+			log(ERROR, "Command", "Could not execute command: " + cmd.command);
+			break;
+		case 0:
+			log(INFO, "Command", "User \"" + user.getNickname() + "\" executed command " + cmd.command);
+			break;
+	}
+}
 
-	string prefix, command, arguments;
+static cmd parse_line(string &message)
+{
+	cmd cmd;
 	istringstream stream(message);
 	if (message[0] == ':')
-		stream >> prefix;
-	stream >> command;
-	getline(stream, arguments);
-
-	cout << "Message: " << message << endl;
-	do_command(prefix, command, arguments, pfd);
-
-	if (nlpos == string::npos)
-		return "";
-	return message.substr(nlpos + 1, message.size() - nlpos - 1);
+		stream >> cmd.prefix;
+	stream >> cmd.command;
+	stream.ignore(1); // skip space
+	getline(stream, cmd.arguments, '\r');
+	return cmd;
 }
 
-void main_loop(int serverSocket)
+string Server::client_info(struct sockaddr_in &client_addr)
 {
-	vector<pollfd> fds;
-	fds.push_back({serverSocket, POLLIN, 0});
+	return "IP: " + string(inet_ntoa(client_addr.sin_addr)) 
+	+ " Port: " + to_string(ntohs(client_addr.sin_port));
+}
 
-	while (true)
+void Server::handle_new_client()
+{
+	if (fds[0].revents & POLLIN)
 	{
-		int activity = poll(fds.data(), fds.size(), -1);
-		if (activity < 0)
+		struct sockaddr_in client_addr;
+		socklen_t client_len = sizeof(client_addr);
+		int clientSocket = accept(fds[0].fd, (struct sockaddr *)&client_addr, &client_len);
+		if (clientSocket == -1)
 		{
-			cerr << "Poll error\n";
-			break;
+			log(ERROR, "Connection", "Error accepting connection " + client_info(client_addr));
+			cerr << "Error accepting connection" << endl;
+			return;
 		}
+		pollfd new_pfd = {clientSocket, POLLIN, 0};
+		fds.push_back(new_pfd);
+		users[new_pfd.fd] = User(new_pfd.fd);
+		log(INFO, "Connection", "New client connected: " + client_info(client_addr));
+	}
+}
 
-		if (fds[0].revents & POLLIN)
+void Server::process_message(int clientFd, char *buffer)
+{
+	stringstream message;
+	message << buffer;
+	string line;
+	while (getline(message, line))
+		execute_command(parse_line(line), users[clientFd]);
+}
+
+void Server::handle_client_messages()
+{
+	for (size_t i = 1; i < fds.size(); i++)
+	{
+		if (fds[i].revents & POLLIN)
 		{
-			int clientSocket = accept(serverSocket, nullptr, nullptr);
-			if (clientSocket == -1)
-				cerr << "Error accepting connection\n";
+			char buffer[1024] = {0};
+			int bytesReceived = recv(fds[i].fd, buffer, sizeof(buffer), 0);
+
+			if (bytesReceived > 0)
+				process_message(fds[i].fd, buffer);
 			else
 			{
-				cout << "New client connected!\n";
-				fds.push_back({clientSocket, POLLIN, 0});
-			}
-		}
-
-		for (size_t i = 1; i < fds.size(); i++)
-		{
-			if (fds[i].revents & POLLIN)
-			{
-				char buffer[1024] = {0};
-				int bytesReceived = recv(fds[i].fd, buffer, sizeof(buffer), 0);
-
-				if (bytesReceived > 0)
-				{
-					string message = string(buffer);
-					cout << "------------" << endl;
-					while (!message.empty())
-						message = handle_line(message, fds[i]); // read one line and return the rest of the message
-				}
-				else
-				{
-					cout << "Client disconnected\n";
-					close(fds[i].fd);
-					fds.erase(fds.begin() + i);
-					i--;
-				}
+				log(INFO, "Connection", "Client disconnected: " + users[fds[i].fd].getNickname());
+				close(fds[i].fd);
+				users.erase(fds[i].fd);
+				fds.erase(fds.begin() + i);
+				i--;
 			}
 		}
 	}
-
-	close(serverSocket);
 }
 
-int server_socket()
+void Server::cleanup()
+{
+	for (pollfd pfd : fds)
+	{
+		close(pfd.fd);
+	}
+}
+
+void Server::main_loop()
+{
+
+	signal(SIGINT, signal_handler);
+	signal(SIGTERM, signal_handler);
+
+	while (running)
+	{
+		if (poll(fds.data(), fds.size(), -1) < 0 && errno != EINTR)
+			throw runtime_error("Poll error");
+
+		handle_new_client();
+		handle_client_messages();
+	}
+	cleanup();
+	log(INFO, "Server", "Shutting down server");
+}
+
+int Server::create_socket()
 {
 	int serverSocket = socket(AF_INET, SOCK_STREAM, 0);
 	if (serverSocket == -1)
-	{
-		cerr << "Error creating socket\n";
-		return -1;
-	}
+		throw runtime_error("Error creating socket");
 
 	int opt = 1;
 	setsockopt(serverSocket, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
 
 	sockaddr_in serverAddress;
 	serverAddress.sin_family = AF_INET;
-	serverAddress.sin_port = htons(PORT);
+	serverAddress.sin_port = htons(port);
 	serverAddress.sin_addr.s_addr = INADDR_ANY;
 
 	if (bind(serverSocket, (struct sockaddr *)&serverAddress, sizeof(serverAddress)) == -1)
-	{
-		cerr << "Error binding socket\n";
-		return -1;
-	}
+		throw runtime_error("Error binding socket");
 
-	if (listen(serverSocket, MAX_CLIENTS) == -1)
-	{
-		cerr << "Error listening on socket\n";
-		return -1;
-	}
+	if (listen(serverSocket, max_clients) == -1)
+		throw runtime_error("Error listening to socket");
 
-	cout << "Server listening on port " << PORT << "...\n";
+	log(INFO, "Server", "Server started on port " + to_string(port));
 	return serverSocket;
+}
+
+Server::Server(const int port) : port(port), max_clients(10)
+{
+	fds.push_back({create_socket(), POLLIN, 0});
+}
+
+const User* Server::getUser(const string &nickname)
+{
+	for (const auto &pair : users)
+	{
+		if (pair.second.getNickname() == nickname)
+			return &pair.second;
+	}
+	return nullptr;
+}
+
+const User* Server::getUser(int fd)
+{
+	if (users.find(fd) != users.end())
+		return &users[fd];
+	return nullptr;
+}
+
+void Server::log(log_level level, const string &event, const string &details)
+{
+	time_t now = time(nullptr);
+	tm *ltm = localtime(&now);
+
+	const string RESET = "\033[0m";
+	const string RED = "\033[31m";
+	const string ORANGE = "\033[38;5;214m";
+	const string GREEN = "\033[32m";
+
+	cout << "[" << put_time(ltm, "%d.%m.%Y %H:%M:%S") << "] ";
+	switch (level)
+	{
+		case INFO:
+			cout << GREEN;
+			cout << "[INFO] ";
+			break;
+		case WARN:
+			cout << ORANGE;
+			cout << "[WARN] ";
+			break;
+		case ERROR:
+			cout << RED;
+			cout << "[ERROR] ";
+			break;
+	}
+	cout << RESET;
+	cout << "[" << event << "] " << details << endl;
+}
+
+void Server::signal_handler(int signal)
+{
+	if (signal == SIGINT || signal == SIGTERM)
+		running = 0;
 }
