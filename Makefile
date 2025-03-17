@@ -8,7 +8,8 @@ OBJ_DIR		=	./objs
 
 SRC_FILES	=	main.cpp \
 				Server.cpp \
-				User.cpp
+				User.cpp	\
+				Channel.cpp
 
 SRCS		=	$(addprefix $(SRC_DIR)/, $(SRC_FILES))
 
@@ -31,10 +32,10 @@ $(OBJ_DIR)/%.o: $(SRC_DIR)/%.cpp
 
 clean:
 	$(RM) $(OBJ_DIR)
-	
+
 fclean: clean
 	$(RM) $(NAME)
-	
+
 re: fclean all
 
 .PHONY: all clean fclean re
