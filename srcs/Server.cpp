@@ -174,34 +174,76 @@ void Server::main_loop()
 	log(INFO, "Server", "Shutting down server");
 }
 
-int Server::create_socket()
-{
+
+
+int Server::createSocket() {
 	int serverSocket = socket(AF_INET, SOCK_STREAM, 0);
-	if (serverSocket == -1)
-		throw runtime_error("Error creating socket");
+	if (serverSocket == -1)  {
+		throw runtime_error("Error: socket failed: " + string(strerror(errno)));
+	}
+
+	// Use unique_ptr to automatic close serverSocket if failed
+	auto socketGuard = unique_ptr<int, decltype(&close)>(new int(serverSocket), close);
 
 	int opt = 1;
-	setsockopt(serverSocket, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
-
-	sockaddr_in serverAddress;
+	if (setsockopt(serverSocket, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)) == -1) {
+		throw runtime_error("Error: setsockopt failed: " + string(strerror(errno)));
+	}
+	
+	sockaddr_in serverAddress{};
 	serverAddress.sin_family = AF_INET;
-	serverAddress.sin_port = htons(port);
+	serverAddress.sin_port = htons(this->_port);
 	serverAddress.sin_addr.s_addr = INADDR_ANY;
 
-	if (bind(serverSocket, (struct sockaddr *)&serverAddress, sizeof(serverAddress)) == -1)
-		throw runtime_error("Error binding socket");
+	if (bind(serverSocket, (struct sockaddr *)&serverAddress, sizeof(serverAddress)) == -1) {
+		throw runtime_error("Error: bind failed: " + string(strerror(errno)));
+	}
 
-	if (listen(serverSocket, max_clients) == -1)
-		throw runtime_error("Error listening to socket");
+	if (listen(serverSocket, _maxClients) == -1) {
+		throw runtime_error("Error: listen failed: " + string(strerror(errno)));
+	}
 
-	log(INFO, "Server", "Server started on port " + to_string(port));
+	// release unique_ptr
+	socketGuard.release();
+
+	log(INFO, "Server", "Server started on port " + to_string(_port));
 	return serverSocket;
 }
 
-Server::Server(const int port) : port(port), max_clients(10)
-{
-	fds.push_back({create_socket(), POLLIN, 0});
-}
+
+// int Server::create_socket() {
+// 	int serverSocket = socket(AF_INET, SOCK_STREAM, 0);
+// 	if (serverSocket == -1)
+// 		throw runtime_error("Error: socket failed: " + string(strerror(errno)));
+
+// 	int opt = 1;
+// 	if (setsockopt(serverSocket, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)) == -1) {
+// 		close(serverSocket);
+// 		throw runtime_error("Error: setsockopt failed: " + string(strerror(errno)));
+// 	}
+
+// 	sockaddr_in serverAddress;
+// 	serverAddress.sin_family = AF_INET;
+// 	serverAddress.sin_port = htons(this->_port);
+// 	serverAddress.sin_addr.s_addr = INADDR_ANY;
+
+// 	if (bind(serverSocket, (struct sockaddr *)&serverAddress, sizeof(serverAddress)) == -1) 
+// 		throw runtime_error("Error: bind failed: " + string(strerror(errno)));
+
+// 	// if (listen(serverSocket, max_clients) == -1)
+// 	if (listen(serverSocket, _maxClients) == -1) 
+// 		throw runtime_error("Error: listen failed: " + string(strerror(errno)));
+
+// 	log(INFO, "Server", "Server started on port " + to_string(_port));
+// 	return serverSocket;
+// }
+
+// Server::Server(const int port) : port(port), max_clients(10)
+// {
+// 	fds.push_back({create_socket(), POLLIN, 0});
+// }
+
+
 
 const User* Server::getUser(const string &nickname)
 {
@@ -254,4 +296,12 @@ void Server::signal_handler(int signal)
 {
 	if (signal == SIGINT || signal == SIGTERM)
 		running = 0;
+}
+
+
+
+///Trung
+
+Server::Server(const string port, const string password): _port(stoi(port)), _password(password) {
+	fds.push_back({createSocket(), POLLIN, 0});
 }
