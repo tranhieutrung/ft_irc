@@ -6,14 +6,14 @@ using namespace std;
 void validate_args(int ac, char **av) {
 
 	if (ac != 3) {
-		std::cerr << "Error: invalid arguments!" << std::endl;
-		std::cerr << "Usage: ./ircserv <port> <password>" << std::endl;
+		cerr << "Error: invalid arguments!" << endl;
+		cerr << "Usage: ./ircserv <port> <password>" << endl;
 		exit (EXIT_FAILURE);
 	}
-	int port = std::atoi(av[1]);
-	if (port < 6660 || port > 6669 || port != 6697) {
-		std::cerr << "Error: invalid port!" << std::endl;
-		std::cerr << "Usage: valid port range: 6660-6669 or 6697" << std::endl;
+	int port = atoi(av[1]);
+	if ((port < 6660 || port > 6669) && port != 6697) {
+		cerr << "Error: invalid port!" << endl;
+		cerr << "Usage: valid port range: 6660-6669 or 6697" << endl;
 		exit (EXIT_FAILURE);
 	}
 }
