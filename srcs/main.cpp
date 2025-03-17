@@ -20,7 +20,13 @@ void validate_args(int ac, char **av) {
 
 int main(int ac, char **av) {
 	validate_args(ac, av);
-	Server server = Server(av[1], av[2]);
-	server.main_loop();
+	try {
+		Server server(av[1], av[2]);
+		server.main_loop();
+	} catch (const exception &e) {
+		cerr << "Error: " << e.what() << endl;
+		return (EXIT_FAILURE);
+	}
+
 	return 0;
 }
