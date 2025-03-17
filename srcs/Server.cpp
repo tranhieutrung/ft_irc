@@ -18,6 +18,8 @@ using namespace std;
 
 volatile sig_atomic_t Server::running = 1;
 
+// Private members:
+
 void Server::process_privmsg(cmd cmd, const User &user)
 {
 	string target;
@@ -96,10 +98,9 @@ string Server::client_info(struct sockaddr_in &client_addr)
 	+ " Port: " + to_string(ntohs(client_addr.sin_port));
 }
 
-void Server::handle_new_client()
+void Server::handleNewClient()
 {
-	if (fds[0].revents & POLLIN)
-	{
+	if (fds[0].revents & POLLIN) {
 		struct sockaddr_in client_addr;
 		socklen_t client_len = sizeof(client_addr);
 		int clientSocket = accept(fds[0].fd, (struct sockaddr *)&client_addr, &client_len);
@@ -125,56 +126,31 @@ void Server::process_message(int clientFd, char *buffer)
 		execute_command(parse_line(line), users[clientFd]);
 }
 
-void Server::handle_client_messages()
+void Server::handleClientMessages(int i)
 {
-	for (size_t i = 1; i < fds.size(); i++)
+	if (fds[i].revents & POLLIN)
 	{
-		if (fds[i].revents & POLLIN)
-		{
-			char buffer[1024] = {0};
-			int bytesReceived = recv(fds[i].fd, buffer, sizeof(buffer), 0);
-
+		char buffer[1024] = {0};
+		int bytesReceived = recv(fds[i].fd, buffer, sizeof(buffer), 0);
 			if (bytesReceived > 0)
-				process_message(fds[i].fd, buffer);
-			else
-			{
-				log(INFO, "Connection", "Client disconnected: " + users[fds[i].fd].getNickname());
-				close(fds[i].fd);
-				users.erase(fds[i].fd);
-				fds.erase(fds.begin() + i);
-				i--;
-			}
+			process_message(fds[i].fd, buffer);
+		else
+		{
+			log(INFO, "Connection", "Client disconnected: " + users[fds[i].fd].getNickname());
+			close(fds[i].fd);
+			users.erase(fds[i].fd);
+			fds.erase(fds.begin() + i);
+			i--;
 		}
 	}
 }
 
 void Server::cleanup()
 {
-	for (pollfd pfd : fds)
-	{
+	for (pollfd pfd : fds) {
 		close(pfd.fd);
 	}
 }
-
-void Server::main_loop()
-{
-
-	signal(SIGINT, signal_handler);
-	signal(SIGTERM, signal_handler);
-
-	while (running)
-	{
-		if (poll(fds.data(), fds.size(), -1) < 0 && errno != EINTR)
-			throw runtime_error("Poll error");
-
-		handle_new_client();
-		handle_client_messages();
-	}
-	cleanup();
-	log(INFO, "Server", "Shutting down server");
-}
-
-
 
 int Server::createSocket() {
 	int serverSocket = socket(AF_INET, SOCK_STREAM, 0);
@@ -182,12 +158,9 @@ int Server::createSocket() {
 		throw runtime_error("Error: socket failed: " + string(strerror(errno)));
 	}
 
-	// Use unique_ptr to automatic close serverSocket if failed
-	auto socketGuard = unique_ptr<int, decltype(&close)>(new int(serverSocket), close);
-
 	int opt = 1;
 	if (setsockopt(serverSocket, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)) == -1) {
-		throw runtime_error("Error: setsockopt failed: " + string(strerror(errno)));
+		throw runtime_error("setsockopt failed: " + string(strerror(errno)));
 	}
 	
 	sockaddr_in serverAddress{};
@@ -196,54 +169,55 @@ int Server::createSocket() {
 	serverAddress.sin_addr.s_addr = INADDR_ANY;
 
 	if (bind(serverSocket, (struct sockaddr *)&serverAddress, sizeof(serverAddress)) == -1) {
-		throw runtime_error("Error: bind failed: " + string(strerror(errno)));
+		close (serverSocket);
+		throw runtime_error("binding failed: " + string(strerror(errno)));
 	}
 
 	if (listen(serverSocket, _maxClients) == -1) {
-		throw runtime_error("Error: listen failed: " + string(strerror(errno)));
+		close (serverSocket);
+		throw runtime_error("listening failed: " + string(strerror(errno)));
 	}
-
-	// release unique_ptr
-	socketGuard.release();
 
 	log(INFO, "Server", "Server started on port " + to_string(_port));
 	return serverSocket;
 }
 
+// Public members
 
-// int Server::create_socket() {
-// 	int serverSocket = socket(AF_INET, SOCK_STREAM, 0);
-// 	if (serverSocket == -1)
-// 		throw runtime_error("Error: socket failed: " + string(strerror(errno)));
+Server::Server(const string port, const string password): _port(stoi(port)), _password(password) {
+	fds.push_back({createSocket(), POLLIN, 0});
+}
 
-// 	int opt = 1;
-// 	if (setsockopt(serverSocket, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)) == -1) {
-// 		close(serverSocket);
-// 		throw runtime_error("Error: setsockopt failed: " + string(strerror(errno)));
-// 	}
+Server::~Server() {
+	cleanup();
+	log(INFO, "Server", "Shutting down server");
+}
 
-// 	sockaddr_in serverAddress;
-// 	serverAddress.sin_family = AF_INET;
-// 	serverAddress.sin_port = htons(this->_port);
-// 	serverAddress.sin_addr.s_addr = INADDR_ANY;
+void Server::start()
+{
 
-// 	if (bind(serverSocket, (struct sockaddr *)&serverAddress, sizeof(serverAddress)) == -1) 
-// 		throw runtime_error("Error: bind failed: " + string(strerror(errno)));
+	signal(SIGINT, signal_handler);
+	signal(SIGTERM, signal_handler);
 
-// 	// if (listen(serverSocket, max_clients) == -1)
-// 	if (listen(serverSocket, _maxClients) == -1) 
-// 		throw runtime_error("Error: listen failed: " + string(strerror(errno)));
+	while (this->running)
+	{
+		if (poll(fds.data(), fds.size(), -1) < 0 && errno != EINTR)
+			throw runtime_error("Poll error");
+		for (int index = 0; index < this->fds.size(); index++) {
+			if (index == 0) { //fds[0] = serverSocket
+				handleNewClient();
+			} else {
+				handleClientMessages(index);
+			}
+		}
+	}
+}
 
-// 	log(INFO, "Server", "Server started on port " + to_string(_port));
-// 	return serverSocket;
-// }
-
-// Server::Server(const int port) : port(port), max_clients(10)
-// {
-// 	fds.push_back({create_socket(), POLLIN, 0});
-// }
-
-
+void Server::signal_handler(int signal)
+{
+	if (signal == SIGINT || signal == SIGTERM)
+		running = 0;
+}
 
 const User* Server::getUser(const string &nickname)
 {
@@ -290,18 +264,4 @@ void Server::log(log_level level, const string &event, const string &details)
 	}
 	cout << RESET;
 	cout << "[" << event << "] " << details << endl;
-}
-
-void Server::signal_handler(int signal)
-{
-	if (signal == SIGINT || signal == SIGTERM)
-		running = 0;
-}
-
-
-
-///Trung
-
-Server::Server(const string port, const string password): _port(stoi(port)), _password(password) {
-	fds.push_back({createSocket(), POLLIN, 0});
 }

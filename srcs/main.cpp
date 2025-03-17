@@ -22,7 +22,7 @@ int main(int ac, char **av) {
 	validate_args(ac, av);
 	try {
 		Server server(av[1], av[2]);
-		server.main_loop();
+		server.start();
 	} catch (const exception &e) {
 		cerr << "Error: " << e.what() << endl;
 		return (EXIT_FAILURE);
