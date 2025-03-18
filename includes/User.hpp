@@ -14,6 +14,8 @@ class User
 		string nickname, username, hostname, servername, realname;
 		int fd;
 		bool isOperator;
+		bool isAuth;
+
 	public:
 		// constructors
 		User();
@@ -41,6 +43,8 @@ class User
 		int setServername(string &servername);
 		int setRealname(string &realname);
 		void setIsOperator(bool isOperator) { this->isOperator = isOperator; }
+
+		void	setAuth(bool status);
 		
 		friend ostream &operator<<(ostream &os, const User &user);
 };
