@@ -1,5 +1,7 @@
-#include "User.hpp"
-#include "Server.hpp"
+#include "../includes/User.hpp"
+#include "../includes/Server.hpp"
+#include "../includes/Channel.hpp"
+#include "../includes/ErrorCodes.hpp"
 #include <sstream>
 #include <regex>
 
@@ -54,7 +56,7 @@ int	User::setNickname(string &nickname)
 {
 	regex nick_regex(R"(^[A-Za-z\[\]\\`_^{}|][-A-Za-z0-9\[\]\\`_^{}|]{0,8}$)");
 	if (regex_match(nickname, nick_regex) == false)
-		return 1;
+		return ERR_ERRONEUSNICKNAME;
 	this->nickname = nickname;
 	return 0;
 }
@@ -103,8 +105,8 @@ int User::setInfo(string &args)
 	stream >> host;
 	stream >> server;
 	getline(stream, real);
-	if (setUsername(user) == 1)
-		return 1;
+	if (setUsername(user) == ERR_ERRONEUSNICKNAME)
+		return ERR_ERRONEUSNICKNAME;
 	if (setHostname(host) == 1)
 		return 1;
 	if (setServername(server) == 1)
@@ -129,21 +131,28 @@ string User::getFullIdentifier() const
 	return ":" + nickname + "!" + username + "@" + hostname;
 }
 
-void User::privmsg(const User &recipient, string &message)
+int User::privmsg(const User &recipient, string &message)
 {
+	if (message.empty())
+		return ERR_NOTEXTTOSEND;
 	string prefix = getFullIdentifier();
-	(void) recipient;
-	(void) message;
-	// server is gonna send the recipient client "<prefix> PRIVMSG <recipient nick> :<message>"
+	stringstream stream;
+	stream << prefix << " PRIVMSG " << recipient.getNickname() << " " << message << "\r\n";
+	const char *buffer = stream.str().c_str();
+	send(recipient.fd, buffer, sizeof(buffer), 0);
+	return 0;
 }
 
-// void User::privmsg_channel(const Channel &channel, string &message)
-// {
-// 	for (User u : channel.users)
-// 	{
-// 		privmsg(u, message);
-// 	}
-// }
+int User::privmsg(const Channel &channel, string &message)
+{
+	for (const auto &pair : channel.getUserList())
+	{
+		int ret = privmsg(pair.second, message);
+		if (ret != 0)
+			return ret;
+	}
+	return 0;
+}
 
 // void User::join(const string &channel)
 // {

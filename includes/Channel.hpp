@@ -3,11 +3,11 @@
 #ifndef CHANNEL_HPP
 #define CHANNEL_HPP
 
+#include "User.hpp"
 #include <string>
 #include <poll.h>
 #include <iostream>
 #include <map>
-#include "User.hpp"
 #include <algorithm>
 #include <exception>
 
