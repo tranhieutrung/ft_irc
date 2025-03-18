@@ -1,17 +1,16 @@
 #ifndef IO_HPP
 #define IO_HPP
 
-#include <sstream>
-#include <cstring>
+#include <string>
 
 using namespace std;
 
-typedef struct
+struct cmd
 {
 	string prefix;
 	string command;
 	string arguments;
-} cmd;
+};
 
 class IO
 {
