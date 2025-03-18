@@ -2,6 +2,7 @@
 #include "../includes/Server.hpp"
 #include "../includes/Channel.hpp"
 #include "../includes/ErrorCodes.hpp"
+#include "../includes/IO.hpp"
 #include <sstream>
 #include <regex>
 
@@ -136,11 +137,7 @@ int User::privmsg(const User &recipient, string &message) const
 {
 	if (message.empty())
 		return ERR_NOTEXTTOSEND;
-	string prefix = getFullIdentifier();
-	stringstream stream;
-	stream << prefix << " PRIVMSG " << recipient.getNickname() << " " << message << "\r\n";
-	const char *buffer = stream.str().c_str();
-	send(recipient.fd, buffer, sizeof(buffer), 0);
+	IO::sendCommand(recipient.fd, {getFullIdentifier(), recipient.nickname, message});
 	return 0;
 }
 
