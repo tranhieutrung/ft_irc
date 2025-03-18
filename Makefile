@@ -33,10 +33,10 @@ $(OBJ_DIR)/%.o: $(SRC_DIR)/%.cpp
 
 clean:
 	$(RM) $(OBJ_DIR)
-	
+
 fclean: clean
 	$(RM) $(NAME)
-	
+
 re: fclean all
 
 .PHONY: all clean fclean re

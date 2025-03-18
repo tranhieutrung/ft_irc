@@ -8,6 +8,8 @@
 #include <iostream>
 #include <map>
 #include "User.hpp"
+#include <algorithm>
+#include <exception>
 
 using namespace std;
 
@@ -42,7 +44,11 @@ class Channel
 
         // User management
         void addUser(const int& user_fd, const User& user) { UserList[user_fd] = user; }
-        void removeUser(int& user_fd) { UserList.erase(user_fd); }
+        void removeUser(int& user_fd) { UserList.erase(user_fd);};
+        std::map<int, User>::iterator findUser (int user_fd);
+        void kickUser(int user_fd);
+        void changeTopic(int user_fd, string new_topic);
+
 };
 
 
