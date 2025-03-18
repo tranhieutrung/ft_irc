@@ -12,7 +12,8 @@ User::User() :
 	servername(""),
 	realname(""),
 	fd(-1),
-	isOperator(false) {}
+	isOperator(false),
+	isAuth(false) {}
 
 User::User(int fd) :
 	nickname("User" + to_string(fd)),
@@ -21,7 +22,8 @@ User::User(int fd) :
 	servername(""),
 	realname(""),
 	fd(fd),
-	isOperator(false) {}
+	isOperator(false),
+	isAuth(false) {}
 
 User::User(const User &other) :
 	nickname(other.nickname),
@@ -30,7 +32,8 @@ User::User(const User &other) :
 	servername(other.servername),
 	realname(other.realname),
 	fd(other.fd),
-	isOperator(other.isOperator) {}
+	isOperator(other.isOperator),
+	isAuth(other.isAuth) {}
 
 User& User::operator=(const User &other)
 {
@@ -43,6 +46,7 @@ User& User::operator=(const User &other)
 	realname = other.realname;
 	fd = other.fd;
 	isOperator = other.isOperator;
+	isAuth = other.isAuth;
 	return *this;
 }
 
@@ -147,3 +151,7 @@ void User::privmsg(const User &recipient, string &message)
 // 	(void) channel;
 // 	// server is going to send everyone in this channel "<prefix> JOIN #<channel>"
 // }
+
+void	User::setAuth(bool status) {
+	this->isAuth = status;
+}

@@ -1,20 +1,20 @@
-#include <iostream>
-#include <cstring>
-#include <vector>
-#include <netinet/in.h>
-#include <arpa/inet.h>
-#include <sys/socket.h>
-#include <unistd.h>
-#include <poll.h>
-#include <sstream>
-#include <map>
-#include <iomanip>
-#include <ctime>
-#include "../includes/User.hpp"
+// #include <iostream>
+// #include <cstring>
+// #include <vector>
+// #include <netinet/in.h>
+// #include <arpa/inet.h>
+// #include <sys/socket.h>
+// #include <unistd.h>
+// #include <poll.h>
+// #include <sstream>
+// #include <map>
+// #include <iomanip>
+// #include <ctime>
+// #include "../includes/User.hpp"
 #include "../includes/Server.hpp"
-#include <csignal>
+// #include <csignal>
 
-using namespace std;
+// using namespace std;
 
 volatile sig_atomic_t Server::running = 1;
 
@@ -50,34 +50,64 @@ void Server::process_privmsg(cmd cmd, const User &user)
 
 void Server::execute_command(cmd cmd, User &user)
 {
-	int code = 2; // 2 = unknown cmd, 1 = error, 0 = success
-	if(cmd.command == "NICK")
-	{
-		if (getUser(cmd.arguments) == nullptr)
-			code = user.setNickname(cmd.arguments);
-		else
-			code = 1;
+	string res;
+
+	if (cmd.command == "PASS")
+		res = _processPASS(cmd, user);
+	// else if (cmd.command == "NICK")
+	// 	_processNICK(cmd, user);
+	// else if (cmd.command == "USER")
+	// 	_processUSER(cmd, user);
+	// else if (cmd.command == "OPER")
+	// 	_processOPER(cmd, user);
+	// else if (cmd.command == "MODE")
+	// 	_processMODE(cmd, user);
+	// else if (cmd.command == "PRIVMSG")
+	// 	_processPRIVMSG(cmd, user);
+	// else if (cmd.command == "JOIN")
+	// 	_processJOIN(cmd, user);
+	// else if (cmd.command == "TOPIC")
+	// 	_processTOPIC(cmd, user);
+	// else if (cmd.command == "KICK")
+	// 	_processKICK(cmd, user);
+	// else if (cmd.command == "QUIT")
+	// 	_processQUIT(cmd, user);
+	else {
+		log(WARN, "Command", "Unknown command received: " + cmd.command);
+		res = "Unknown command received";
 	}
-	if(cmd.command == "USER")
-		code = user.setInfo(cmd.arguments);
-	// if(cmd.command == "CAP" && cmd.arguments == "LS")
-	// 	send_cap_ls();
-	// if(cmd.command == "PRIVMSG")
-	// 	process_privmsg(cmd, user);
-	// if(cmd.command == "JOIN")
-	// 	user.join(cmd.arguments);
-	switch (code)
-	{
-		case 2:
-			log(WARN, "Command", "Unknown command received: " + cmd.command);
-			break;
-		case 1:
-			log(ERROR, "Command", "Could not execute command: " + cmd.command);
-			break;
-		case 0:
-			log(INFO, "Command", "User \"" + user.getNickname() + "\" executed command " + cmd.command);
-			break;
-	}
+	if (send(user.getFd(), (res + '\n').c_str(), res.length() + 1, 0) == -1)
+		cerr << "send() error: " << strerror(errno) << endl;
+
+
+	// int code = 2; // 2 = unknown cmd, 1 = error, 0 = success
+	// if(cmd.command == "NICK")
+	// {
+	// 	if (getUser(cmd.arguments) == nullptr)
+	// 		code = user.setNickname(cmd.arguments);
+	// 	else
+	// 		code = 1;
+	// }
+	// if(cmd.command == "USER")
+	// 	code = user.setInfo(cmd.arguments);
+	// // if(cmd.command == "CAP" && cmd.arguments == "LS")
+	// // 	send_cap_ls();
+	// // if(cmd.command == "PRIVMSG")
+	// // 	process_privmsg(cmd, user);
+	// // if(cmd.command == "JOIN")
+	// // 	user.join(cmd.arguments);
+	// switch (code)
+	// {
+	// 	case 2:
+	// 		log(WARN, "Command", "Unknown command received: " + cmd.command);
+	// 		break;
+	// 	case 1:
+	// 		log(ERROR, "Command", "Could not execute command: " + cmd.command);
+	// 		break;
+	// 	case 0:
+	// 		log(INFO, "Command", "User \"" + user.getNickname() + "\" executed command " + cmd.command);
+	// 		break;
+	// }
 }
 
 static cmd parse_line(string &message)
@@ -117,31 +147,36 @@ void Server::handleNewClient()
 		string welcomeMessage = "Welcome to connect!\nPlease login to start chatting.\n";
 
 		if (send(clientSocket, welcomeMessage.c_str(), welcomeMessage.length(), 0) == -1)
-			cerr << "Sending welcome message failed: " << strerror(errno) << endl;
+			cerr << "Sending a welcome message failed: " << strerror(errno) << endl;
 		log(INFO, "Connection", "New client connected: " + client_info(client_addr));
 	}
 }
 
-void Server::process_message(int clientFd, char *buffer)
+void Server::process_message(int clientFd, string buffer)
 {
 	stringstream message;
-	message << buffer;
+	message << buffer; 
 	string line;
-	while (getline(message, line))
+	while (getline(message, line)) {
 		execute_command(parse_line(line), users[clientFd]);
+	}
 }
 
 void Server::handleClientMessages(int i)
 {
 	if (fds[i].revents & POLLIN)
 	{
-		char buffer[1024] = {0};
+		char buffer[1024] = {0}; // what if over 1024
 		int bytesReceived = recv(fds[i].fd, buffer, sizeof(buffer), 0);
-			if (bytesReceived > 0)
+		
+		if (bytesReceived > 0) {
 			process_message(fds[i].fd, buffer);
-		else
-		{
-			log(INFO, "Connection", "Client disconnected: " + users[fds[i].fd].getNickname());
+		} else {
+			if (bytesReceived == 0) {
+				log(INFO, "Connection", "Client disconnected: " + users[fds[i].fd].getNickname());
+			} else {
+				cerr << "recv() failed: " << strerror(errno) << endl;
+			}
 			close(fds[i].fd);
 			users.erase(fds[i].fd);
 			fds.erase(fds.begin() + i);
@@ -264,7 +299,7 @@ void Server::log(log_level level, const string &event, const string &details)
 			break;
 		case ERROR:
 			cout << RED;
-			cout << "[ERROR] ";
+			cout << "[ERROR] "; //cerr?
 			break;
 	}
 	cout << RESET;

@@ -7,6 +7,20 @@
 #include <cstring>
 #include <csignal>
 #include <memory>  // unique_ptr
+#include <iostream>
+#include <cstring>
+#include <vector>
+#include <netinet/in.h>
+#include <arpa/inet.h>
+#include <sys/socket.h>
+#include <unistd.h>
+#include <poll.h>
+#include <sstream>
+#include <map>
+#include <iomanip>
+#include <ctime>
+#include "../includes/User.hpp"
+#include <csignal>
 
 using namespace std;
 
@@ -39,12 +53,23 @@ class Server
 		void handleNewClient();
 		void handleClientMessages(int index);
 		void cleanup();
-		void process_message(int clientFd, char *buffer);
+		void process_message(int clientFd, string buffer);
 		// int create_socket();
 		int createSocket();
 		void execute_command(cmd cmd, User &user);
 		void process_privmsg(cmd cmd, const User &user);
 		string client_info(struct sockaddr_in &client_addr);
+
+		string	_processPASS(cmd cmd, User &user);
+		string	_processNICK(cmd cmd, User &user);
+		string	_processUSER(cmd cmd, User &user);
+		string	_processOPER(cmd cmd, User &user);
+		string	_processMODE(cmd cmd, User &user);
+		string	_processPRIVMSG(cmd cmd, User &user);
+		string	_processJOIN(cmd cmd, User &user);
+		string	_processTOPIC(cmd cmd, User &user);
+		string	_processKICK(cmd cmd, User &user);
+		string	_processQUIT(cmd cmd, User &user);
 
 	public:
 		// Server(const int port); Trung
