@@ -9,6 +9,7 @@ OBJ_DIR		=	./objs
 SRC_FILES	=	main.cpp \
 				Server.cpp \
 				User.cpp \
+				Channel.cpp \
 				processCMD.cpp
 
 SRCS		=	$(addprefix $(SRC_DIR)/, $(SRC_FILES))
