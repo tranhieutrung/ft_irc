@@ -25,8 +25,10 @@ class User
 		User(const User &other);
 		User &operator=(const User &other);
 
-		int privmsg(const User &recipient, string &args);
-		int privmsg(const Channel &reci_chan, string &message);
+		int privmsg(const User &recipient, string &args) const;
+		int privmsg(const Channel &reci_chan, string &message) const;
+		int join(Channel &channel);
+		int join(Channel &channel, const string &password);
 
 		// getters
 		string getNickname() const { return nickname; }

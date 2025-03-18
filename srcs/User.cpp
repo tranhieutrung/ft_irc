@@ -104,6 +104,7 @@ int User::setInfo(string &args)
 	stream >> user;
 	stream >> host;
 	stream >> server;
+	stream.ignore(2); // skip space and ':'
 	getline(stream, real);
 	if (setUsername(user) == ERR_ERRONEUSNICKNAME)
 		return ERR_ERRONEUSNICKNAME;
@@ -131,7 +132,7 @@ string User::getFullIdentifier() const
 	return ":" + nickname + "!" + username + "@" + hostname;
 }
 
-int User::privmsg(const User &recipient, string &message)
+int User::privmsg(const User &recipient, string &message) const
 {
 	if (message.empty())
 		return ERR_NOTEXTTOSEND;
@@ -143,8 +144,10 @@ int User::privmsg(const User &recipient, string &message)
 	return 0;
 }
 
-int User::privmsg(const Channel &channel, string &message)
+int User::privmsg(const Channel &channel, string &message) const
 {
+	// if channel.getMode... +m or +b mode
+	//	return ERR_CANNOTSENDTOCHAN;
 	for (const auto &pair : channel.getUserList())
 	{
 		int ret = privmsg(pair.second, message);
@@ -154,12 +157,22 @@ int User::privmsg(const Channel &channel, string &message)
 	return 0;
 }
 
-// void User::join(const string &channel)
-// {
-// 	string prefix = getFullIdentifier();
-// 	(void) channel;
-// 	// server is going to send everyone in this channel "<prefix> JOIN #<channel>"
-// }
+int User::join(Channel &channel)
+{
+	return join(channel, ""); 
+	// if no password is given, try to login with an empty password.
+	// If channel is not password protected, it could have an empty password so this works
+}
+
+int User::join(Channel &channel, const string &password)
+{
+	if (password != channel.getPassword())
+		return ERR_BADCHANNELKEY;
+	if (channel.isInviteOnly())
+		return ERR_INVITEONLYCHAN;
+	channel.addUser(fd, *this);
+	return 0;
+}
 
 void	User::setAuth(bool status) {
 	this->isAuth = status;
