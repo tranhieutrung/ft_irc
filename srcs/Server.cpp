@@ -104,6 +104,7 @@ void Server::handleNewClient()
 		struct sockaddr_in client_addr;
 		socklen_t client_len = sizeof(client_addr);
 		int clientSocket = accept(fds[0].fd, (struct sockaddr *)&client_addr, &client_len);
+
 		if (clientSocket == -1)
 		{
 			log(ERROR, "Connection", "Error accepting connection " + client_info(client_addr));
@@ -113,6 +114,10 @@ void Server::handleNewClient()
 		pollfd new_pfd = {clientSocket, POLLIN, 0};
 		fds.push_back(new_pfd);
 		users[new_pfd.fd] = User(new_pfd.fd);
+		string welcomeMessage = "Welcome to connect!\nPlease login to start chatting.\n";
+
+		if (send(clientSocket, welcomeMessage.c_str(), welcomeMessage.length(), 0) == -1)
+			cerr << "Sending welcome message failed: " << strerror(errno) << endl;
 		log(INFO, "Connection", "New client connected: " + client_info(client_addr));
 	}
 }
@@ -148,7 +153,7 @@ void Server::handleClientMessages(int i)
 void Server::cleanup()
 {
 	for (pollfd pfd : fds) {
-		close(pfd.fd);
+		close(pfd.fd); // also close socket (fds[0]) here
 	}
 }
 
@@ -203,8 +208,8 @@ void Server::start()
 	{
 		if (poll(fds.data(), fds.size(), -1) < 0 && errno != EINTR)
 			throw runtime_error("Poll error");
-		for (int index = 0; index < this->fds.size(); index++) {
-			if (index == 0) { //fds[0] = serverSocket
+		for (size_t index = 0; index < this->fds.size(); index++) {
+			if (index == 0) { // fds[0] = serverSocket
 				handleNewClient();
 			} else {
 				handleClientMessages(index);
