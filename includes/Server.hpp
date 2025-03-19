@@ -1,7 +1,7 @@
 #ifndef SERVER_HPP
 #define SERVER_HPP
 
-#include "User.hpp"
+#include "../includes/IO.hpp"
 #include <map>
 #include <vector>
 #include <cstring>
@@ -25,13 +25,6 @@
 using namespace std;
 
 class User;
-
-typedef struct
-{
-	string prefix;
-	string command;
-	string arguments;
-} cmd;
 
 enum log_level { INFO, WARN, ERROR };
 

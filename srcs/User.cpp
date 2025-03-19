@@ -1,5 +1,8 @@
-#include "User.hpp"
-#include "Server.hpp"
+#include "../includes/User.hpp"
+#include "../includes/Server.hpp"
+#include "../includes/Channel.hpp"
+#include "../includes/ErrorCodes.hpp"
+#include "../includes/IO.hpp"
 #include <sstream>
 #include <regex>
 
@@ -54,7 +57,7 @@ int	User::setNickname(string &nickname)
 {
 	regex nick_regex(R"(^[A-Za-z\[\]\\`_^{}|][-A-Za-z0-9\[\]\\`_^{}|]{0,8}$)");
 	if (regex_match(nickname, nick_regex) == false)
-		return 1;
+		return ERR_ERRONEUSNICKNAME;
 	this->nickname = nickname;
 	return 0;
 }
@@ -102,9 +105,10 @@ int User::setInfo(string &args)
 	stream >> user;
 	stream >> host;
 	stream >> server;
+	stream.ignore(2); // skip space and ':'
 	getline(stream, real);
-	if (setUsername(user) == 1)
-		return 1;
+	if (setUsername(user) == ERR_ERRONEUSNICKNAME)
+		return ERR_ERRONEUSNICKNAME;
 	if (setHostname(host) == 1)
 		return 1;
 	if (setServername(server) == 1)
@@ -129,28 +133,43 @@ string User::getFullIdentifier() const
 	return ":" + nickname + "!" + username + "@" + hostname;
 }
 
-void User::privmsg(const User &recipient, string &message)
+int User::privmsg(const User &recipient, string &message) const
 {
-	string prefix = getFullIdentifier();
-	(void) recipient;
-	(void) message;
-	// server is gonna send the recipient client "<prefix> PRIVMSG <recipient nick> :<message>"
+	if (message.empty())
+		return ERR_NOTEXTTOSEND;
+	IO::sendCommand(recipient.fd, {getFullIdentifier(), recipient.nickname, message});
+	return 0;
 }
 
-// void User::privmsg_channel(const Channel &channel, string &message)
-// {
-// 	for (User u : channel.users)
-// 	{
-// 		privmsg(u, message);
-// 	}
-// }
+int User::privmsg(const Channel &channel, string &message) const
+{
+	// if channel.getMode... +m or +b mode
+	//	return ERR_CANNOTSENDTOCHAN;
+	for (const auto &pair : channel.getUserList())
+	{
+		int ret = privmsg(pair.second, message);
+		if (ret != 0)
+			return ret;
+	}
+	return 0;
+}
 
-// void User::join(const string &channel)
-// {
-// 	string prefix = getFullIdentifier();
-// 	(void) channel;
-// 	// server is going to send everyone in this channel "<prefix> JOIN #<channel>"
-// }
+int User::join(Channel &channel)
+{
+	return join(channel, ""); 
+	// if no password is given, try to login with an empty password.
+	// If channel is not password protected, it could have an empty password so this works
+}
+
+int User::join(Channel &channel, const string &password)
+{
+	if (password != channel.getPassword())
+		return ERR_BADCHANNELKEY;
+	if (channel.isInviteOnly())
+		return ERR_INVITEONLYCHAN;
+	channel.addUser(fd, *this);
+	return 0;
+}
 
 void	User::setAuth(bool status) {
 	this->isAuth = status;

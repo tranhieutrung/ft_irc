@@ -6,6 +6,8 @@
 #include <iostream>
 #include "Server.hpp"
 
+class Channel;
+
 using namespace std;
 
 class User
@@ -23,7 +25,10 @@ class User
 		User(const User &other);
 		User &operator=(const User &other);
 
-		void privmsg(const User &recipient, string &args);
+		int privmsg(const User &recipient, string &args) const;
+		int privmsg(const Channel &reci_chan, string &message) const;
+		int join(Channel &channel);
+		int join(Channel &channel, const string &password);
 
 		// getters
 		string getNickname() const { return nickname; }
