@@ -16,7 +16,7 @@ User::User() :
 	isAuth(false) {}
 
 User::User(int fd) :
-	nickname("User" + to_string(fd)),
+	nickname("User" + to_string(fd -3)),
 	username(""),
 	hostname(""),
 	servername(""),
