@@ -28,6 +28,15 @@ bool	Server::_nickIsUsed(string nick) {
 	return (false);
 }
 
+bool	Server::_userIsUsed(string username) {
+	for (auto &[fd, user] : this->users) {
+		if (user.getUsername() == username) {
+			return (true);
+		}
+	}
+	return (false);
+}
+
 string	Server::_processNICK(cmd cmd, User &user) {
 	string		res;
 	log_level	type;
@@ -57,9 +66,34 @@ string	Server::_processNICK(cmd cmd, User &user) {
 	return (res);
 }
 
-// string	Server::_processUSER(cmd cmd, User &user) {
+string	Server::_processUSER(cmd cmd, User &user) {
+	string		res;
+	log_level	type;
 
-// }
+	if (!user.getAuth()) {
+		res = "Please login to set your nickname";
+		type = ERROR;
+	} else if (cmd.arguments.empty()) {
+		res = "Empty username";
+		type = ERROR;
+	} else if (user.getUsername() == cmd.arguments) {
+		res = "You are already using this username";
+		type = ERROR;
+	} else if (_userIsUsed(cmd.arguments)) {
+		res = "The username is already in use";
+		type = ERROR;
+	} else {
+		if (user.setUsername(cmd.arguments)) {
+			res = "Invalid username";
+			type = ERROR;			
+		} else {
+			res = "Your username has been set up";
+			type = INFO;
+		}
+	}
+	log(type, cmd.command, res);
+	return (res);
+}
 
 // string	Server::_processJOIN(cmd cmd, User &user) {
 

@@ -40,24 +40,24 @@ void Server::execute_command(cmd cmd, User &user)
 		res = _processPASS(cmd, user);
 	else if (cmd.command == "NICK")
 		res = _processNICK(cmd, user);
-	// else if (cmd.command == "USER")
-	// 	_processUSER(cmd, user);
+	else if (cmd.command == "USER")
+		res = _processUSER(cmd, user);
 	// else if (cmd.command == "OPER")
-	// 	_processOPER(cmd, user);
+	// 	res = _processOPER(cmd, user);
 	// else if (cmd.command == "MODE")
-	// 	_processMODE(cmd, user);
+	// 	res = _processMODE(cmd, user);
 	// else if (cmd.command == "INVITE")
-	// 	_processINVITE(cmd, user);
+	// 	res = _processINVITE(cmd, user);
 	// else if (cmd.command == "PRIVMSG")
-	// 	_processPRIVMSG(cmd, user);
+	// 	res = _processPRIVMSG(cmd, user);
 	// else if (cmd.command == "JOIN")
-	// 	_processJOIN(cmd, user);
+	// 	res = _processJOIN(cmd, user);
 	// else if (cmd.command == "TOPIC")
-	// 	_processTOPIC(cmd, user);
+	// 	res = _processTOPIC(cmd, user);
 	// else if (cmd.command == "KICK")
-	// 	_processKICK(cmd, user);
+	// 	res = _processKICK(cmd, user);
 	// else if (cmd.command == "QUIT")
-	// 	_processQUIT(cmd, user);
+	// 	res = _processQUIT(cmd, user);
 	else {
 		log(WARN, "Command", "Unknown command received: " + cmd.command);
 		res = "Unknown command received";
@@ -159,7 +159,7 @@ void Server::handleClientMessages(int i)
 			process_message(fds[i].fd, buffer);
 		} else {
 			if (bytesReceived == 0) {
-				log(INFO, "Connection", "Client disconnected: " + users[fds[i].fd].getNickname());
+				log(INFO, "Connection", "Client disconnected: " + users[fds[i].fd].getNickname()); //if client has set their Nick/Username, it will null
 			} else {
 				cerr << "recv() failed: " << strerror(errno) << endl;
 			}

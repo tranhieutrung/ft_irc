@@ -62,6 +62,7 @@ class Server
 
 		// helper functions:
 		bool	_nickIsUsed(string nick);
+		bool	_userIsUsed(string username);
 		// Commands
 		string	_processPASS(cmd cmd, User &user);
 		string	_processNICK(cmd cmd, User &user);
