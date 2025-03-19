@@ -8,49 +8,46 @@
 
 class Channel;
 
-using namespace std;
-
 class User
 {
 	private:
-		string nickname, username, hostname, servername, realname;
-		int fd;
+		std::string nickname, username, hostname, servername, realname;
+		const int fd;
 		bool isOperator;
 		bool isAuth;
-
+		std::vector<Channel> channels;
 	public:
 		// constructors
 		User();
-		User(int fd);
+		User(const int fd);
 		User(const User &other);
 		User &operator=(const User &other);
 
-		int privmsg(const User &recipient, string &args) const;
-		int privmsg(const Channel &reci_chan, string &message) const;
+		int privmsg(const User &recipient, const std::string &message) const;
+		int privmsg(const Channel &reci_chan, const std::string &message) const;
 		int join(Channel &channel);
 		int join(Channel &channel, const string &password);
 
 		// getters
-		string getNickname() const { return nickname; }
-		string getUsername() const { return username; }
-		string getHostname() const { return hostname; }
-		string getServername() const { return servername; }
-		string getRealname() const { return realname; }
+		std::string getNickname() const { return nickname; }
+		std::string getUsername() const { return username; }
+		std::string getHostname() const { return hostname; }
+		std::string getServername() const { return servername; }
+		std::string getRealname() const { return realname; }
 		int getFd() const { return fd; }
 		bool getIsOperator() const { return isOperator; }
-		string getFullIdentifier() const;
-		bool	getAuth();
+		std::string getFullIdentifier() const;
+		bool getAuth() const;
 
 		// setters
-		int setInfo(string &args);
-		int setNickname(string &nickname);
-		int setUsername(string &username);
-		int setHostname(string &hostname);
-		int setServername(string &servername);
-		int setRealname(string &realname);
-		void setIsOperator(bool isOperator) { this->isOperator = isOperator; }
-
-		void	setAuth(bool status);
+		int setInfo(const std::string &args);
+		int setNickname(const std::string &nickname);
+		int setUsername(const std::string &username);
+		int setHostname(const std::string &hostname);
+		int setServername(const std::string &servername);
+		int setRealname(const std::string &realname);
+		void setIsOperator(const bool isOperator) { this->isOperator = isOperator; }
+		void setIsAuth(const bool status);
 		
 		friend ostream &operator<<(ostream &os, const User &user);
 };

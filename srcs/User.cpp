@@ -6,8 +6,6 @@
 #include <sstream>
 #include <regex>
 
-using namespace std;
-
 User::User() :
 	nickname("Unknown"),
 	username(""),
@@ -18,7 +16,7 @@ User::User() :
 	isOperator(false),
 	isAuth(false) {}
 
-User::User(int fd) :
+User::User(const int fd) :
 	nickname("User" + to_string(fd -3)),
 	username(""),
 	hostname(""),
@@ -53,7 +51,7 @@ User& User::operator=(const User &other)
 	return *this;
 }
 
-int	User::setNickname(string &nickname)
+int	User::setNickname(const std::string &nickname)
 {
 	regex nick_regex(R"(^[A-Za-z\[\]\\`_^{}|][-A-Za-z0-9\[\]\\`_^{}|]{0,8}$)");
 	if (regex_match(nickname, nick_regex) == false)
@@ -62,7 +60,7 @@ int	User::setNickname(string &nickname)
 	return 0;
 }
 
-int User::setUsername(string &username)
+int User::setUsername(const std::string &username)
 {
 	regex user_regex(R"(^[^\s@]{1,10}$)");
 	if (regex_match(username, user_regex) == false)
@@ -71,7 +69,7 @@ int User::setUsername(string &username)
 	return 0;
 }
 
-int User::setHostname(string &hostname)
+int User::setHostname(const std::string &hostname)
 {
 	regex host_regex(R"(^(?=.{1,255}$)([a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(\.[a-zA-Z0-9]{1,})*)$)");
 	if (regex_match(hostname, host_regex) == false)
@@ -80,7 +78,7 @@ int User::setHostname(string &hostname)
 	return 0;
 }
 
-int User::setServername(string &servername)
+int User::setServername(const std::string &servername)
 {
 	regex server_regex(R"(^(?=.{1,255}$)([a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(\.[a-zA-Z0-9]{1,})*)$)");
 	if (regex_match(servername, server_regex) == false)
@@ -89,7 +87,7 @@ int User::setServername(string &servername)
 	return 0;
 }
 
-int User::setRealname(string &realname)
+int User::setRealname(const std::string &realname)
 {
 	regex real_regex(R"(^[\x20-\x7E]{1,50}$)");
 	if (regex_match(realname, real_regex) == false)
@@ -98,9 +96,9 @@ int User::setRealname(string &realname)
 	return 0;
 }
 
-int User::setInfo(string &args)
+int User::setInfo(const std::string &args)
 {
-	string user, host, server, real;
+	std::string user, host, server, real;
 	istringstream stream(args);
 	stream >> user;
 	stream >> host;
@@ -133,7 +131,7 @@ string User::getFullIdentifier() const
 	return ":" + nickname + "!" + username + "@" + hostname;
 }
 
-int User::privmsg(const User &recipient, string &message) const
+int User::privmsg(const User &recipient, const std::string &message) const
 {
 	if (message.empty())
 		return ERR_NOTEXTTOSEND;
@@ -141,7 +139,7 @@ int User::privmsg(const User &recipient, string &message) const
 	return 0;
 }
 
-int User::privmsg(const Channel &channel, string &message) const
+int User::privmsg(const Channel &channel, const std::string &message) const
 {
 	// if channel.getMode... +m or +b mode
 	//	return ERR_CANNOTSENDTOCHAN;
@@ -168,13 +166,32 @@ int User::join(Channel &channel, const string &password)
 	if (channel.isInviteOnly())
 		return ERR_INVITEONLYCHAN;
 	channel.addUser(username, *this);
+	joinedChannels.push_back(channel);
 	return 0;
 }
 
-void	User::setAuth(bool status) {
-	this->isAuth = status;
+void User::setIsAuth(const bool status)
+{
+	isAuth = status;
 }
 
-bool User::getAuth() {
-	return (this->isAuth);
+bool User::getIsAuth() const
+{
+	return isAuth;
+}
+
+int User::part(Channel &channel, const std::string &message) // leaves a channel with a goodbye message
+{
+	IO::sendCommandAll(channel.getUserList(), {getFullIdentifier(),
+		"PART", "#" + channel.getChannelName() + " :" + message});
+	joinedChannels.erase(channel);
+}
+
+int User::quit(const std::string &message) // leaves all joined channels
+{
+	std::vecto<Channel> channelsCopy = joinedChannels;
+	for (const auto &c : channelsCopy)
+	{
+		part(c, message);
+	}
 }
