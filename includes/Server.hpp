@@ -19,8 +19,9 @@
 #include <map>
 #include <iomanip>
 #include <ctime>
-#include "../includes/User.hpp"
+#include "User.hpp"
 #include <csignal>
+#include "Channel.hpp"
 
 using namespace std;
 
