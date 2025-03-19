@@ -31,7 +31,8 @@ enum log_level { INFO, WARN, ERROR };
 class Server
 {
 	private:
-		map<int,User> users;
+		map<int, User> users;
+		map<string, Channel> channels;
 		vector<pollfd> fds;
 		// const int port; trung
 		// const int max_clients; trung
