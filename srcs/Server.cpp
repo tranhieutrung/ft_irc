@@ -1,20 +1,4 @@
-// #include <iostream>
-// #include <cstring>
-// #include <vector>
-// #include <netinet/in.h>
-// #include <arpa/inet.h>
-// #include <sys/socket.h>
-// #include <unistd.h>
-// #include <poll.h>
-// #include <sstream>
-// #include <map>
-// #include <iomanip>
-// #include <ctime>
-// #include "../includes/User.hpp"
 #include "../includes/Server.hpp"
-// #include <csignal>
-
-// using namespace std;
 
 volatile sig_atomic_t Server::running = 1;
 
@@ -54,14 +38,16 @@ void Server::execute_command(cmd cmd, User &user)
 
 	if (cmd.command == "PASS")
 		res = _processPASS(cmd, user);
-	// else if (cmd.command == "NICK")
-	// 	_processNICK(cmd, user);
+	else if (cmd.command == "NICK")
+		res = _processNICK(cmd, user);
 	// else if (cmd.command == "USER")
 	// 	_processUSER(cmd, user);
 	// else if (cmd.command == "OPER")
 	// 	_processOPER(cmd, user);
 	// else if (cmd.command == "MODE")
 	// 	_processMODE(cmd, user);
+	// else if (cmd.command == "INVITE")
+	// 	_processINVITE(cmd, user);
 	// else if (cmd.command == "PRIVMSG")
 	// 	_processPRIVMSG(cmd, user);
 	// else if (cmd.command == "JOIN")

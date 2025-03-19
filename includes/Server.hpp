@@ -60,16 +60,22 @@ class Server
 		void process_privmsg(cmd cmd, const User &user);
 		string client_info(struct sockaddr_in &client_addr);
 
+		// helper functions:
+		bool	_nickIsUsed(string nick);
+		// Commands
 		string	_processPASS(cmd cmd, User &user);
 		string	_processNICK(cmd cmd, User &user);
 		string	_processUSER(cmd cmd, User &user);
 		string	_processOPER(cmd cmd, User &user);
-		string	_processMODE(cmd cmd, User &user);
 		string	_processPRIVMSG(cmd cmd, User &user);
 		string	_processJOIN(cmd cmd, User &user);
-		string	_processTOPIC(cmd cmd, User &user);
-		string	_processKICK(cmd cmd, User &user);
 		string	_processQUIT(cmd cmd, User &user);
+
+		//channel commands
+		string	_processKICK(cmd cmd, User &user);
+		string	_processINVITE(cmd cmd, User &user);
+		string	_processTOPIC(cmd cmd, User &user);
+		string	_processMODE(cmd cmd, User &user);
 
 	public:
 		// Server(const int port); Trung
