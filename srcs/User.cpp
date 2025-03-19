@@ -155,3 +155,7 @@ void User::privmsg(const User &recipient, string &message)
 void	User::setAuth(bool status) {
 	this->isAuth = status;
 }
+
+bool User::getAuth() {
+	return (this->isAuth);
+}

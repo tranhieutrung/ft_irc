@@ -34,6 +34,7 @@ class User
 		int getFd() const { return fd; }
 		bool getIsOperator() const { return isOperator; }
 		string getFullIdentifier() const;
+		bool	getAuth();
 
 		// setters
 		int setInfo(string &args);
