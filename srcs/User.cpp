@@ -167,7 +167,7 @@ int User::join(Channel &channel, const string &password)
 		return ERR_BADCHANNELKEY;
 	if (channel.isInviteOnly())
 		return ERR_INVITEONLYCHAN;
-	channel.addUser(fd, *this);
+	channel.addUser(username, *this);
 	return 0;
 }
 
