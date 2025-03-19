@@ -5,6 +5,7 @@
 #include "../includes/IO.hpp"
 #include <sstream>
 #include <regex>
+#include <vector>
 
 User::User() :
 	nickname("Unknown"),
@@ -165,33 +166,45 @@ int User::join(Channel &channel, const string &password)
 		return ERR_BADCHANNELKEY;
 	if (channel.isInviteOnly())
 		return ERR_INVITEONLYCHAN;
+	if (channel.getUserLimit() >= channel.getUserList().size())
+		return ERR_CHANNELISFULL;
 	channel.addUser(username, *this);
-	joinedChannels.push_back(channel);
+	joinedChannels[channel.getChannelName()] = channel;
 	return 0;
 }
 
-void User::setIsAuth(const bool status)
+void User::setAuth(const bool status)
 {
 	isAuth = status;
 }
 
-bool User::getIsAuth() const
+bool User::getAuth() const
 {
 	return isAuth;
 }
 
 int User::part(Channel &channel, const std::string &message) // leaves a channel with a goodbye message
 {
-	IO::sendCommandAll(channel.getUserList(), {getFullIdentifier(),
-		"PART", "#" + channel.getChannelName() + " :" + message});
-	joinedChannels.erase(channel);
+	for (const auto &pair : channel.getUserList())
+	{
+		User u = pair.second;
+		if (IO::sendCommand(u.fd, {getFullIdentifier(),
+			"PART", "#" + channel.getChannelName() + " :" + message}) < 0)
+			return -1;
+	}
+	joinedChannels.erase(channel.getChannelName());
+	channel.removeUser(nickname);
+	return 0;
 }
 
 int User::quit(const std::string &message) // leaves all joined channels
 {
-	std::vecto<Channel> channelsCopy = joinedChannels;
-	for (const auto &c : channelsCopy)
+	std::map<string, Channel> channelsCopy = joinedChannels;
+	for (const auto &pair : channelsCopy) // iterate the copy so that the original can be modified at the same time
 	{
-		part(c, message);
+		Channel c = pair.second;
+		if (part(c, message) < 0)
+			return -1; // send error
 	}
+	return 0;
 }

@@ -12,10 +12,10 @@ class User
 {
 	private:
 		std::string nickname, username, hostname, servername, realname;
-		const int fd;
+		int fd;
 		bool isOperator;
 		bool isAuth;
-		std::vector<Channel> channels;
+		std::map<std::string, Channel> joinedChannels;
 	public:
 		// constructors
 		User();
@@ -26,7 +26,9 @@ class User
 		int privmsg(const User &recipient, const std::string &message) const;
 		int privmsg(const Channel &reci_chan, const std::string &message) const;
 		int join(Channel &channel);
-		int join(Channel &channel, const string &password);
+		int join(Channel &channel, const std::string &password);
+		int part(Channel &channel, const std::string &message);
+		int quit(const std::string &message);
 
 		// getters
 		std::string getNickname() const { return nickname; }
@@ -47,7 +49,7 @@ class User
 		int setServername(const std::string &servername);
 		int setRealname(const std::string &realname);
 		void setIsOperator(const bool isOperator) { this->isOperator = isOperator; }
-		void setIsAuth(const bool status);
+		void setAuth(const bool status);
 		
 		friend ostream &operator<<(ostream &os, const User &user);
 };

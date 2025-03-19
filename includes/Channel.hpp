@@ -28,7 +28,7 @@ class Channel
             unsigned int        userLimit;
 
     public:
-
+        Channel() : ChannelName(""), ChannelTopic(""), password(""), inviteOnly(false), topic_restriction(false), userLimit(999) {}
         Channel(const std::string& name) : ChannelName(name), inviteOnly(false), topic_restriction(false) {}
 
         // Getters
