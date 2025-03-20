@@ -1,11 +1,33 @@
 #include "Server.hpp"
 
+int countWords(const 	string &s) {
+	size_t pos = s.find(":");
+		string beforeColon = (pos != 	string::npos) ? s.substr(0, pos) : s;
+	
+		stringstream ss(beforeColon);
+		string word;
+	int count = 0;
+
+	while (ss >> word) {
+		count++;
+	}
+
+	if (pos != 	string::npos) {
+		count++;
+	}
+
+	return count;
+}
+
 string	Server::_processPASS(cmd cmd, User &user) {
 	string		res;
 	log_level	type;
 
-	if (cmd.arguments.empty()) { //will change to array of string so need to change condition to check empty password/ invlaid args
+	if (cmd.arguments.empty()) {
 		res = "Empty password";
+		type = ERROR;
+	} else if (countWords(cmd.arguments) != 1) {
+		res = "Invalid number of arguments";
 		type = ERROR;
 	} else if (cmd.arguments != this->_password) {
 		res = "Incorrect password";
@@ -47,6 +69,9 @@ string	Server::_processNICK(cmd cmd, User &user) {
 	} else if (cmd.arguments.empty()) {
 		res = "Empty nickname";
 		type = ERROR;
+	} else if (countWords(cmd.arguments) != 1) {
+		res = "Invalid number of arguments";
+		type = ERROR;
 	} else if (user.getNickname() == cmd.arguments) {
 		res = "You are already using this nickname";
 		type = ERROR;
@@ -67,24 +92,31 @@ string	Server::_processNICK(cmd cmd, User &user) {
 }
 
 string	Server::_processUSER(cmd cmd, User &user) {
-	string		res;
-	log_level	type;
+	string			res;
+	log_level		type;
+	stringstream	args(cmd.arguments);
+	string			username;
 
 	if (!user.getAuth()) {
 		res = "Please login to set your nickname";
 		type = ERROR;
 	} else if (cmd.arguments.empty()) {
-		res = "Empty username";
+		res = "Empty arguments";
 		type = ERROR;
-	} else if (user.getUsername() == cmd.arguments) {
+	} else if (countWords(cmd.arguments) != 4) {
+		res = "Invalid number of arguments";
+		type = ERROR;
+	}
+	args >> username;
+	if (user.getUsername() == username) {
 		res = "You are already using this username";
 		type = ERROR;
-	} else if (_userIsUsed(cmd.arguments)) {
+	} else if (_userIsUsed(username)) {
 		res = "The username is already in use";
 		type = ERROR;
 	} else {
-		if (user.setUsername(cmd.arguments)) {
-			res = "Invalid username";
+		if (user.setInfo(cmd.arguments)) {
+			res = "Invalid argument formats";
 			type = ERROR;			
 		} else {
 			res = "Your username has been set up";
