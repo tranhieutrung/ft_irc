@@ -6,7 +6,7 @@
 /*   By: ttero <ttero@student.hive.fi>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/17 11:47:53 by ttero             #+#    #+#             */
-/*   Updated: 2025/03/19 18:49:52 by ttero            ###   ########.fr       */
+/*   Updated: 2025/03/20 16:26:49 by ttero            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -33,4 +33,20 @@ void Channel::addUser(const string& username, const User& user)
 void Channel::removeUser(string user) 
 { 
 	UserList.erase(user);
+}
+
+
+void Channel::addOperator(const User& user) {
+    if (!isOperator(user)) {
+        operators.push_back(user);
+    }
+}
+void Channel::removeOperator(const User& user){
+    auto it = std::find(operators.begin(), operators.end(), user);
+    if (it != operators.end()) {
+        operators.erase(it);
+    }
+}
+bool Channel::isOperator(const User& user) const {
+    return std::find(operators.begin(), operators.end(), user) != operators.end();
 }

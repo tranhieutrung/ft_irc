@@ -1,6 +1,8 @@
 
 #include "Server.hpp"
 
+
+
 std::map<string, Channel>::iterator Server:: findChannel (string channel)
 {
 	return (channels.find(channel));
@@ -12,15 +14,20 @@ string	Server::_processTOPIC(cmd cmd, User &user)
 {	
 	string		res;
 	log_level	type;
+	string channel;
+	string topic;
+	istringstream stream(cmd.arguments);
 
-	if (!cmd.arguments || cmd.arguments->size() < 2)
+	stream >> channel >> topic;
+
+	if (channel.empty())
 	{
 		res = "Invalid number of arguments";
 		type = ERROR;
 		log(type, cmd.command, res);
 		return (res);
 	}
-	std::map<string, Channel>::iterator it = findChannel(cmd.arguments[0]);
+	std::map<string, Channel>::iterator it = findChannel(channel);
 	if (it != channels.end())
 	{
 		res = "Channel not found";
@@ -28,7 +35,7 @@ string	Server::_processTOPIC(cmd cmd, User &user)
 		log(type, cmd.command, res);
 		return (res);
 	}
-	if (cmd.arguments->size() == 2)
+	if (!topic.empty())
 	{
 		return(it->second.getChannelTopic());
 	}
@@ -41,7 +48,7 @@ string	Server::_processTOPIC(cmd cmd, User &user)
 	}
 	else 
 	{
-		it->second.setChannelTopic(cmd.arguments[1]);
+		it->second.setChannelTopic(topic);
 	}
 	res = "Changed topic for channel";
 	type = INFO;
@@ -54,10 +61,15 @@ string	Server::_processTOPIC(cmd cmd, User &user)
 
 string	Server::_processKICK(cmd cmd, User &user) 
 {
+	string channel;
+	string target;
 	string		res;
 	log_level	type;
+	istringstream stream(cmd.arguments);
 
-	if (!cmd.arguments || cmd.arguments->size() < 2)
+	stream >> channel >> target;
+
+	if (channel.empty() || target.empty())
 	{
 		res = "Invalid number of arguments";
 		type = ERROR;
@@ -71,7 +83,7 @@ string	Server::_processKICK(cmd cmd, User &user)
 		log(type, cmd.command, res);
 		return (res);
 	}
-	std::map<string, Channel>::iterator it = findChannel(cmd.arguments[0]);
+	std::map<string, Channel>::iterator it = findChannel(channel);
 	if (it != channels.end())
 	{
 		res = "Channel not found";
@@ -79,7 +91,7 @@ string	Server::_processKICK(cmd cmd, User &user)
 		log(type, cmd.command, res);
 		return (res);
 	}
-	std::optional<std::map<string, User>::iterator> it2 = it->second.findUser(cmd.arguments[1]);
+	std::optional<std::map<string, User>::iterator> it2 = it->second.findUser(target);
 	if (!it2)
 	{
 		res = "User not found in channel";
@@ -96,10 +108,16 @@ string	Server::_processKICK(cmd cmd, User &user)
 
 string	Server::_processMODE(cmd cmd, User &user) 
 {
+	string mode;
+	string channel;
+	string extra;
 	string		res;
 	log_level	type;
 
-	if (!cmd.arguments || cmd.arguments->size() < 2)
+	istringstream stream(cmd.arguments);
+
+	stream >> channel >> mode >> extra;
+	if (channel.empty() || mode.empty())
     {
         res = "Invalid number of arguments";
         type = ERROR;
@@ -113,7 +131,7 @@ string	Server::_processMODE(cmd cmd, User &user)
 		log(type, cmd.command, res);
 		return (res);
 	}
-	std::map<string, Channel>::iterator it = findChannel(cmd.arguments[0]);
+	std::map<string, Channel>::iterator it = findChannel(channel);
 	if (it != channels.end())
 	{
 		res = "Channel not found";
@@ -121,7 +139,7 @@ string	Server::_processMODE(cmd cmd, User &user)
 		log(type, cmd.command, res);
 		return (res);
 	}
-	if (cmd.arguments[1] == "-i")
+	if (mode == "-i")
 	{
 		if (!it->second.isInviteOnly())
 			it->second.setInviteOnly(true);
@@ -132,7 +150,7 @@ string	Server::_processMODE(cmd cmd, User &user)
         log(type, cmd.command, res);
         return (res);
 	}
-	if (cmd.arguments[1] == "-t")
+	if (mode == "-t")
 	{
 		if (!it->second.isTopicRestricted())
 			it->second.setTopicRestriction(true);
@@ -143,41 +161,44 @@ string	Server::_processMODE(cmd cmd, User &user)
         log(type, cmd.command, res);
         return (res);
 	}
-	if (cmd.arguments[1] == "-k")
+	if (mode == "-k")
 	{
-		if (cmd.arguments->size() == 3)
+		if (extra.empty())
 		{
             it->second.setPassword(nullptr);
 		}
-        if (cmd.arguments->size() == 3)
+        else 
 		{
-            it->second.setPassword(cmd.arguments[2]);
+            it->second.setPassword(extra);
 		}
         res = "Switched password";
         type = INFO;
         log(type, cmd.command, res);
         return (res);
 	}
-	if (cmd.arguments[1] == "-o")
+	if (mode == "-o")
 	{
-		if (it->second.findUser(cmd.arguments[2]))
+		
+		if (it->second.findUser(extra))
 		{
-            it->second.addOperator(cmd.arguments[2]);
+            const User *opp =  getUser(extra);
+			it->second.addOperator(*opp);
 		}
+
         res = "Added operator";
         type = INFO;
         log(type, cmd.command, res);
         return (res);
 	}
-	if (cmd.arguments[1] == "-l")
+	if (mode == "-l")
 	{
-		if (cmd.arguments->size() == 2)
+		if (extra.empty())
 		{
 			it->second.setUserLimit(999);
 		}
-		if (cmd.arguments->size() == 3)
+		else
 		{
-			it->second.setUserLimit(stoi(cmd.arguments[2]));
+			it->second.setUserLimit(stoi(extra));
 		}
         res = "Set Userlimit";
         type = INFO;
@@ -193,3 +214,52 @@ string	Server::_processMODE(cmd cmd, User &user)
 	}
 }
 	
+
+string	Server::_processINVITE(cmd cmd, User &user)
+{
+	string target;
+	string channel;
+	string		res;
+	log_level	type;
+	istringstream stream(cmd.arguments);
+
+	stream >> channel >> target;
+	
+	if (channel.empty() || target.empty())
+    {
+        res = "Invalid number of arguments";
+        type = ERROR;
+        log(type, cmd.command, res);
+        return (res);
+    }
+	if (!user.getIsOperator())
+	{
+		res = "No permission for this command";
+		type = ERROR;
+		log(type, cmd.command, res);
+		return (res);
+	}
+	std::map<string, Channel>::iterator it = findChannel(target);
+	if (it != channels.end())
+	{
+		res = "Channel not found";
+		type = ERROR;
+		log(type, cmd.command, res);
+		return (res);
+	}
+	const User *invited = getUser(target);
+	if (!invited)
+	{
+		res = "User not found";
+		type = ERROR;
+		log(type, cmd.command, res);
+		return (res);
+	}
+	//sendInvite();
+	it->second.addUser(invited->getNickname(), *invited);
+	res = "Invite send to user";
+	type = INFO;
+	log(type, cmd.command, res);
+	return (res);
+
+}

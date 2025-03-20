@@ -87,6 +87,7 @@ class Server
 		void			log(log_level level, const string &event, const string &details);
 
 		void			print_status();
+		std::map<string, Channel>::iterator findChannel (string channel);
 };
 
 #endif
