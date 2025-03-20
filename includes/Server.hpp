@@ -22,6 +22,8 @@
 #include "User.hpp"
 #include <csignal>
 #include "Channel.hpp"
+#include "ErrorCodes.hpp"
+#include "ReplyCodes.hpp"
 
 using namespace std;
 
@@ -59,20 +61,24 @@ class Server
 		bool	_nickIsUsed(string nick);
 		bool	_userIsUsed(string username);
 		// Commands
-		string	_processPASS(cmd cmd, User &user);
-		string	_processNICK(cmd cmd, User &user);
-		string	_processUSER(cmd cmd, User &user);
-		string	_processOPER(cmd cmd, User &user);
-		string	_processPRIVMSG(cmd cmd, User &user);
-		string	_processJOIN(cmd cmd, User &user);
-		string	_processQUIT(cmd cmd, User &user);
+		int	PASS(cmd cmd, User &user);
+		int	NICK(cmd cmd, User &user);
+		int	USER(cmd cmd, User &user);
+		int	JOIN(cmd cmd, User &user);
+		int	PING(cmd cmd, User &user);
+		int	PONG(cmd cmd, User &user);
+		int	OPER(cmd cmd, User &user);
+		int	PRIVMSG(cmd cmd, User &user);
+		int	QUIT(cmd cmd, User &user);
+		int	PART(cmd cmd, User &user);
 
 		//channel commands
-		string	_processKICK(cmd cmd, User &user);
-		string	_processINVITE(cmd cmd, User &user);
-		string	_processTOPIC(cmd cmd, User &user);
-		string	_processMODE(cmd cmd, User &user);
+		int	KICK(cmd cmd, User &user);
+		int	INVITE(cmd cmd, User &user);
+		int	TOPIC(cmd cmd, User &user);
+		int	MODE(cmd cmd, User &user);
 
+		void	sendMessageToClient(int code, string cmd, User &user);
 	public:
 		// Server(const int port); Trung
 		Server(std::string port, std::string password);

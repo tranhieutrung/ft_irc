@@ -1,6 +1,8 @@
 #ifndef IRC_ERROR_CODES_HPP
 #define IRC_ERROR_CODES_HPP
 
+
+
 // --- Nickname and User Errors ---
 #define ERR_NONICKNAMEGIVEN 431  
 // "<client> :No nickname given"

@@ -3,97 +3,69 @@
 volatile sig_atomic_t Server::running = 1;
 
 // Private members:
-
-void Server::process_privmsg(cmd cmd, const User &user)
-{
-	string target;
+void	Server::sendMessageToClient(int code, string command, User &user) {
 	string message;
-	istringstream stream(cmd.arguments);
-	stream >> target;
-	getline(stream, message);
 
-	(void) user;
+	switch (code)
+	{
+	case RPL_WELCOME:
+		message = ":localhost 001 " + user.getNickname() + " :Welcome to the Internet Relay Network " + user.getNickname() + "!" + user.getUsername() + "@localhost"+ "\r\n";
+		break;
 
-	// if (target[0] == '#')
-	// {
-	// 	const Channel *recipient = getChannel(target);
-	// 	if (recipient != nullptr)
-	// 		user.privmsg(*recipient, message);
-	// 	else
-	// 		cout << target << " not found" << endl;
-	// }
-	// else
-	// {
-	// 	const User *recipient = getUser(target);
-	// 	if (recipient != nullptr)
-	// 		user.privmsg(*recipient, message);
-	// 	else
-	// 		cout << target << " not found" << endl;
-	// }
+	case ERR_NEEDMOREPARAMS:
+		message = ":localhost " + to_string(code) + " " + user.getNickname() + " " + command + " :Not enough parameters" + "\r\n";
+		break;
+	
+	case ERR_PASSWDMISMATCH:
+		message = ":localhost " + to_string(code) + " " + user.getNickname() + " :Password incorrect" + "\r\n";
+		break;
+
+	case ERR_ALREADYREGISTRED:
+		message = ":localhost " + to_string(code) + " " + user.getNickname() + " :Unauthorized command (already registered)" + "\r\n";
+		break;
+
+	default:
+		break;
+	}
+	cout << "here" + to_string(code) <<endl;
+
+	if (send(user.getFd(), message.c_str(), message.length(), 0) == -1)
+		cerr << "send() error: " << strerror(errno) << endl;
 }
+
 
 void Server::execute_command(cmd cmd, User &user)
 {
-	string res;
+	int code;
 
 	if (cmd.command == "PASS")
-		res = _processPASS(cmd, user);
-	else if (cmd.command == "NICK")
-		res = _processNICK(cmd, user);
-	else if (cmd.command == "USER")
-		res = _processUSER(cmd, user);
+		code = PASS(cmd, user);
+	// else if (cmd.command == "NICK")
+	// 	code = NICK(cmd, user);
+	// else if (cmd.command == "USER")
+	// 	code = USER(cmd, user);
 	// else if (cmd.command == "OPER")
-	// 	res = _processOPER(cmd, user);
+	// 	code = OPER(cmd, user);
 	// else if (cmd.command == "MODE")
-	// 	res = _processMODE(cmd, user);
+	// 	code = MODE(cmd, user);
 	// else if (cmd.command == "INVITE")
-	// 	res = _processINVITE(cmd, user);
+	// 	code = INVITE(cmd, user);
 	// else if (cmd.command == "PRIVMSG")
-	// 	res = _processPRIVMSG(cmd, user);
+	// 	code = PRIVMSG(cmd, user);
 	// else if (cmd.command == "JOIN")
-	// 	res = _processJOIN(cmd, user);
+	// 	code = JOIN(cmd, user);
 	// else if (cmd.command == "TOPIC")
-	// 	res = _processTOPIC(cmd, user);
+	// 	code = TOPIC(cmd, user);
 	// else if (cmd.command == "KICK")
-	// 	res = _processKICK(cmd, user);
+	// 	code = KICK(cmd, user);
 	// else if (cmd.command == "QUIT")
-	// 	res = _processQUIT(cmd, user);
+	// 	code = QUIT(cmd, user);
+	// else if (cmd.command == "PART")
+	// 	code = PART(cmd, user);
 	else {
-		log(WARN, "Command", "Unknown command received: " + cmd.command);
-		res = "Unknown command received";
+		code = ERR_UNKNOWNCOMMAND;
 	}
-	if (send(user.getFd(), (res + '\n').c_str(), res.length() + 1, 0) == -1)
-		cerr << "send() error: " << strerror(errno) << endl;
-
-
-	// int code = 2; // 2 = unknown cmd, 1 = error, 0 = success
-	// if(cmd.command == "NICK")
-	// {
-	// 	if (getUser(cmd.arguments) == nullptr)
-	// 		code = user.setNickname(cmd.arguments);
-	// 	else
-	// 		code = 1;
-	// }
-	// if(cmd.command == "USER")
-	// 	code = user.setInfo(cmd.arguments);
-	// // if(cmd.command == "CAP" && cmd.arguments == "LS")
-	// // 	send_cap_ls();
-	// // if(cmd.command == "PRIVMSG")
-	// // 	process_privmsg(cmd, user);
-	// // if(cmd.command == "JOIN")
-	// // 	user.join(cmd.arguments);
-	// switch (code)
-	// {
-	// 	case 2:
-	// 		log(WARN, "Command", "Unknown command received: " + cmd.command);
-	// 		break;
-	// 	case 1:
-	// 		log(ERROR, "Command", "Could not execute command: " + cmd.command);
-	// 		break;
-	// 	case 0:
-	// 		log(INFO, "Command", "User \"" + user.getNickname() + "\" executed command " + cmd.command);
-	// 		break;
-	// }
+	sendMessageToClient(code, cmd.command, user);
 }
 
 static cmd parse_line(string &message)
@@ -130,10 +102,8 @@ void Server::handleNewClient()
 		pollfd new_pfd = {clientSocket, POLLIN, 0};
 		fds.push_back(new_pfd);
 		users[new_pfd.fd] = User(new_pfd.fd);
-		string welcomeMessage = "Welcome to connect!\nPlease login to start chatting.\n";
-
-		if (send(clientSocket, welcomeMessage.c_str(), welcomeMessage.length(), 0) == -1)
-			cerr << "Sending a welcome message failed: " << strerror(errno) << endl;
+		cout << "here" <<endl;
+		sendMessageToClient(RPL_WELCOME, "", users[new_pfd.fd]);
 		log(INFO, "Connection", "New client connected: " + client_info(client_addr));
 	}
 }
