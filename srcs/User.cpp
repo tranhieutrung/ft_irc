@@ -15,7 +15,10 @@ User::User() :
 	realname(""),
 	fd(-1),
 	isOperator(false),
-	isAuth(false) {}
+	isAuth(false),
+	nickIsSet(false),
+	userIsSet(false),
+	isRegistered(false) {}
 
 User::User(const int fd) :
 	nickname("User" + to_string(fd -3)),
@@ -25,7 +28,10 @@ User::User(const int fd) :
 	realname(""),
 	fd(fd),
 	isOperator(false),
-	isAuth(false) {}
+	isAuth(false),
+	nickIsSet(false),
+	userIsSet(false),
+	isRegistered(false) {}
 
 User::User(const User &other) :
 	nickname(other.nickname),
@@ -35,7 +41,10 @@ User::User(const User &other) :
 	realname(other.realname),
 	fd(other.fd),
 	isOperator(other.isOperator),
-	isAuth(other.isAuth) {}
+	isAuth(other.isAuth),
+	nickIsSet(other.nickIsSet),
+	userIsSet(other.userIsSet),
+	isRegistered(other.isRegistered) {}
 
 User& User::operator=(const User &other)
 {
@@ -49,6 +58,9 @@ User& User::operator=(const User &other)
 	fd = other.fd;
 	isOperator = other.isOperator;
 	isAuth = other.isAuth;
+	nickIsSet = other.nickIsSet;
+	userIsSet = other.userIsSet;
+	isRegistered = other.isRegistered;
 	return *this;
 }
 
@@ -58,6 +70,7 @@ int	User::setNickname(const std::string &nickname)
 	if (regex_match(nickname, nick_regex) == false)
 		return ERR_ERRONEUSNICKNAME;
 	this->nickname = nickname;
+	// this->nickIsSet = true;
 	return 0;
 }
 
@@ -94,6 +107,7 @@ int User::setRealname(const std::string &realname)
 	if (regex_match(realname, real_regex) == false)
 		return 1;
 	this->realname = realname;
+	// this->userIsSet = true;
 	return 0;
 }
 
@@ -173,14 +187,41 @@ int User::join(Channel &channel, const string &password)
 	return 0;
 }
 
-void User::setAuth(const bool status)
-{
+void User::setAuth(const bool status) {
 	isAuth = status;
 }
+
+void User::setNickIsSet(const bool status) {
+	nickIsSet = status;
+}
+
+void User::setUserIsSet(const bool status) {
+	userIsSet = status;
+}
+
+void User::setIsRegistered(const bool status) {
+	isRegistered = status;
+}
+
 
 bool User::getAuth() const
 {
 	return isAuth;
+}
+
+bool User::getNickIsSet() const
+{
+	return nickIsSet;
+}
+
+bool User::getUserIsSet() const
+{
+	return userIsSet;
+}
+
+bool User::getIsRegistered() const
+{
+	return isRegistered;
 }
 
 int User::part(Channel &channel, const std::string &message) // leaves a channel with a goodbye message
