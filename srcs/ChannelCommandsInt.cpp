@@ -32,7 +32,7 @@ int	Server::_processTOPIC(cmd cmd, User &user)
 	{
 		return(it->second.getChannelTopic());
 	}
-	if (it->second.isTopicRestricted() && !user.getIsOperator())
+	if (it->second.isTopicRestricted() && !it->second.isOperator(user))
 	{
 		return (ERR_CHANOPRIVSNEEDED);
 	}
@@ -62,14 +62,14 @@ int	Server::_processKICK(cmd cmd, User &user)
 	{
 		return (ERR_NEEDMOREPARAMS);
 	}
-	if (!user.getIsOperator())
-	{
-		return (ERR_CHANOPRIVSNEEDED);
-	}
 	std::map<string, Channel>::iterator it = findChannel(channel);
 	if (it != channels.end())
 	{
 		return (ERR_NOSUCHCHANNEL);
+	}
+	if (!it->second.isOperator(user))
+	{
+		return (ERR_CHANOPRIVSNEEDED);
 	}
 	std::optional<std::map<string, User>::iterator> it2 = it->second.findUser(target);
 	if (!it2)
@@ -98,14 +98,14 @@ int	Server::_processMODE(cmd cmd, User &user)
     {
         return (ERR_NEEDMOREPARAMS);
     }
-	if (!user.getIsOperator())
-	{
-		return (ERR_CHANOPRIVSNEEDED);
-	}
 	std::map<string, Channel>::iterator it = findChannel(channel);
 	if (it != channels.end())
 	{
 		return (ERR_NOSUCHCHANNEL);
+	}
+	if (!it->second.isOperator(user))
+	{
+		return (ERR_CHANOPRIVSNEEDED);
 	}
 	if (mode == "-i")
 	{
@@ -196,14 +196,14 @@ int	Server::_processINVITE(cmd cmd, User &user)
     {
         return (ERR_NEEDMOREPARAMS);
     }
-	if (!user.getIsOperator())
-	{
-		return (ERR_CHANOPRIVSNEEDED);
-	}
 	std::map<string, Channel>::iterator it = findChannel(target);
 	if (it != channels.end())
 	{
 		return (ERR_NOSUCHCHANNEL);
+	}
+	if (!it->second.isOperator(user))
+	{
+		return (ERR_CHANOPRIVSNEEDED);
 	}
 	const User *invited = getUser(target);
 	if (!invited)

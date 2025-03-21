@@ -39,7 +39,7 @@ string	Server::_processTOPIC(cmd cmd, User &user)
 	{
 		return(it->second.getChannelTopic());
 	}
-	if (it->second.isTopicRestricted() && !user.getIsOperator())
+	if (it->second.isTopicRestricted() && !it->second.isOperator(user))
 	{
 		res = "No permission for this command";
 		type = ERROR;
@@ -76,17 +76,17 @@ string	Server::_processKICK(cmd cmd, User &user)
 		log(type, cmd.command, res);
 		return (res);
 	}
-	if (!user.getIsOperator())
-	{
-		res = "No permission for this command";
-		type = ERROR;
-		log(type, cmd.command, res);
-		return (res);
-	}
 	std::map<string, Channel>::iterator it = findChannel(channel);
 	if (it != channels.end())
 	{
 		res = "Channel not found";
+		type = ERROR;
+		log(type, cmd.command, res);
+		return (res);
+	}
+	if (!it->second.isOperator(user))
+	{
+		res = "No permission for this command";
 		type = ERROR;
 		log(type, cmd.command, res);
 		return (res);
@@ -124,17 +124,17 @@ string	Server::_processMODE(cmd cmd, User &user)
         log(type, cmd.command, res);
         return (res);
     }
-	if (!user.getIsOperator())
-	{
-		res = "No permission for this command";
-		type = ERROR;
-		log(type, cmd.command, res);
-		return (res);
-	}
 	std::map<string, Channel>::iterator it = findChannel(channel);
 	if (it != channels.end())
 	{
 		res = "Channel not found";
+		type = ERROR;
+		log(type, cmd.command, res);
+		return (res);
+	}
+	if (!it->second.isOperator(user))
+	{
+		res = "No permission for this command";
 		type = ERROR;
 		log(type, cmd.command, res);
 		return (res);
@@ -232,17 +232,17 @@ string	Server::_processINVITE(cmd cmd, User &user)
         log(type, cmd.command, res);
         return (res);
     }
-	if (!user.getIsOperator())
-	{
-		res = "No permission for this command";
-		type = ERROR;
-		log(type, cmd.command, res);
-		return (res);
-	}
 	std::map<string, Channel>::iterator it = findChannel(target);
 	if (it != channels.end())
 	{
 		res = "Channel not found";
+		type = ERROR;
+		log(type, cmd.command, res);
+		return (res);
+	}
+	if (!it->second.isOperator(user))
+	{
+		res = "No permission for this command";
 		type = ERROR;
 		log(type, cmd.command, res);
 		return (res);
