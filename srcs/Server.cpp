@@ -3,34 +3,39 @@
 volatile sig_atomic_t Server::running = 1;
 
 // Private members:
-void	Server::sendMessageToClient(int code, string command, User &user) {
+string	Server::commandResponses(int code, cmd cmd, User &user) {
 	string message;
 
-	switch (code)
-	{
-	case RPL_WELCOME:
-		message = ":localhost 001 " + user.getNickname() + " :Welcome to the Internet Relay Network " + user.getNickname() + "!" + user.getUsername() + "@localhost"+ "\r\n";
-		break;
-
-	case ERR_NEEDMOREPARAMS:
-		message = ":localhost " + to_string(code) + " " + user.getNickname() + " " + command + " :Not enough parameters" + "\r\n";
-		break;
-	
-	case ERR_PASSWDMISMATCH:
-		message = ":localhost " + to_string(code) + " " + user.getNickname() + " :Password incorrect" + "\r\n";
-		break;
-
-	case ERR_ALREADYREGISTRED:
-		message = ":localhost " + to_string(code) + " " + user.getNickname() + " :Unauthorized command (already registered)" + "\r\n";
-		break;
-
-	default:
-		break;
+	message = ":" + this->_name + " ";
+	if (code <= 5) {
+		message += "00";
 	}
-	cout << "here" + to_string(code) <<endl;
+	message += to_string(code) + " " + user.getNickname() + " ";
+	
+	if (code == RPL_WELCOME) {
+		message += ":Welcome to the Internet Relay Network " + user.getFullIdentifier();
+	} else if (code == ERR_NEEDMOREPARAMS) {
+		message += cmd.command + " :Not enough parameters";
+	} else if (code == ERR_PASSWDMISMATCH) {
+		message += ":Password incorrect";
+	} else if (code == ERR_ALREADYREGISTRED) {
+		message += ":Unauthorized command (already registered)";
+	} else if (code == ERR_NOLOGIN) {
+		message += user.getUsername() + " :User not logged in";
+	} else if (code == ERR_NONICKNAMEGIVEN) {
+		message += ":No nickname given";
+	} else if (code == ERR_NICKNAMEINUSE) {
+		message += cmd.arguments + " :Nickname is already in use";
+	} else if (code == ERR_ERRONEUSNICKNAME) {
+		message += cmd.arguments + " :Erroneous nickname";
+	} else if (code == ERR_UNKNOWNCOMMAND) {
+		message += cmd.command + " :Unknown command";
+	} else if (code == ERR_NOTREGISTERED) {
+		message += ":You have not registered";
+	}
+	message += "\r\n";
 
-	if (send(user.getFd(), message.c_str(), message.length(), 0) == -1)
-		cerr << "send() error: " << strerror(errno) << endl;
+	return (message);
 }
 
 
@@ -38,12 +43,16 @@ void Server::execute_command(cmd cmd, User &user)
 {
 	int code;
 
-	if (cmd.command == "PASS")
+	if (cmd.command == "PASS") {
 		code = PASS(cmd, user);
-	// else if (cmd.command == "NICK")
-	// 	code = NICK(cmd, user);
-	// else if (cmd.command == "USER")
-	// 	code = USER(cmd, user);
+	} else if (!user.getAuth()) {
+		code = ERR_NOLOGIN;
+	} else if (cmd.command == "NICK") {
+		code = NICK(cmd, user);
+	} else if (cmd.command == "USER") {
+		code = USER(cmd, user);
+	} else if (!user.getIsRegistered()) {
+		code = ERR_NOTREGISTERED;
 	// else if (cmd.command == "OPER")
 	// 	code = OPER(cmd, user);
 	// else if (cmd.command == "MODE")
@@ -62,10 +71,12 @@ void Server::execute_command(cmd cmd, User &user)
 	// 	code = QUIT(cmd, user);
 	// else if (cmd.command == "PART")
 	// 	code = PART(cmd, user);
-	else {
+	} else {
 		code = ERR_UNKNOWNCOMMAND;
 	}
-	sendMessageToClient(code, cmd.command, user);
+	string message = commandResponses(code, cmd, user);
+	if (code && send(user.getFd(), message.c_str(), message.length(), 0) == -1)
+		cerr << "send() error: " << strerror(errno) << endl;
 }
 
 static cmd parse_line(string &message)
@@ -102,8 +113,8 @@ void Server::handleNewClient()
 		pollfd new_pfd = {clientSocket, POLLIN, 0};
 		fds.push_back(new_pfd);
 		users[new_pfd.fd] = User(new_pfd.fd);
-		cout << "here" <<endl;
-		sendMessageToClient(RPL_WELCOME, "", users[new_pfd.fd]);
+
+		// sendMessageToClient(RPL_WELCOME, "", users[new_pfd.fd]);
 		log(INFO, "Connection", "New client connected: " + client_info(client_addr));
 	}
 }

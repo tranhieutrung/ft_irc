@@ -78,7 +78,7 @@ class Server
 		int	TOPIC(cmd cmd, User &user);
 		int	MODE(cmd cmd, User &user);
 
-		void	sendMessageToClient(int code, string cmd, User &user);
+		string	commandResponses(int code, cmd cmd, User &user);
 	public:
 		// Server(const int port); Trung
 		Server(std::string port, std::string password);

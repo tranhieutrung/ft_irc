@@ -15,6 +15,10 @@ class User
 		int fd;
 		bool isOperator;
 		bool isAuth;
+		bool nickIsSet;
+		bool userIsSet;
+		bool isRegistered;
+
 		std::map<std::string, Channel> joinedChannels;
 	public:
 		// constructors
@@ -40,6 +44,9 @@ class User
 		bool getIsOperator() const { return isOperator; }
 		std::string getFullIdentifier() const;
 		bool getAuth() const;
+		bool getNickIsSet() const;
+		bool getUserIsSet() const;
+		bool getIsRegistered() const;
 
 		// setters
 		int setInfo(const std::string &args);
@@ -50,6 +57,9 @@ class User
 		int setRealname(const std::string &realname);
 		void setIsOperator(const bool isOperator) { this->isOperator = isOperator; }
 		void setAuth(const bool status);
+		void setNickIsSet(const bool status);
+		void setUserIsSet(const bool status);
+		void setIsRegistered(const bool status);
 		
 		friend ostream &operator<<(ostream &os, const User &user);
 };

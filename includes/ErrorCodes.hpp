@@ -178,4 +178,7 @@
 // "<client> :File error doing <file op> on <file>"
 // Returned when a server encounters a file-related error.
 
+#define ERR_NOLOGIN 444
+//  "<user> :User not logged in"
+
 #endif // IRC_ERROR_CODES_HPP
