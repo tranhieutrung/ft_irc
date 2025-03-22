@@ -2,11 +2,13 @@
 #include "Server.hpp"
 
 
-
-
-std::map<string, Channel>::iterator Server:: findChannel (string channel)
+std::optional<std::map<string, Channel>::iterator> Server:: findChannel(string channel)
 {
-	return (channels.find(channel));
+	auto it = channels.find(channel);
+    if (it != channels.end()) {
+        return it;
+    }
+    return std::nullopt;
 }
 
 
@@ -20,15 +22,18 @@ int	Server::TOPIC(cmd cmd, User &user)
 	string message;
 
 	stream >> channel >> topic;
+	cout << "   "<< channel <<"   "<< topic<< endl;
+	return 0;
 	if (channel.empty())
 	{
 		return (ERR_NEEDMOREPARAMS);
 	}
-	std::map<string, Channel>::iterator it = findChannel(channel);
-	if (it != channels.end())
-	{
-		return (ERR_NOSUCHCHANNEL);
-	}
+	auto itOpt = findChannel(channel);
+    if (!itOpt.has_value()) {
+        return ERR_NOSUCHCHANNEL;
+    }
+
+    std::map<string, Channel>::iterator it = *itOpt;
 	if (!topic.empty())
 	{
 		message = it->second.getChannelTopic();
@@ -63,11 +68,12 @@ int	Server::KICK(cmd cmd, User &user)
 	{
 		return (ERR_NEEDMOREPARAMS);
 	}
-	std::map<string, Channel>::iterator it = findChannel(channel);
-	if (it != channels.end())
-	{
-		return (ERR_NOSUCHCHANNEL);
-	}
+	auto itOpt = findChannel(channel);
+    if (!itOpt.has_value()) {
+        return ERR_NOSUCHCHANNEL;
+    }
+
+    std::map<string, Channel>::iterator it = *itOpt;
 	if (!it->second.isOperator(user))
 	{
 		return (ERR_CHANOPRIVSNEEDED);
@@ -96,11 +102,12 @@ int	Server::MODE(cmd cmd, User &user)
     {
         return (ERR_NEEDMOREPARAMS);
     }
-	std::map<string, Channel>::iterator it = findChannel(channel);
-	if (it != channels.end())
-	{
-		return (ERR_NOSUCHCHANNEL);
-	}
+	auto itOpt = findChannel(channel);
+    if (!itOpt.has_value()) {
+        return ERR_NOSUCHCHANNEL;
+    }
+
+    std::map<string, Channel>::iterator it = *itOpt;
 	if (!it->second.isOperator(user))
 	{
 		return (ERR_CHANOPRIVSNEEDED);
@@ -195,11 +202,12 @@ int	Server::INVITE(cmd cmd, User &user)
     {
         return (ERR_NEEDMOREPARAMS);
     }
-	std::map<string, Channel>::iterator it = findChannel(channel);
-	if (it != channels.end())
-	{
-		return (ERR_NOSUCHCHANNEL);
-	}
+	auto itOpt = findChannel(channel);
+    if (!itOpt.has_value()) {
+        return ERR_NOSUCHCHANNEL;
+    }
+
+    std::map<string, Channel>::iterator it = *itOpt;
 	if (!it->second.isOperator(user))
 	{
 		return (ERR_CHANOPRIVSNEEDED);

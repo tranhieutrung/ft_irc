@@ -24,6 +24,7 @@
 #include "Channel.hpp"
 #include "ErrorCodes.hpp"
 #include "ReplyCodes.hpp"
+#include <optional>
 
 using namespace std;
 
@@ -94,7 +95,7 @@ class Server
 
 		void			print_status();
 
-		std::map<string, Channel>::iterator findChannel (string channel);
+		std::optional<std::map<string, Channel>::iterator> findChannel(string channel);
 };
 
 #endif
