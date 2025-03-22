@@ -10,8 +10,8 @@ SRC_FILES	=	main.cpp \
 				Server.cpp \
 				User.cpp \
 				Channel.cpp \
-				processCMD.cpp \
-				IO.cpp \
+				commands.cpp \
+				IO.cpp  \
 				ChannelCommands.cpp
 
 SRCS		=	$(addprefix $(SRC_DIR)/, $(SRC_FILES))

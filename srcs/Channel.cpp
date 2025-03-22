@@ -6,10 +6,9 @@
 /*   By: ttero <ttero@student.hive.fi>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/17 11:47:53 by ttero             #+#    #+#             */
-/*   Updated: 2025/03/20 16:26:49 by ttero            ###   ########.fr       */
+/*   Updated: 2025/03/22 16:59:12 by ttero            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
-
 
 #include "Channel.hpp"
 #include <optional>
@@ -21,17 +20,17 @@ std::optional<std::map<string, User>::iterator> Channel::findUser(string usernam
  {
     auto it = UserList.find(username);
     if (it != UserList.end()) {
-        return it;  
+        return it;
     }
-    return std::nullopt;  
+    return std::nullopt;
 }
 
-void Channel::addUser(const string& username, const User& user) 
-{ 
-	UserList[username] = user; 
+void Channel::addUser(const string& username, const User& user)
+{
+	UserList[username] = user;
 }
-void Channel::removeUser(string user) 
-{ 
+void Channel::removeUser(string user)
+{
 	UserList.erase(user);
 }
 

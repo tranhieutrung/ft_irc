@@ -3,141 +3,107 @@
 
 
 
+
 std::map<string, Channel>::iterator Server:: findChannel (string channel)
 {
 	return (channels.find(channel));
 }
 
 
-string	Server::_processTOPIC(cmd cmd, User &user) 
+int	Server::TOPIC(cmd cmd, User &user)
 
-{	
+{
 	string		res;
-	log_level	type;
 	string channel;
 	string topic;
 	istringstream stream(cmd.arguments);
+	string message;
 
 	stream >> channel >> topic;
-
 	if (channel.empty())
 	{
-		res = "Invalid number of arguments";
-		type = ERROR;
-		log(type, cmd.command, res);
-		return (res);
+		return (ERR_NEEDMOREPARAMS);
 	}
 	std::map<string, Channel>::iterator it = findChannel(channel);
 	if (it != channels.end())
 	{
-		res = "Channel not found";
-		type = ERROR;
-		log(type, cmd.command, res);
-		return (res);
+		return (ERR_NOSUCHCHANNEL);
 	}
 	if (!topic.empty())
 	{
-		return(it->second.getChannelTopic());
+		message = it->second.getChannelTopic();
+		message += "\r\n";
+		if (send(user.getFd(), message.c_str(), message.length(), 0) == -1)
+		cerr << "send() error: " << strerror(errno) << endl;
+		return (0);
 	}
 	if (it->second.isTopicRestricted() && !it->second.isOperator(user))
 	{
-		res = "No permission for this command";
-		type = ERROR;
-		log(type, cmd.command, res);
-		return (res);
+		return (ERR_CHANOPRIVSNEEDED);
 	}
-	else 
+	else
 	{
 		it->second.setChannelTopic(topic);
 	}
-	res = "Changed topic for channel";
-	type = INFO;
-	log(type, cmd.command, res);
-	return (res);
-	
+	return (0);
+
 }
 
 
 
-string	Server::_processKICK(cmd cmd, User &user) 
+int	Server::KICK(cmd cmd, User &user)
 {
 	string channel;
 	string target;
 	string		res;
-	log_level	type;
 	istringstream stream(cmd.arguments);
 
 	stream >> channel >> target;
-
 	if (channel.empty() || target.empty())
 	{
-		res = "Invalid number of arguments";
-		type = ERROR;
-		log(type, cmd.command, res);
-		return (res);
+		return (ERR_NEEDMOREPARAMS);
 	}
 	std::map<string, Channel>::iterator it = findChannel(channel);
 	if (it != channels.end())
 	{
-		res = "Channel not found";
-		type = ERROR;
-		log(type, cmd.command, res);
-		return (res);
+		return (ERR_NOSUCHCHANNEL);
 	}
 	if (!it->second.isOperator(user))
 	{
-		res = "No permission for this command";
-		type = ERROR;
-		log(type, cmd.command, res);
-		return (res);
+		return (ERR_CHANOPRIVSNEEDED);
 	}
 	std::optional<std::map<string, User>::iterator> it2 = it->second.findUser(target);
 	if (!it2)
 	{
-		res = "User not found in channel";
-		type = ERROR;
-		log(type, cmd.command, res);
-		return (res);
+		return (ERR_NOSUCHNICK);
 	}
 	it->second.removeUser(user.getUsername());
-	res = "Kicked user from channel";
-	type = INFO;
-	log(type, cmd.command, res);
-	return (res);
+	return (0);
 }
 
-string	Server::_processMODE(cmd cmd, User &user) 
+int	Server::MODE(cmd cmd, User &user)
 {
 	string mode;
 	string channel;
 	string extra;
 	string		res;
 	log_level	type;
-
 	istringstream stream(cmd.arguments);
 
 	stream >> channel >> mode >> extra;
+
 	if (channel.empty() || mode.empty())
     {
-        res = "Invalid number of arguments";
-        type = ERROR;
-        log(type, cmd.command, res);
-        return (res);
+        return (ERR_NEEDMOREPARAMS);
     }
 	std::map<string, Channel>::iterator it = findChannel(channel);
 	if (it != channels.end())
 	{
-		res = "Channel not found";
-		type = ERROR;
-		log(type, cmd.command, res);
-		return (res);
+		return (ERR_NOSUCHCHANNEL);
 	}
 	if (!it->second.isOperator(user))
 	{
-		res = "No permission for this command";
-		type = ERROR;
-		log(type, cmd.command, res);
-		return (res);
+		return (ERR_CHANOPRIVSNEEDED);
 	}
 	if (mode == "-i")
 	{
@@ -148,7 +114,7 @@ string	Server::_processMODE(cmd cmd, User &user)
         res = "Switched Invite only";
         type = INFO;
         log(type, cmd.command, res);
-        return (res);
+        return (0);
 	}
 	if (mode == "-t")
 	{
@@ -159,7 +125,7 @@ string	Server::_processMODE(cmd cmd, User &user)
         res = "Switched topic restriction only";
         type = INFO;
         log(type, cmd.command, res);
-        return (res);
+        return (0);
 	}
 	if (mode == "-k")
 	{
@@ -167,28 +133,30 @@ string	Server::_processMODE(cmd cmd, User &user)
 		{
             it->second.setPassword(nullptr);
 		}
-        else 
+        else
 		{
             it->second.setPassword(extra);
 		}
         res = "Switched password";
         type = INFO;
         log(type, cmd.command, res);
-        return (res);
+        return (0);
 	}
 	if (mode == "-o")
 	{
-		
+
 		if (it->second.findUser(extra))
 		{
             const User *opp =  getUser(extra);
 			it->second.addOperator(*opp);
 		}
-
+		else{
+			return (ERR_NOSUCHNICK);
+		}
         res = "Added operator";
         type = INFO;
         log(type, cmd.command, res);
-        return (res);
+        return (0);
 	}
 	if (mode == "-l")
 	{
@@ -203,63 +171,53 @@ string	Server::_processMODE(cmd cmd, User &user)
         res = "Set Userlimit";
         type = INFO;
         log(type, cmd.command, res);
-        return (res);
+        return (0);
 	}
 	else
 	{
-		res = "Command not found";
-		type = ERROR;
-		log(type, cmd.command, res);
-		return (res);
+		return (ERR_UNKNOWNMODE);
 	}
 }
-	
 
-string	Server::_processINVITE(cmd cmd, User &user)
+
+int	Server::INVITE(cmd cmd, User &user)
 {
 	string target;
 	string channel;
 	string		res;
-	log_level	type;
 	istringstream stream(cmd.arguments);
+	string message;
+	string message2;
 
 	stream >> channel >> target;
-	
+
 	if (channel.empty() || target.empty())
     {
-        res = "Invalid number of arguments";
-        type = ERROR;
-        log(type, cmd.command, res);
-        return (res);
+        return (ERR_NEEDMOREPARAMS);
     }
-	std::map<string, Channel>::iterator it = findChannel(target);
+	std::map<string, Channel>::iterator it = findChannel(channel);
 	if (it != channels.end())
 	{
-		res = "Channel not found";
-		type = ERROR;
-		log(type, cmd.command, res);
-		return (res);
+		return (ERR_NOSUCHCHANNEL);
 	}
 	if (!it->second.isOperator(user))
 	{
-		res = "No permission for this command";
-		type = ERROR;
-		log(type, cmd.command, res);
-		return (res);
+		return (ERR_CHANOPRIVSNEEDED);
 	}
 	const User *invited = getUser(target);
 	if (!invited)
 	{
-		res = "User not found";
-		type = ERROR;
-		log(type, cmd.command, res);
-		return (res);
+		return (ERR_NOSUCHNICK);
 	}
 	//sendInvite();
+	message =  "Invited " + target + "\r\n";
+
+	if (send(user.getFd(), message.c_str(), message.length(), 0) == -1)
+		cerr << "send() error: " << strerror(errno) << endl;
+	message2= "You have been invited by " + user.getNickname() + "to channel " + channel + "\r\n";
+	if (send(invited->getFd(), message2.c_str(), message2.length(), 0) == -1)
+		cerr << "send() error: " << strerror(errno) << endl;
 	it->second.addUser(invited->getNickname(), *invited);
-	res = "Invite send to user";
-	type = INFO;
-	log(type, cmd.command, res);
-	return (res);
+	return (0);
 
 }

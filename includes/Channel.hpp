@@ -22,7 +22,7 @@ class Channel
             string ChannelName;
             string ChannelTopic;
             string password;
-            map<string, User> UserList;  
+            map<string, User> UserList;
             bool        inviteOnly;
             bool        topic_restriction;
             vector<User>      operators;
@@ -52,7 +52,7 @@ class Channel
 
         // User management
         void addUser(const string& username, const User& user) ;
-        void removeUser(string user); 
+        void removeUser(string user);
         std::optional<std::map<string, User>::iterator> findUser(string username);
         void addOperator(const User& nick) ;
         void removeOperator(const User& nick) ;
