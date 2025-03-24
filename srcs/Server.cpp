@@ -33,7 +33,7 @@ string	Server::commandResponses(int code, cmd cmd, User &user) {
 	} else if (code == ERR_NOTREGISTERED) {
 		message += ":You have not registered";
 	}
-	message += "\r\n";
+	message += "(hitran)\r\n";
 
 	return (message);
 }
@@ -43,33 +43,35 @@ void Server::execute_command(cmd cmd, User &user)
 {
 	int code;
 
-	if (cmd.command == "PASS") {
-		code = PASS(cmd, user);
-	} else if (!user.getAuth()) {
-		code = ERR_NOLOGIN;
+	if (cmd.command == "PING") {
+		code = PING(cmd, user);
+	} else if (cmd.command == "PASS") {
+		code = PASS(cmd, user); 
+	//} else if (!user.getAuth()) {
+	// 	code = ERR_NOLOGIN;
 	} else if (cmd.command == "NICK") {
 		code = NICK(cmd, user);
 	} else if (cmd.command == "USER") {
 		code = USER(cmd, user);
 	} else if (!user.getIsRegistered()) {
-		code = ERR_NOTREGISTERED;
-	// else if (cmd.command == "OPER")
+		code = ERR_NOTREGISTERED; 
+	//} else if (cmd.command == "OPER") {
 	// 	code = OPER(cmd, user);
-	// else if (cmd.command == "MODE")
-	// 	code = MODE(cmd, user);
-	// else if (cmd.command == "INVITE")
-	// 	code = INVITE(cmd, user);
-	// else if (cmd.command == "PRIVMSG")
-	// 	code = PRIVMSG(cmd, user);
-	// else if (cmd.command == "JOIN")
-	// 	code = JOIN(cmd, user);
-	// else if (cmd.command == "TOPIC")
-	// 	code = TOPIC(cmd, user);
-	// else if (cmd.command == "KICK")
-	// 	code = KICK(cmd, user);
-	// else if (cmd.command == "QUIT")
-	// 	code = QUIT(cmd, user);
-	// else if (cmd.command == "PART")
+	} else if (cmd.command == "MODE") {
+		code = MODE(cmd, user); 
+	//} else if (cmd.command == "INVITE") {
+	// 	code = INVITE(cmd, user); 
+	//} else if (cmd.command == "PRIVMSG") {
+	// 	code = PRIVMSG(cmd, user); 
+	//} else if (cmd.command == "JOIN") {
+	// 	code = JOIN(cmd, user); 
+	//} else if (cmd.command == "TOPIC") {
+	// 	code = TOPIC(cmd, user); 
+	//} else if (cmd.command == "KICK") {
+	// 	code = KICK(cmd, user); 
+	//} } else if (cmd.command == "QUIT") {
+	// 	code = QUIT(cmd, user); 
+	//} } else if (cmd.command == "PART") {
 	// 	code = PART(cmd, user);
 	} else {
 		code = ERR_UNKNOWNCOMMAND;
