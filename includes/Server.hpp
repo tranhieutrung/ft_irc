@@ -48,7 +48,7 @@ class Server
 		// int				_serverSocket;
 
 		void handleNewClient();
-		void handleClientMessages(int index);
+		void handleClientMessages(size_t *index);
 		void cleanup();
 		void process_message(int clientFd, string buffer);
 		// int create_socket();

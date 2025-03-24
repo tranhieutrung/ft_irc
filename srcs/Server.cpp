@@ -81,18 +81,6 @@ void Server::execute_command(cmd cmd, User &user)
 		cerr << "send() error: " << strerror(errno) << endl;
 }
 
-static cmd parse_line(string &message)
-{
-	cmd cmd;
-	istringstream stream(message);
-	if (message[0] == ':')
-		stream >> cmd.prefix;
-	stream >> cmd.command;
-	stream.ignore(1); // skip space
-	getline(stream, cmd.arguments, '\r');
-	return cmd;
-}
-
 string Server::client_info(struct sockaddr_in &client_addr)
 {
 	return "IP: " + string(inet_ntoa(client_addr.sin_addr)) 
@@ -121,37 +109,33 @@ void Server::handleNewClient()
 	}
 }
 
-void Server::process_message(int clientFd, string buffer)
+void Server::handleClientMessages(size_t *index)
 {
-	stringstream message;
-	message << buffer; 
-	string line;
-	while (getline(message, line)) {
-		execute_command(parse_line(line), users[clientFd]);
-	}
-}
 
-void Server::handleClientMessages(int i)
-{
-	if (fds[i].revents & POLLIN)
+	if ((fds[*index].revents & POLLIN) == false)
+		return;
+
+	int fd = fds[*index].fd;
+	cmd cmd = IO::recvCommand(fd);
+
+	if (cmd.command != "DISCONNECT" && cmd.command != "ERROR")
 	{
-		char buffer[1024] = {0}; // what if over 1024
-		int bytesReceived = recv(fds[i].fd, buffer, sizeof(buffer), 0);
-		
-		if (bytesReceived > 0) {
-			process_message(fds[i].fd, buffer);
-		} else {
-			if (bytesReceived == 0) {
-				log(INFO, "Connection", "Client disconnected: " + users[fds[i].fd].getNickname()); //if client has set their Nick/Username, it will null
-			} else {
-				cerr << "recv() failed: " << strerror(errno) << endl;
-			}
-			close(fds[i].fd);
-			users.erase(fds[i].fd);
-			fds.erase(fds.begin() + i);
-			i--;
-		}
+		execute_command(cmd, users[fd]);
+		return;
 	}
+
+	if (cmd.command == "DISCONNECT")
+		log(INFO, "Connection", "Client disconnected: " + users[fd].getNickname());
+	else // "ERROR"
+	{
+		close(fd);
+		throw runtime_error("recv() failed");
+	}
+
+	close(fd);
+	users.erase(fd);
+	fds.erase(fds.begin() + *index);
+	*index -= 1;
 }
 
 void Server::cleanup()
@@ -216,7 +200,7 @@ void Server::start()
 			if (index == 0) { // fds[0] = serverSocket
 				handleNewClient();
 			} else {
-				handleClientMessages(index);
+				handleClientMessages(&index);
 			}
 		}
 	}
