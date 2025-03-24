@@ -19,6 +19,27 @@ int countWords(const 	string &s) {
 	return count;
 }
 
+int	Server::PING(cmd cmd, User &user) {
+	(void)user;
+	if (cmd.arguments.empty()) {
+		return (ERR_NOORIGIN);
+	} else if (cmd.arguments != this->_name) {
+		return (ERR_NOSUCHSERVER);
+	} else {
+		return (0);
+	}
+}
+
+int	Server::PONG(cmd cmd, User &user) {
+	if (cmd.arguments.empty()) {
+		return (ERR_NOORIGIN);
+	} else if (cmd.arguments != user.getFullIdentifier()) {
+		return (ERR_NOSUCHSERVER);
+	} else {
+		return (0);
+	}
+}
+
 int	Server::PASS(cmd cmd, User &user) {
 	if (cmd.arguments.empty()) {
 		return (ERR_NEEDMOREPARAMS);
@@ -69,8 +90,8 @@ int	Server::NICK(cmd cmd, User &user) {
 int	Server::USER(cmd cmd, User &user) {
 	if (countWords(cmd.arguments) < 4) {
 		return (ERR_NEEDMOREPARAMS);
-	} else if (user.getUserIsSet()) {
-		return (ERR_ALREADYREGISTRED); //only setup user to register
+	// } else if (user.getUserIsSet()) {
+	// 	return (ERR_ALREADYREGISTRED); //only setup user to register
 	}
 	user.setUserIsSet(true);
 	if (user.getNickIsSet() && !user.getIsRegistered()) {
@@ -129,6 +150,9 @@ int	Server::USER(cmd cmd, User &user) {
 
 // }
 
+// int	Server::PART(cmd cmd, User &user) {
+
+// }
 
 // channel commands:
 
@@ -144,6 +168,8 @@ int	Server::USER(cmd cmd, User &user) {
 
 // }
 
-// int	Server::MODE(cmd cmd, User &user) { //Teemu
-
-// }
+int	Server::MODE(cmd cmd, User &user) { //Teemu
+(void)cmd;
+(void) user;
+return 0;
+}
