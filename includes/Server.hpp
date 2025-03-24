@@ -29,7 +29,7 @@ using namespace std;
 
 class User;
 
-enum log_level { INFO, WARN, ERROR };
+enum log_level { DEBUG, INFO, WARN, ERROR };
 
 class Server
 {
@@ -90,9 +90,9 @@ class Server
 		const User*		getUser(int fd);
 		const User*		getUser(const string &nickname);
 
-		void			log(log_level level, const string &event, const string &details);
-
+		
 		void			print_status();
-};
-
+	};
+	void			log(log_level level, const string &event, const string &details);
+	
 #endif

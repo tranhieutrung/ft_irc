@@ -1,4 +1,5 @@
-#include "IO.hpp"
+#include "../includes/IO.hpp"
+#include "../includes/Server.hpp"
 #include <sstream>
 #include <sys/socket.h>
 
@@ -16,6 +17,8 @@ cmd IO::recvCommand(int fd)
 {
     char buf[512];
     ssize_t bytesReceived = recv(fd, buf, sizeof(buf), 0);
+
+    log(DEBUG, "RECV", string(buf));
 
     if (bytesReceived == 0)
         return {"", "DISCONNECT", ""};

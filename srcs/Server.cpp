@@ -229,7 +229,7 @@ const User* Server::getUser(int fd)
 	return nullptr;
 }
 
-void Server::log(log_level level, const string &event, const string &details)
+void log(log_level level, const string &event, const string &details)
 {
 	time_t now = time(nullptr);
 	tm *ltm = localtime(&now);
@@ -253,6 +253,9 @@ void Server::log(log_level level, const string &event, const string &details)
 		case ERROR:
 			cout << RED;
 			cout << "[ERROR] "; //cerr?
+			break;
+		case DEBUG:
+			cout << "[DEBUG]";
 			break;
 	}
 	cout << RESET;
