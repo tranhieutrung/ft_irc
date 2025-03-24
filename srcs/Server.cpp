@@ -32,6 +32,10 @@ string	Server::commandResponses(int code, cmd cmd, User &user) {
 		message += cmd.command + " :Unknown command";
 	} else if (code == ERR_NOTREGISTERED) {
 		message += ":You have not registered";
+	} else if (code == ERR_NOORIGIN) {
+		message += ":No origin specified";
+	} else if (code == ERR_NOSUCHSERVER) {
+		message += cmd.arguments + " :No such server";
 	}
 	message += "(hitran)\r\n";
 
@@ -53,26 +57,26 @@ void Server::execute_command(cmd cmd, User &user)
 		code = NICK(cmd, user);
 	} else if (cmd.command == "USER") {
 		code = USER(cmd, user);
-	} else if (!user.getIsRegistered()) {
-		code = ERR_NOTREGISTERED; 
-	//} else if (cmd.command == "OPER") {
-	// 	code = OPER(cmd, user);
 	} else if (cmd.command == "MODE") {
 		code = MODE(cmd, user); 
-	//} else if (cmd.command == "INVITE") {
-	// 	code = INVITE(cmd, user); 
-	//} else if (cmd.command == "PRIVMSG") {
-	// 	code = PRIVMSG(cmd, user); 
-	//} else if (cmd.command == "JOIN") {
-	// 	code = JOIN(cmd, user); 
-	//} else if (cmd.command == "TOPIC") {
-	// 	code = TOPIC(cmd, user); 
-	//} else if (cmd.command == "KICK") {
-	// 	code = KICK(cmd, user); 
-	//} } else if (cmd.command == "QUIT") {
-	// 	code = QUIT(cmd, user); 
-	//} } else if (cmd.command == "PART") {
-	// 	code = PART(cmd, user);
+	} else if (!user.getIsRegistered()) {
+		code = ERR_NOTREGISTERED; 
+	} else if (cmd.command == "OPER") {
+		code = OPER(cmd, user);
+	} else if (cmd.command == "INVITE") {
+		code = INVITE(cmd, user); 
+	} else if (cmd.command == "PRIVMSG") {
+		code = PRIVMSG(cmd, user); 
+	} else if (cmd.command == "JOIN") {
+		code = JOIN(cmd, user); 
+	} else if (cmd.command == "TOPIC") {
+		code = TOPIC(cmd, user); 
+	} else if (cmd.command == "KICK") {
+		code = KICK(cmd, user); 
+	} else if (cmd.command == "QUIT") {
+		code = QUIT(cmd, user); 
+	} else if (cmd.command == "PART") {
+		code = PART(cmd, user);
 	} else {
 		code = ERR_UNKNOWNCOMMAND;
 	}
