@@ -129,7 +129,6 @@ int	Server::USER(cmd cmd, User &user) {
 	return (0);
 }
 
-
 //user create and join a new channel
 int Server::createChannel(User user, string channelName, string key) {
 	Channel channel(channelName); //should have a channel(name, password)

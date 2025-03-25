@@ -5,7 +5,6 @@ volatile sig_atomic_t Server::running = 1;
 // Private members:
 string	Server::commandResponses(int code, cmd cmd, User &user) {
 	string message;
-
 	message = ":" + this->_name + " ";
 	if (code <= 5) {
 		message += "00";
@@ -94,7 +93,7 @@ void Server::execute_command(cmd cmd, User &user)
 
 string Server::client_info(struct sockaddr_in &client_addr)
 {
-	return "IP: " + string(inet_ntoa(client_addr.sin_addr)) 
+	return "IP: " + string(inet_ntoa(client_addr.sin_addr))
 	+ " Port: " + to_string(ntohs(client_addr.sin_port));
 }
 
@@ -121,7 +120,6 @@ void Server::handleNewClient()
 }
 
 void Server::handleClientMessages(size_t *index)
-{
 
 	if ((fds[*index].revents & POLLIN) == false)
 		return;
@@ -166,7 +164,7 @@ int Server::createSocket() {
 	if (setsockopt(serverSocket, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)) == -1) {
 		throw runtime_error("setsockopt failed: " + string(strerror(errno)));
 	}
-	
+
 	sockaddr_in serverAddress{};
 	serverAddress.sin_family = AF_INET;
 	serverAddress.sin_port = htons(this->_port);

@@ -25,6 +25,8 @@
 #include "ErrorCodes.hpp"
 #include "ReplyCodes.hpp"
 #include <regex>
+#include <optional>
+
 
 using namespace std;
 
@@ -41,7 +43,7 @@ class Server
 		// const int port; trung
 		// const int max_clients; trung
 		static volatile sig_atomic_t running;
-		
+
 		const string	_name = "IRCS";
 		const int		_port;
 		const string 	_password;
@@ -84,6 +86,8 @@ class Server
 		int createChannel(User user, string channelName, string key);
 		Channel* findChannelByName(const std::string& channelName);
 
+
+		string	commandResponses(int code, cmd cmd, User &user);
 	public:
 		// Server(const int port); Trung
 		Server(std::string port, std::string password);
@@ -97,7 +101,9 @@ class Server
 
 		
 		void			print_status();
+    std::optional<std::map<string, Channel>::iterator> findChannel(string channel);
 	};
 	void			log(log_level level, const string &event, const string &details);
 	
 #endif
+

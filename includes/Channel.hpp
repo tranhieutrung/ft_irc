@@ -1,3 +1,4 @@
+
 #ifndef CHANNEL_HPP
 #define CHANNEL_HPP
 
@@ -21,15 +22,16 @@ class Channel
             string ChannelName;
             string ChannelTopic;
             string password;
-            map<string, User> UserList;  // Using 'User' here will now work because of the forward declaration
+            map<string, User> UserList;
             bool        inviteOnly;
             bool        topic_restriction;
-            vector<string>      operators;
+            vector<User>      operators;
             unsigned int        userLimit;
 
     public:
         Channel() : ChannelName(""), ChannelTopic(""), password(""), inviteOnly(false), topic_restriction(false), userLimit(999) {}
-        Channel(const std::string& name) : ChannelName(name), inviteOnly(false), topic_restriction(false) {}
+        Channel(const std::string& name) : ChannelName(name),  ChannelTopic(""), password(""), inviteOnly(false), topic_restriction(false), userLimit(999) {}
+
 
         // Getters
         std::string getChannelName() const { return ChannelName; }
@@ -49,21 +51,14 @@ class Channel
         void setUserLimit(const unsigned int limit) {userLimit = limit;}
 
         // User management
-        void addUser(const string& username, const User& user) ;//{ UserList[username] = user; }
-        void removeUser(string user); //{ UserList.erase(user);};
+        void addUser(const string& username, const User& user) ;
+        void removeUser(string user);
         std::optional<std::map<string, User>::iterator> findUser(string username);
-        void addOperator(const string& nick) {
-                if (find(operators.begin(), operators.end(), nick) == operators.end()) {
-                    operators.push_back(nick);
-                }
-            }
-        void removeOperator(const string& nick) {
-                operators.erase(remove(operators.begin(), operators.end(), nick), operators.end());
-        }
-        bool isOperator(const string& nick) const {
-                return find(operators.begin(), operators.end(), nick) != operators.end();
-            }
-
+        void addOperator(const User& nick) ;
+        void removeOperator(const User& nick) ;
+        bool isOperator(const User& nick) const ;
 };
 
 #endif
+
+

@@ -181,6 +181,7 @@
 #define ERR_NOLOGIN 444
 //  "<user> :User not logged in"
 
+
 #define ERR_NOORIGIN 409
 //":No origin specified"
 // PING or PONG message missing the originator parameter.

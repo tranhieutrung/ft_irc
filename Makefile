@@ -11,7 +11,9 @@ SRC_FILES	=	main.cpp \
 				User.cpp \
 				Channel.cpp \
 				commands.cpp \
-				IO.cpp
+				IO.cpp  \
+				ChannelCommands.cpp
+
 
 SRCS		=	$(addprefix $(SRC_DIR)/, $(SRC_FILES))
 

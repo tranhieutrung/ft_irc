@@ -169,7 +169,7 @@ int User::privmsg(const Channel &channel, const std::string &message) const
 
 int User::join(Channel &channel)
 {
-	return join(channel, ""); 
+	return join(channel, "");
 	// if no password is given, try to login with an empty password.
 	// If channel is not password protected, it could have an empty password so this works
 }
@@ -218,6 +218,9 @@ bool User::getUserIsSet() const
 {
 	return userIsSet;
 }
+
+bool operator==(const User &lhs, const User &rhs) {
+	return lhs.getFd() == rhs.getFd();
 
 bool User::getIsRegistered() const
 {
