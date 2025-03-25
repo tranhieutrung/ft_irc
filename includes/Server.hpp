@@ -24,6 +24,7 @@
 #include "Channel.hpp"
 #include "ErrorCodes.hpp"
 #include "ReplyCodes.hpp"
+#include <regex>
 
 using namespace std;
 
@@ -79,6 +80,10 @@ class Server
 		int	MODE(cmd cmd, User &user);
 
 		string	commandResponses(int code, cmd cmd, User &user);
+		// bool	existChannel(string channel);
+		int createChannel(User user, string channelName, string key);
+		Channel* findChannelByName(const std::string& channelName);
+
 	public:
 		// Server(const int port); Trung
 		Server(std::string port, std::string password);

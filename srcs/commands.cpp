@@ -19,6 +19,46 @@ int countWords(const 	string &s) {
 	return count;
 }
 
+vector<string> commaSplit(string str) {
+	vector<string> result;
+
+	if (str.empty()) {
+		return result;
+	}
+
+	istringstream ss(str);
+	string word;
+	while (getline(ss, word, ',')) {
+		result.push_back(word);
+	}
+	return (result);
+}
+
+// map<string, string> parseChannels(const string& arguments) {
+// 	map<string, string> result;
+	
+// 	istringstream ss(arguments);
+// 	string channels_str, keys_str;
+
+// 	// Separate channel and key string:
+// 	getline(ss, channels_str, ' ');
+// 	if (!getline(ss, keys_str)) {
+// 		keys_str = "";
+// 	}
+
+// 	// Comma split:
+// 	vector<string> channels = commaSplit(channels_str);
+// 	vector<string> keys = commaSplit(keys_str);
+
+// 	// crate pairs:
+// 	for (size_t i = 0; i < channels.size(); ++i) {
+// 		string key_value = (i < keys.size()) ? keys[i] : "";
+// 		result.insert(channels[i], key_value);
+// 	}
+
+// 	return result;
+// }
+
 int	Server::PING(cmd cmd, User &user) {
 	(void)user;
 	if (cmd.arguments.empty()) {
@@ -40,6 +80,9 @@ int	Server::PONG(cmd cmd, User &user) {
 	}
 }
 
+/** Numeric Replies:
+* ERR_NEEDMOREPARAMS		ERR_ALREADYREGISTRED
+*/
 int	Server::PASS(cmd cmd, User &user) {
 	if (cmd.arguments.empty()) {
 		return (ERR_NEEDMOREPARAMS);
@@ -71,6 +114,11 @@ bool	Server::_userIsUsed(string username) {
 	return (false);
 }
 
+/** Numeric Replies:
+* ERR_NONICKNAMEGIVEN		ERR_ERRONEUSNICKNAME
+* ERR_NICKNAMEINUSE			ERR_NICKCOLLISION
+* ERR_UNAVAILRESOURCE		ERR_RESTRICTED
+*/
 int	Server::NICK(cmd cmd, User &user) {
 	if (cmd.arguments.empty()) {
 		return (ERR_NONICKNAMEGIVEN);
@@ -87,6 +135,9 @@ int	Server::NICK(cmd cmd, User &user) {
 	return (0);
 }
 
+/** Numeric Replies:
+* ERR_NEEDMOREPARAMS		ERR_ALREADYREGISTRED
+*/
 int	Server::USER(cmd cmd, User &user) {
 	if (countWords(cmd.arguments) < 4) {
 		return (ERR_NEEDMOREPARAMS);
@@ -101,74 +152,140 @@ int	Server::USER(cmd cmd, User &user) {
 	return (0);
 }
 
-// int	Server::JOIN(cmd cmd, User &user) {
-// 	string			res;
-// 	log_level		type;
-// 	stringstream	args(cmd.arguments);
-// 	string			username;
 
-// 	if (!user.getAuth()) {
-// 		res = "Please login to set your nickname";
-// 		type = ERROR;
-// 	} else if (cmd.arguments.empty()) {
-// 		res = "Empty arguments";
-// 		type = ERROR;
-// 	} else if (countWords(cmd.arguments) != 4) {
-// 		res = "Invalid number of arguments";
-// 		type = ERROR;
-// 	}
-// 	args >> username;
-// 	if (user.getUsername() == username) {
-// 		res = "You are already using this username";
-// 		type = ERROR;
-// 	} else if (_userIsUsed(username)) {
-// 		res = "The username is already in use";
-// 		type = ERROR;
-// 	} else {
-// 		if (user.setInfo(cmd.arguments)) {
-// 			res = "Invalid argument formats";
-// 			type = ERROR;			
-// 		} else {
-// 			res = "Your username has been set up";
-// 			type = INFO;
-// 		}
-// 	}
-// 	log(type, cmd.command, res);
-// 	return (res);
-// }
+//user create and join a new channel
+int Server::createChannel(User user, string channelName, string key) {
+	Channel channel(channelName); //should have a channel(name, password)
+	channel.setPassword(key);
+	channel.addOperator(user.getNickname());
 
-// int	Server::PRIVMSG(cmd cmd, User &user) {
+	this->channels.emplace(channelName, channel);
+	user.join(channel, key);
+	//if creation failed, return error code
+	return (0);
+}
 
-// }
+/*
+*  Channels names are strings (beginning with a '&', '#', '+' or '!'
+   character) of length up to fifty (50) characters.  Apart from the
+   requirement that the first character is either '&', '#', '+' or '!',
+   the only restriction on a channel name is that it SHALL NOT contain
+   any spaces (' '), a control G (^G or ASCII 7), a comma (',').  Space
+   is used as parameter separator and command is used as a list item
+   separator by the protocol).  A colon (':') can also be used as a
+   delimiter for the channel mask.  Channel names are case insensitive.
+*/
+bool isValidChannelName(const string& channelName) {
+	if (channelName.empty() || channelName.size() > 50)
+		return (false);
+    regex channelRegex(R"(^[&#+!][^[:space:],^G,]*$)");
+    return regex_match(channelName, channelRegex);
+}
 
-// int	Server::OPER(cmd cmd, User &user) {
+/** Numeric Replies:
+* ERR_NEEDMOREPARAMS -		ERR_BANNEDFROMCHAN
+* ERR_INVITEONLYCHAN -		ERR_BADCHANNELKEY -
+* ERR_CHANNELISFULL	- 		ERR_BADCHANMASK -
+* ERR_NOSUCHCHANNEL			ERR_TOOMANYCHANNELS
+* ERR_TOOMANYTARGETS		ERR_UNAVAILRESOURCE
+* RPL_TOPIC
+*/
+int	Server::JOIN(cmd cmd, User &user) {
 
-// }
+	if (cmd.arguments.empty()) {
+		return (ERR_NEEDMOREPARAMS);
+	} else if (cmd.arguments == "0") {
+		user.quit(user.getNickname() + " left"); //part all joined channels
+	}
+
+	// Parsing:
+	istringstream ss(cmd.arguments);
+	string channels_str, keys_str;
+
+	// Separate channel and key string:
+	getline(ss, channels_str, ' ');
+	getline(ss, keys_str);
+
+	// Comma split:
+	vector<string> channels = commaSplit(channels_str);
+	vector<string> keys = commaSplit(keys_str);
+
+	if (keys.size() > channels.size()) {
+		return (ERR_NEEDMOREPARAMS);
+	}
+	// crate pairs:
+	for (size_t index = 0; index < channels.size(); ++index) {
+		if (!isValidChannelName(channels[index])) {
+			return (ERR_BADCHANMASK);
+		}
+		string keyValue = "";
+
+		if (index < keys.size()) {
+			keyValue = keys[index];
+		}
+
+		Channel *channel = this->findChannelByName(channels[index]);
+		int		code = 0;
+
+		if (channel == nullptr) {
+			code = createChannel(user, channels[index], keyValue);
+		} else {
+			code = user.join(*channel, keyValue);
+		}
+
+		if (code)
+			return (code);
+	}
+
+	return (0);
+}
+
+int	Server::PRIVMSG(cmd cmd, User &user) {
+(void)cmd;
+(void) user;
+return 0;
+}
+
+int	Server::OPER(cmd cmd, User &user) {
+(void)cmd;
+(void) user;
+return 0;
+}
 
 
-// int	Server::QUIT(cmd cmd, User &user) {
+int	Server::QUIT(cmd cmd, User &user) {
+(void)cmd;
+(void) user;
+return 0;
+}
 
-// }
-
-// int	Server::PART(cmd cmd, User &user) {
-
-// }
+int	Server::PART(cmd cmd, User &user) {
+(void)cmd;
+(void) user;
+return 0;
+}
 
 // channel commands:
 
-// int	Server::KICK(cmd cmd, User &user) { //Teemu
+int	Server::KICK(cmd cmd, User &user) {
+(void)cmd;
+(void) user;
+return 0;
+}
 
-// }
+int	Server::INVITE(cmd cmd, User &user) {
+(void)cmd;
+(void) user;
+return 0;
+}
 
-// int	Server::INVITEcmd cmd, User &user) { //Teemu
+int	Server::TOPIC(cmd cmd, User &user) {
+(void)cmd;
+(void) user;
+return 0;
+}
 
-// }
-
-// int	Server::TOPIC(cmd cmd, User &user) { //Teemu
-
-// }
-
-int	Server::MODE(cmd cmd, User &user) { //Teemu
+int	Server::MODE(cmd cmd, User &user) {
 (void)cmd;
 (void) user;
 return 0;
