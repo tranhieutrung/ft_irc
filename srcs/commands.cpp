@@ -34,31 +34,6 @@ vector<string> commaSplit(string str) {
 	return (result);
 }
 
-// map<string, string> parseChannels(const string& arguments) {
-// 	map<string, string> result;
-	
-// 	istringstream ss(arguments);
-// 	string channels_str, keys_str;
-
-// 	// Separate channel and key string:
-// 	getline(ss, channels_str, ' ');
-// 	if (!getline(ss, keys_str)) {
-// 		keys_str = "";
-// 	}
-
-// 	// Comma split:
-// 	vector<string> channels = commaSplit(channels_str);
-// 	vector<string> keys = commaSplit(keys_str);
-
-// 	// crate pairs:
-// 	for (size_t i = 0; i < channels.size(); ++i) {
-// 		string key_value = (i < keys.size()) ? keys[i] : "";
-// 		result.insert(channels[i], key_value);
-// 	}
-
-// 	return result;
-// }
-
 int	Server::PING(cmd cmd, User &user) {
 	(void)user;
 	if (cmd.arguments.empty()) {
@@ -84,6 +59,7 @@ int	Server::PONG(cmd cmd, User &user) {
 * ERR_NEEDMOREPARAMS		ERR_ALREADYREGISTRED
 */
 int	Server::PASS(cmd cmd, User &user) {
+	cout << "[" << cmd.arguments << "]" <<endl;
 	if (cmd.arguments.empty()) {
 		return (ERR_NEEDMOREPARAMS);
 	} else if (cmd.arguments != this->_password) {
@@ -144,6 +120,7 @@ int	Server::USER(cmd cmd, User &user) {
 	// } else if (user.getUserIsSet()) {
 	// 	return (ERR_ALREADYREGISTRED); //only setup user to register
 	}
+	user.setInfo(cmd.arguments);
 	user.setUserIsSet(true);
 	if (user.getNickIsSet() && !user.getIsRegistered()) {
 		user.setIsRegistered(true);
@@ -157,6 +134,7 @@ int	Server::USER(cmd cmd, User &user) {
 int Server::createChannel(User user, string channelName, string key) {
 	Channel channel(channelName); //should have a channel(name, password)
 	channel.setPassword(key);
+	channel.addUser(user.getUsername(), user);
 	channel.addOperator(user.getNickname());
 
 	this->channels.emplace(channelName, channel);
@@ -254,15 +232,45 @@ return 0;
 
 
 int	Server::QUIT(cmd cmd, User &user) {
-(void)cmd;
-(void) user;
-return 0;
+	if (user.quit(cmd.arguments) == -1) {
+		cerr << "Sending messages failes" <<endl;
+	}
+	return 0;
+}
+
+bool isJoinedChannel(User &user, Channel &channel) {
+	for (const auto &it : channel.getUserList()) {
+		if (it.first == user.getUsername()) {
+			return (true);
+		}
+	}
+	return (false);
 }
 
 int	Server::PART(cmd cmd, User &user) {
-(void)cmd;
-(void) user;
-return 0;
+	if (cmd.arguments.empty())
+		return (ERR_NEEDMOREPARAMS);
+
+	istringstream ss(cmd.arguments);
+	string channelList;
+	string	message;
+	getline(ss, channelList, ':');
+	getline(ss, message);
+
+	istringstream channel_ss(channelList);
+	string channelName;
+
+	while (channel_ss >> channelName) {
+		Channel *channel = this->findChannelByName(channelName);
+		if (channel == nullptr) {
+			return (ERR_NOSUCHCHANNEL);
+		} else if (!isJoinedChannel(user, *channel)) {
+			return (ERR_NOTONCHANNEL);
+		} else if (user.part(*channel, message) == -1) {
+			cerr << "Sending messages failes" <<endl;
+		}
+	}
+	return 0;
 }
 
 // channel commands:
