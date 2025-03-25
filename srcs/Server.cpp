@@ -127,15 +127,18 @@ void Server::handleClientMessages(size_t *index)
 		return;
 
 	int fd = fds[*index].fd;
-	cmd cmd = IO::recvCommand(fd);
+	vector<cmd> commands = IO::recvCommands(fd);
 
-	if (cmd.command != "DISCONNECT" && cmd.command != "ERROR")
+	if (commands[0].command != "DISCONNECT" && commands[0].command != "ERROR")
 	{
-		execute_command(cmd, users[fd]);
+		for (const auto &c : commands)
+		{
+			execute_command(c, users[fd]);
+		}
 		return;
 	}
 
-	if (cmd.command == "DISCONNECT")
+	if (commands[0].command == "DISCONNECT")
 		log(INFO, "Connection", "Client disconnected: " + users[fd].getNickname());
 	else // "ERROR"
 	{

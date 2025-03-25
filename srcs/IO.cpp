@@ -13,22 +13,37 @@ ssize_t IO::sendCommand(int fd, cmd cmd)
     return send(fd, buf, sizeof(buf), 0);
 }
 
-cmd IO::recvCommand(int fd)
+std::vector<cmd> IO::recvCommands(int fd)
 {
     char buf[512];
     ssize_t bytesReceived = recv(fd, buf, sizeof(buf), 0);
-
+    if (bytesReceived == 0)
+        return {{"", "DISCONNECT", ""}};
+    if (bytesReceived < 0)
+        return {{"", "ERROR", ""}};
+    buf[bytesReceived] = '\0';
     log(DEBUG, "RECV", string(buf));
 
-    if (bytesReceived == 0)
-        return {"", "DISCONNECT", ""};
-    if (bytesReceived < 0)
-        return {"", "ERROR", ""};
-    cmd cmd;
+
     istringstream stream(buf);
-    if (buf[0] == ':')  
-        stream >> cmd.prefix;
-    stream >> cmd.command;
-    getline(stream, cmd.arguments, '\r');
-    return cmd;
+    std::string line;
+    std::vector<cmd> list;
+
+    while (getline(stream, line))
+    {
+        cmd cmd = {"", "", ""};
+        istringstream lstream(line);
+        if (line[0] == ':')
+        {
+            getline(lstream, cmd.prefix, ' ');
+        }
+        getline(lstream, cmd.command, ' ');
+        getline(lstream, cmd.arguments, '\r');
+        std::cout << "p[" << cmd.prefix << "]" << std::endl;
+        std::cout << "c[" << cmd.command << "]" << std::endl;
+        std::cout << "a[" << cmd.arguments << "]" << std::endl;
+
+        list.push_back(cmd);
+    }
+    return list;
 }
