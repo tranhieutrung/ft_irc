@@ -44,6 +44,16 @@ string	Server::commandResponses(int code, cmd cmd, User &user) {
 		message += cmd.arguments + " :Cannot join channel (+k)"; //need a channel name, not arguments
 	} else if (code == ERR_BADCHANMASK) {
 		message += cmd.arguments + " :Bad Channel Mask"; //need a channel name, not arguments
+	} else if (code == ERR_UNKNOWNMODE) {
+		message += cmd.arguments +":Unknown mode";
+	}else if (code == ERR_CHANOPRIVSNEEDED) {
+		message += cmd.arguments +":You're not channel operator";
+	}else if (code == ERR_NOSUCHCHANNEL) {
+		message += cmd.arguments +":No such channel";
+	}else if (code == ERR_NOSUCHNICK) {
+		message += cmd.arguments +":No such nick/channel";
+	}else if (code == ERR_NOTREGISTERED) {
+		message += cmd.arguments +":You have not registered";
 	}
 	message += "\r\n";
 

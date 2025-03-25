@@ -155,7 +155,7 @@ int Server::createChannel(User user, string channelName, string key) {
 	Channel channel(channelName); //should have a channel(name, password)
 	channel.setPassword(key);
 	channel.addUser(user.getUsername(), user);
-	channel.addOperator(user.getNickname());
+	channel.addOperator(user);
 
 	this->channels.emplace(channelName, channel);
 	user.join(channel, key);
@@ -342,30 +342,4 @@ int	Server::PART(cmd cmd, User &user) {
 		}
 	}
 	return 0;
-}
-
-// channel commands:
-
-int	Server::KICK(cmd cmd, User &user) {
-(void)cmd;
-(void) user;
-return 0;
-}
-
-int	Server::INVITE(cmd cmd, User &user) {
-(void)cmd;
-(void) user;
-return 0;
-}
-
-int	Server::TOPIC(cmd cmd, User &user) {
-(void)cmd;
-(void) user;
-return 0;
-}
-
-int	Server::MODE(cmd cmd, User &user) {
-(void)cmd;
-(void) user;
-return 0;
 }
