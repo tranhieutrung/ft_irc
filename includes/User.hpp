@@ -60,6 +60,8 @@ class User
 		void setNickIsSet(const bool status);
 		void setUserIsSet(const bool status);
 		void setIsRegistered(const bool status);
+
+		friend bool operator==(const User &lhs, const User &rhs);
 };
 
 

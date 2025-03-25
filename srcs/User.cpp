@@ -237,3 +237,7 @@ int User::quit(const std::string &message) // leaves all joined channels
 	}
 	return 0;
 }
+
+bool operator==(const User &lhs, const User &rhs) {
+	return lhs.getFd() == rhs.getFd();
+}
