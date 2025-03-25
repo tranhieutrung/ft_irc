@@ -68,7 +68,7 @@ class Server
 		int	JOIN(cmd cmd, User &user);
 		int	PING(cmd cmd, User &user);
 		int	PONG(cmd cmd, User &user);
-		int	OPER(cmd cmd, User &user);
+		// int	OPER(cmd cmd, User &user);
 		int	PRIVMSG(cmd cmd, User &user);
 		int	QUIT(cmd cmd, User &user);
 		int	PART(cmd cmd, User &user);

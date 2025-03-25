@@ -68,8 +68,8 @@ void Server::execute_command(cmd cmd, User &user)
 		code = MODE(cmd, user); 
 	} else if (!user.getIsRegistered()) {
 		code = ERR_NOTREGISTERED; 
-	} else if (cmd.command == "OPER") {
-		code = OPER(cmd, user);
+	// } else if (cmd.command == "OPER") {
+	// 	code = OPER(cmd, user);
 	} else if (cmd.command == "INVITE") {
 		code = INVITE(cmd, user); 
 	} else if (cmd.command == "PRIVMSG") {
