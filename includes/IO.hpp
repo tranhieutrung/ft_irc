@@ -2,21 +2,20 @@
 #define IO_HPP
 
 #include <string>
-
-using namespace std;
+#include <vector>
 
 struct cmd
 {
-	string prefix;
-	string command;
-	string arguments;
+	std::string prefix;
+	std::string command;
+	std::string arguments;
 };
 
 class IO
 {
 	public:
 		static ssize_t sendCommand(int fd, cmd cmd);
-		static cmd recvCommand(int fd);
+		static std::vector<cmd> recvCommands(int fd);
 		IO() = delete;
 };
 

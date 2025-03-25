@@ -129,18 +129,6 @@ int User::setInfo(const std::string &args)
 	return setRealname(real);
 }
 
-ostream& operator<<(ostream &os, const User &user)
-{
-	os << "Nickname: " << user.getNickname() << endl;
-	os << "Username: " << user.getUsername() << endl;
-	os << "Hostname: " << user.getHostname() << endl;
-	os << "Servername: " << user.getServername() << endl;
-	os << "Realname: " << user.getRealname() << endl;
-	os << "fd: " << user.getFd() << endl;
-	os << "isOperator: " << user.getIsOperator() << endl;
-	return os;
-}
-
 string User::getFullIdentifier() const
 {
 	return ":" + nickname + "!" + username + "@" + hostname;
