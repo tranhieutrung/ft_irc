@@ -169,7 +169,7 @@ int User::privmsg(const Channel &channel, const std::string &message) const
 
 int User::join(Channel &channel)
 {
-	return join(channel, "");
+	return join(channel, ""); 
 	// if no password is given, try to login with an empty password.
 	// If channel is not password protected, it could have an empty password so this works
 }
@@ -249,7 +249,6 @@ int User::quit(const std::string &message) // leaves all joined channels
 	}
 	return 0;
 }
-
 
 bool operator==(const User &lhs, const User &rhs) {
 	return lhs.getFd() == rhs.getFd();

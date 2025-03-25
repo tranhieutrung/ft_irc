@@ -24,13 +24,13 @@
 #include "Channel.hpp"
 #include "ErrorCodes.hpp"
 #include "ReplyCodes.hpp"
-#include <optional>
+#include <regex>
 
 using namespace std;
 
 class User;
 
-enum log_level { INFO, WARN, ERROR };
+enum log_level { DEBUG, INFO, WARN, ERROR };
 
 class Server
 {
@@ -41,7 +41,7 @@ class Server
 		// const int port; trung
 		// const int max_clients; trung
 		static volatile sig_atomic_t running;
-
+		
 		const string	_name = "IRCS";
 		const int		_port;
 		const string 	_password;
@@ -49,7 +49,7 @@ class Server
 		// int				_serverSocket;
 
 		void handleNewClient();
-		void handleClientMessages(int index);
+		void handleClientMessages(size_t *index);
 		void cleanup();
 		void process_message(int clientFd, string buffer);
 		// int create_socket();
@@ -80,6 +80,10 @@ class Server
 		int	MODE(cmd cmd, User &user);
 
 		string	commandResponses(int code, cmd cmd, User &user);
+		// bool	existChannel(string channel);
+		int createChannel(User user, string channelName, string key);
+		Channel* findChannelByName(const std::string& channelName);
+
 	public:
 		// Server(const int port); Trung
 		Server(std::string port, std::string password);
@@ -91,11 +95,10 @@ class Server
 		const User*		getUser(int fd);
 		const User*		getUser(const string &nickname);
 
-		void			log(log_level level, const string &event, const string &details);
-
+		
 		void			print_status();
-
 		std::optional<std::map<string, Channel>::iterator> findChannel(string channel);
-};
-
+	};
+	void			log(log_level level, const string &event, const string &details);
+	
 #endif

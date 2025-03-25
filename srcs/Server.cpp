@@ -32,74 +32,64 @@ string	Server::commandResponses(int code, cmd cmd, User &user) {
 		message += cmd.command + " :Unknown command";
 	} else if (code == ERR_NOTREGISTERED) {
 		message += ":You have not registered";
-	} else if (code == ERR_UNKNOWNMODE) {
-		message += cmd.arguments +":Unknown mode";
-	}else if (code == ERR_CHANOPRIVSNEEDED) {
-		message += cmd.arguments +":You're not channel operator";
-	}else if (code == ERR_NOSUCHCHANNEL) {
-		message += cmd.arguments +":No such channel";
-	}else if (code == ERR_NOSUCHNICK) {
-		message += cmd.arguments +":No such nick/channel";
-	}else if (code == ERR_NOTREGISTERED) {
-		message += cmd.arguments +":You have not registered";
+	} else if (code == ERR_NOORIGIN) {
+		message += ":No origin specified";
+	} else if (code == ERR_NOSUCHSERVER) {
+		message += cmd.arguments + " :No such server";
+	} else if (code == ERR_INVITEONLYCHAN) {
+		message += cmd.arguments + " :Cannot join channel (+i)"; //need a channel name, not arguments
+	} else if (code == ERR_CHANNELISFULL) {
+		message += cmd.arguments + " :Cannot join channel (+l)"; //need a channel name, not arguments
+	} else if (code == ERR_BADCHANNELKEY) {
+		message += cmd.arguments + " :Cannot join channel (+k)"; //need a channel name, not arguments
+	} else if (code == ERR_BADCHANMASK) {
+		message += cmd.arguments + " :Bad Channel Mask"; //need a channel name, not arguments
 	}
-
 	message += "\r\n";
 
 	return (message);
 }
 
-
 void Server::execute_command(cmd cmd, User &user)
 {
 	int code;
 
-	if (cmd.command == "PASS") {
+	if (cmd.command == "PING") {
+		code = PING(cmd, user);
+	} else if (cmd.command == "PASS") {
 		code = PASS(cmd, user);
-	} else if (!user.getAuth()) {
-		code = ERR_NOLOGIN;
+	//} else if (!user.getAuth()) {
+	// 	code = ERR_NOLOGIN;
 	} else if (cmd.command == "NICK") {
 		code = NICK(cmd, user);
 	} else if (cmd.command == "USER") {
 		code = USER(cmd, user);
+	} else if (cmd.command == "MODE") {
+		code = MODE(cmd, user);
 	} else if (!user.getIsRegistered()) {
 		code = ERR_NOTREGISTERED;
-	// else if (cmd.command == "OPER")
-	// 	code = OPER(cmd, user);
-	}else if (cmd.command == "MODE")
-	 	code = MODE(cmd, user);
-	else if (cmd.command == "INVITE")
+	} else if (cmd.command == "OPER") {
+		code = OPER(cmd, user);
+	} else if (cmd.command == "INVITE") {
 		code = INVITE(cmd, user);
-	// else if (cmd.command == "PRIVMSG")
-	// 	code = PRIVMSG(cmd, user);
-	// else if (cmd.command == "JOIN")
-	// 	code = JOIN(cmd, user);
-	 else if (cmd.command == "TOPIC")
-	 	code = TOPIC(cmd, user);
-	 else if (cmd.command == "KICK")
-	 	code = KICK(cmd, user);
-	// else if (cmd.command == "QUIT")
-	// 	code = QUIT(cmd, user);
-	// else if (cmd.command == "PART")
-	// 	code = PART(cmd, user);
-	else {
+	} else if (cmd.command == "PRIVMSG") {
+		code = PRIVMSG(cmd, user);
+	} else if (cmd.command == "JOIN") {
+		code = JOIN(cmd, user);
+	} else if (cmd.command == "TOPIC") {
+		code = TOPIC(cmd, user);
+	} else if (cmd.command == "KICK") {
+		code = KICK(cmd, user);
+	} else if (cmd.command == "QUIT") {
+		code = QUIT(cmd, user);
+	} else if (cmd.command == "PART") {
+		code = PART(cmd, user);
+	} else {
 		code = ERR_UNKNOWNCOMMAND;
 	}
 	string message = commandResponses(code, cmd, user);
 	if (code && send(user.getFd(), message.c_str(), message.length(), 0) == -1)
 		cerr << "send() error: " << strerror(errno) << endl;
-}
-
-static cmd parse_line(string &message)
-{
-	cmd cmd;
-	istringstream stream(message);
-	if (message[0] == ':')
-		stream >> cmd.prefix;
-	stream >> cmd.command;
-	stream.ignore(1); // skip space
-	getline(stream, cmd.arguments, '\r');
-	return cmd;
 }
 
 string Server::client_info(struct sockaddr_in &client_addr)
@@ -130,37 +120,32 @@ void Server::handleNewClient()
 	}
 }
 
-void Server::process_message(int clientFd, string buffer)
+void Server::handleClientMessages(size_t *index)
 {
-	stringstream message;
-	message << buffer;
-	string line;
-	while (getline(message, line)) {
-		execute_command(parse_line(line), users[clientFd]);
-	}
-}
 
-void Server::handleClientMessages(int i)
-{
-	if (fds[i].revents & POLLIN)
+	if ((fds[*index].revents & POLLIN) == false)
+		return;
+
+	int fd = fds[*index].fd;
+	cmd cmd = IO::recvCommand(fd);
+	if (cmd.command != "DISCONNECT" && cmd.command != "ERROR")
 	{
-		char buffer[1024] = {0}; // what if over 1024
-		int bytesReceived = recv(fds[i].fd, buffer, sizeof(buffer), 0);
-
-		if (bytesReceived > 0) {
-			process_message(fds[i].fd, buffer);
-		} else {
-			if (bytesReceived == 0) {
-				log(INFO, "Connection", "Client disconnected: " + users[fds[i].fd].getNickname()); //if client has set their Nick/Username, it will null
-			} else {
-				cerr << "recv() failed: " << strerror(errno) << endl;
-			}
-			close(fds[i].fd);
-			users.erase(fds[i].fd);
-			fds.erase(fds.begin() + i);
-			i--;
-		}
+		execute_command(cmd, users[fd]);
+		return;
 	}
+
+	if (cmd.command == "DISCONNECT")
+		log(INFO, "Connection", "Client disconnected: " + users[fd].getNickname());
+	else // "ERROR"
+	{
+		close(fd);
+		throw runtime_error("recv() failed");
+	}
+
+	close(fd);
+	users.erase(fd);
+	fds.erase(fds.begin() + *index);
+	*index -= 1;
 }
 
 void Server::cleanup()
@@ -225,7 +210,7 @@ void Server::start()
 			if (index == 0) { // fds[0] = serverSocket
 				handleNewClient();
 			} else {
-				handleClientMessages(index);
+				handleClientMessages(&index);
 			}
 		}
 	}
@@ -254,7 +239,7 @@ const User* Server::getUser(int fd)
 	return nullptr;
 }
 
-void Server::log(log_level level, const string &event, const string &details)
+void log(log_level level, const string &event, const string &details)
 {
 	time_t now = time(nullptr);
 	tm *ltm = localtime(&now);
@@ -279,7 +264,18 @@ void Server::log(log_level level, const string &event, const string &details)
 			cout << RED;
 			cout << "[ERROR] "; //cerr?
 			break;
+		case DEBUG:
+			cout << "[DEBUG]";
+			break;
 	}
 	cout << RESET;
 	cout << "[" << event << "] " << details << endl;
+}
+
+Channel* Server::findChannelByName(const string& channelName) {
+	auto it = this->channels.find(channelName);
+	if (it != this->channels.end()) {
+		return &it->second;
+	}
+	return nullptr;
 }

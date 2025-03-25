@@ -181,4 +181,17 @@
 #define ERR_NOLOGIN 444
 //  "<user> :User not logged in"
 
+#define ERR_NOORIGIN 409
+//":No origin specified"
+// PING or PONG message missing the originator parameter.
+
+#define ERR_NOSUCHSERVER 402
+// "<server name> :No such server"
+// Used to indicate the server name given currently does not exist.
+
+#define ERR_NOTONCHANNEL	442
+// "<channel> :You're not on that channel"
+// Returned by the server whenever a client tries to perform a channel affecting 
+// command for which the client isn't a member.
+
 #endif // IRC_ERROR_CODES_HPP

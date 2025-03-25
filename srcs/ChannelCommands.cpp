@@ -22,7 +22,6 @@ int	Server::TOPIC(cmd cmd, User &user)
 	string message;
 
 	stream >> channel >> topic;
-	cout << "   "<< channel <<"   "<< topic<< endl;
 	return 0;
 	if (channel.empty())
 	{
@@ -34,12 +33,12 @@ int	Server::TOPIC(cmd cmd, User &user)
     }
 
     std::map<string, Channel>::iterator it = *itOpt;
-	if (!topic.empty())
+	if (topic.empty())
 	{
 		message = it->second.getChannelTopic();
 		message += "\r\n";
 		if (send(user.getFd(), message.c_str(), message.length(), 0) == -1)
-		cerr << "send() error: " << strerror(errno) << endl;
+			cerr << "send() error: " << strerror(errno) << endl;
 		return (0);
 	}
 	if (it->second.isTopicRestricted() && !it->second.isOperator(user))
@@ -217,7 +216,6 @@ int	Server::INVITE(cmd cmd, User &user)
 	{
 		return (ERR_NOSUCHNICK);
 	}
-	//sendInvite();
 	message =  "Invited " + target + "\r\n";
 
 	if (send(user.getFd(), message.c_str(), message.length(), 0) == -1)

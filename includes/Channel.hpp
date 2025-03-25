@@ -1,4 +1,3 @@
-
 #ifndef CHANNEL_HPP
 #define CHANNEL_HPP
 
@@ -22,16 +21,15 @@ class Channel
             string ChannelName;
             string ChannelTopic;
             string password;
-            map<string, User> UserList;
+            map<string, User> UserList;  // Using 'User' here will now work because of the forward declaration
             bool        inviteOnly;
             bool        topic_restriction;
             vector<User>      operators;
             unsigned int        userLimit;
 
     public:
-
         Channel() : ChannelName(""), ChannelTopic(""), password(""), inviteOnly(false), topic_restriction(false), userLimit(999) {}
-        Channel(const std::string& name) : ChannelName(name),  ChannelTopic(""), password(""), inviteOnly(false), topic_restriction(false), userLimit(999) {}
+        Channel(const std::string& name) : ChannelName(name), inviteOnly(false), topic_restriction(false) {}
 
         // Getters
         std::string getChannelName() const { return ChannelName; }
@@ -51,14 +49,13 @@ class Channel
         void setUserLimit(const unsigned int limit) {userLimit = limit;}
 
         // User management
-        void addUser(const string& username, const User& user) ;
-        void removeUser(string user);
+        void addUser(const string& username, const User& user) ;//{ UserList[username] = user; }
+        void removeUser(string user); //{ UserList.erase(user);};
         std::optional<std::map<string, User>::iterator> findUser(string username);
         void addOperator(const User& nick) ;
         void removeOperator(const User& nick) ;
         bool isOperator(const User& nick) const ;
+
 };
 
 #endif
-
-
