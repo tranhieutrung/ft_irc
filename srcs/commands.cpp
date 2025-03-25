@@ -34,30 +34,30 @@ vector<string> commaSplit(string str) {
 	return (result);
 }
 
-vector<pair<string, string>> parseChannels(const string& arguments) {
-	vector<pair<string, string>> result;
+// map<string, string> parseChannels(const string& arguments) {
+// 	map<string, string> result;
 	
-	istringstream ss(arguments);
-	string channels_str, keys_str;
+// 	istringstream ss(arguments);
+// 	string channels_str, keys_str;
 
-	// Separate channel and key string:
-	getline(ss, channels_str, ' ');
-	if (!getline(ss, keys_str)) {
-		keys_str = "";
-	}
+// 	// Separate channel and key string:
+// 	getline(ss, channels_str, ' ');
+// 	if (!getline(ss, keys_str)) {
+// 		keys_str = "";
+// 	}
 
-	// Comma split:
-	vector<string> channels = commaSplit(channels_str);
-	vector<string> keys = commaSplit(keys_str);
+// 	// Comma split:
+// 	vector<string> channels = commaSplit(channels_str);
+// 	vector<string> keys = commaSplit(keys_str);
 
-	// crate pairs:
-	for (size_t i = 0; i < channels.size(); ++i) {
-		string key_value = (i < keys.size()) ? keys[i] : "";
-		result.emplace_back(channels[i], key_value);
-	}
+// 	// crate pairs:
+// 	for (size_t i = 0; i < channels.size(); ++i) {
+// 		string key_value = (i < keys.size()) ? keys[i] : "";
+// 		result.insert(channels[i], key_value);
+// 	}
 
-	return result;
-}
+// 	return result;
+// }
 
 int	Server::PING(cmd cmd, User &user) {
 	(void)user;
@@ -152,26 +152,40 @@ int	Server::USER(cmd cmd, User &user) {
 	return (0);
 }
 
-bool Server::existChannel(string Name) {
-	for (auto &[str, channel] : this->channels) {
-		if (channel.getChannelName() == Name) {
-			return (true);
-		}
-	}
-	return (false);
-}
+
 //user create and join a new channel
 int Server::createChannel(User user, string channelName, string key) {
-	(void)user;
-	(void)channelName;
-	(void)key;
+	Channel channel(channelName); //should have a channel(name, password)
+	channel.setPassword(key);
+	channel.addOperator(user.getNickname());
+
+	this->channels.emplace(channelName, channel);
+	user.join(channel, key);
+	//if creation failed, return error code
 	return (0);
 }
 
+/*
+*  Channels names are strings (beginning with a '&', '#', '+' or '!'
+   character) of length up to fifty (50) characters.  Apart from the
+   requirement that the first character is either '&', '#', '+' or '!',
+   the only restriction on a channel name is that it SHALL NOT contain
+   any spaces (' '), a control G (^G or ASCII 7), a comma (',').  Space
+   is used as parameter separator and command is used as a list item
+   separator by the protocol).  A colon (':') can also be used as a
+   delimiter for the channel mask.  Channel names are case insensitive.
+*/
+bool isValidChannelName(const string& channelName) {
+	if (channelName.empty() || channelName.size() > 50)
+		return (false);
+    regex channelRegex(R"(^[&#+!][^[:space:],^G,]*$)");
+    return regex_match(channelName, channelRegex);
+}
+
 /** Numeric Replies:
-* ERR_NEEDMOREPARAMS		ERR_BANNEDFROMCHAN
-* ERR_INVITEONLYCHAN		ERR_BADCHANNELKEY
-* ERR_CHANNELISFULL			ERR_BADCHANMASK
+* ERR_NEEDMOREPARAMS -		ERR_BANNEDFROMCHAN
+* ERR_INVITEONLYCHAN -		ERR_BADCHANNELKEY -
+* ERR_CHANNELISFULL	- 		ERR_BADCHANMASK -
 * ERR_NOSUCHCHANNEL			ERR_TOOMANYCHANNELS
 * ERR_TOOMANYTARGETS		ERR_UNAVAILRESOURCE
 * RPL_TOPIC
@@ -183,19 +197,46 @@ int	Server::JOIN(cmd cmd, User &user) {
 	} else if (cmd.arguments == "0") {
 		user.quit(user.getNickname() + " left"); //part all joined channels
 	}
-	vector<pair<string, string>> channelPairs = parseChannels(cmd.arguments);
-	for (pair<string, string> channel : channelPairs) {
-		if (!existChannel(channel.first)) {
-			return (createChannel(user, channel.first, channel.second));
-		}
-		//check too many channels: ERR_TOOMANYCHANNELS
-		//check  invited channel: ERR_INVITEONLYCHAN
-		//check use banned: ERR_BANNEDFROMCHAN
-		//check full chanel: ERR_CHANNELISFULL
-		//check channel key: ERR_BADCHANNELKEY
-		//check other: ERR_BADCHANMASK, ERR_UNAVAILRESOURCE, ERR_NOSUCHCHANNEL, ERR_TOOMANYTARGETS
 
+	// Parsing:
+	istringstream ss(cmd.arguments);
+	string channels_str, keys_str;
+
+	// Separate channel and key string:
+	getline(ss, channels_str, ' ');
+	getline(ss, keys_str);
+
+	// Comma split:
+	vector<string> channels = commaSplit(channels_str);
+	vector<string> keys = commaSplit(keys_str);
+
+	if (keys.size() > channels.size()) {
+		return (ERR_NEEDMOREPARAMS);
 	}
+	// crate pairs:
+	for (size_t index = 0; index < channels.size(); ++index) {
+		if (!isValidChannelName(channels[index])) {
+			return (ERR_BADCHANMASK);
+		}
+		string keyValue = "";
+
+		if (index < keys.size()) {
+			keyValue = keys[index];
+		}
+
+		Channel *channel = this->findChannelByName(channels[index]);
+		int		code = 0;
+
+		if (channel == nullptr) {
+			code = createChannel(user, channels[index], keyValue);
+		} else {
+			code = user.join(*channel, keyValue);
+		}
+
+		if (code)
+			return (code);
+	}
+
 	return (0);
 }
 
