@@ -9,8 +9,11 @@ ssize_t IO::sendCommand(int fd, cmd cmd)
     stream << cmd.prefix << " ";
     stream << cmd.command << " ";
     stream << cmd.arguments << "\r\n";
-    const char *buf = stream.str().c_str();
-    return send(fd, buf, sizeof(buf), 0);
+    std::string sbuf = stream.str();
+
+    log(DEBUG, "SEND", sbuf);
+
+    return send(fd, sbuf.c_str(), sbuf.size(), 0);
 }
 
 std::vector<cmd> IO::recvCommands(int fd)

@@ -138,7 +138,7 @@ int User::privmsg(const User &recipient, const std::string &message) const
 {
 	if (message.empty())
 		return ERR_NOTEXTTOSEND;
-	IO::sendCommand(recipient.fd, {getFullIdentifier(), recipient.nickname, message});
+	IO::sendCommand(recipient.fd, {getFullIdentifier(), "PRIVMSG", recipient.nickname + " " + message});
 	return 0;
 }
 
@@ -148,7 +148,8 @@ int User::privmsg(const Channel &channel, const std::string &message) const
 	//	return ERR_CANNOTSENDTOCHAN;
 	for (const auto &pair : channel.getUserList())
 	{
-		int ret = privmsg(pair.second, message);
+		log(DEBUG, "PRIVMSG", pair.second.getNickname() + " is in channel " + channel.getChannelName());
+		int ret = IO::sendCommand(pair.second.getFd(), {getFullIdentifier(), "PRIVMSG", channel.getChannelName() + " " + message});
 		if (ret != 0)
 			return ret;
 	}
@@ -168,7 +169,7 @@ int User::join(Channel &channel, const string &password)
 		return ERR_BADCHANNELKEY;
 	if (channel.isInviteOnly())
 		return ERR_INVITEONLYCHAN;
-	if (channel.getUserLimit() >= channel.getUserList().size())
+	if (channel.getUserLimit() <= channel.getUserList().size())
 		return ERR_CHANNELISFULL;
 	channel.addUser(username, *this);
 	joinedChannels[channel.getChannelName()] = channel;
