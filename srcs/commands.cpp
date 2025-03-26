@@ -79,7 +79,7 @@ int	Server::PONG(cmd cmd, User &user) {
 * ERR_NEEDMOREPARAMS		ERR_ALREADYREGISTRED
 */
 int	Server::PASS(cmd cmd, User &user) {
-	cout << "[" << cmd.arguments << "]" <<endl;
+	// cout << "[" << cmd.arguments << "]" <<endl;
 	if (cmd.arguments.empty()) {
 		return (ERR_NEEDMOREPARAMS);
 	} else if (cmd.arguments != this->_password) {
@@ -102,8 +102,8 @@ bool	Server::_nickIsUsed(string nick) {
 }
 
 bool	Server::_userIsUsed(string username) {
-	for (auto &[fd, user] : this->users) {
-		if (user.getUsername() == username) {
+	for (auto &it : this->users) {
+		if (it.second.getUsername() == username) {
 			return (true);
 		}
 	}
@@ -238,11 +238,16 @@ int	Server::JOIN(cmd cmd, User &user) {
 	return (0);
 }
 
-bool matchesWildcard(const std::string &pattern, const std::string &target) {
-    // Thay đổi dấu * thành dấu . và ? thành dấu .
-    std::string regexPattern = "^" + std::regex_replace(pattern, std::regex("\\*"), ".*") + "$";
-    std::regex re(regexPattern);
-    return std::regex_match(target, re);
+bool matchesWildcard(const string &pattern, const string &target) {
+    string regexPattern = "^" + regex_replace(pattern, regex("\\*"), ".*") + "$";
+    regex re(regexPattern);
+    return regex_match(target, re);
+}
+
+bool targetIsUser(char c) {
+	if (c == '#' || c == '&' || c == '+' || c == '!')
+		return (false);
+	return (true);
 }
 
 /*
@@ -254,14 +259,16 @@ bool matchesWildcard(const std::string &pattern, const std::string &target) {
            RPL_AWAY
 */
 int	Server::PRIVMSG(cmd cmd, User &user) {
-	if (cmd.arguments.empty())
+	if (cmd.arguments.empty()) {
+		return (ERR_NORECIPIENT);
+	} else if (countWords(cmd.arguments) < 2) {
 		return (ERR_NEEDMOREPARAMS);
+	}
 
 	istringstream 	argSS(cmd.arguments);
-	string			target;
-	string			message;
+	string			target, message;
 
-	getline(argSS, target, ':');
+	getline(argSS, target, ' ');
 	getline(argSS, message);
 
 	if (message.empty()) {
@@ -269,21 +276,34 @@ int	Server::PRIVMSG(cmd cmd, User &user) {
 		argSS.seekg(0); // move the pointer to the beginning
 		argSS >> target >> message; // If there is more than one space, it will skip over the remaining words.
 	}
+	if (message.empty())
+		return (ERR_NOTEXTTOSEND);
 
+	if (target.find(',') != string::npos) {
+		return (ERR_TOOMANYTARGETS);
+	} else if (targetIsUser(target[0])) {
+		string nickName;
+		size_t pos = target.find('!');
+		if (pos != string::npos) {
+			nickName = target.substr(0, pos);
+		} else {
+			nickName = target;
+		}
+		User *targetUser = findUserByNickName(nickName);
+		if (targetUser == nullptr) {
+			return (ERR_NOSUCHNICK);
+		} else {
+			return(user.privmsg(*targetUser, message));
+		}
+	} else {
+		Channel *targetChannel = findChannelByName(target);
 
-	// while (getline(channel_ss, channelName, ',')) {
-	// 	if (channelName.empty())
-	// 		continue;;
-	// 	Channel *channel = this->findChannelByName(channelName);
-	// 	if (channel == nullptr) {
-	// 		return (ERR_NOSUCHCHANNEL);
-	// 	} else if (!isJoinedChannel(user, *channel)) {
-	// 		return (ERR_NOTONCHANNEL);
-	// 	} else if (user.part(*channel, message) == -1) {
-	// 		cerr << "Sending messages failes" <<endl;
-	// 	}
-	// }
-	return 0;
+		if (targetChannel == nullptr) {
+			return (ERR_NOSUCHNICK);
+		} else {
+			return (user.privmsg(*targetChannel, message));
+		}
+	}
 }
 
 // int	Server::OPER(cmd cmd, User &user) {
@@ -294,8 +314,25 @@ int	Server::PRIVMSG(cmd cmd, User &user) {
 
 
 int	Server::QUIT(cmd cmd, User &user) {
-	if (user.quit(cmd.arguments) == -1) {
+	size_t pos = cmd.arguments.find(':');
+	string message;
+	string temp;
+
+	message = ":" + user.getFullIdentifier() + " QUIT :";
+	if (pos != string::npos) {
+		temp = cmd.arguments.substr(pos + 1);
+	} else {
+		istringstream ss(cmd.arguments);
+		ss >> temp;
+	}
+
+	if (temp.empty()) {
+		temp = "Client quit";
+	}
+	message += temp;
+	if (user.quit(message) == -1) {
 		cerr << "Sending messages failes" <<endl;
+		return (-1);
 	}
 	return 0;
 }
@@ -331,7 +368,7 @@ int	Server::PART(cmd cmd, User &user) {
 
 	while (getline(channel_ss, channelName, ',')) {
 		if (channelName.empty())
-			continue;;
+			continue;
 		Channel *channel = this->findChannelByName(channelName);
 		if (channel == nullptr) {
 			return (ERR_NOSUCHCHANNEL);
@@ -339,6 +376,7 @@ int	Server::PART(cmd cmd, User &user) {
 			return (ERR_NOTONCHANNEL);
 		} else if (user.part(*channel, message) == -1) {
 			cerr << "Sending messages failes" <<endl;
+			return (-1);
 		}
 	}
 	return 0;

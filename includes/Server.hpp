@@ -83,6 +83,7 @@ class Server
 		// bool	existChannel(string channel);
 		int createChannel(User user, string channelName, string key);
 		Channel* findChannelByName(const std::string& channelName);
+		User* findUserByNickName(const string& nickName);
 
 	public:
 		// Server(const int port); Trung
