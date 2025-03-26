@@ -2,10 +2,10 @@
 
 int countWords(const 	string &s) {
 	size_t pos = s.find(":");
-		string beforeColon = (pos != 	string::npos) ? s.substr(0, pos) : s;
+	string beforeColon = (pos != 	string::npos) ? s.substr(0, pos) : s;
 	
-		stringstream ss(beforeColon);
-		string word;
+	istringstream ss(beforeColon);
+	string word;
 	int count = 0;
 
 	while (ss >> word) {
@@ -18,6 +18,26 @@ int countWords(const 	string &s) {
 
 	return count;
 }
+
+// vector <string> parsing(const 	string &s) {
+// 	size_t pos = s.find(":");
+	
+// 	vector <string> result;
+// 	string beforeColon = (pos != string::npos) ? s.substr(0, pos) : s;
+		
+// 	istringstream ss(beforeColon);
+// 	string word;
+
+// 	while (ss >> word) {
+// 		result.emplace_back(word);
+// 	}
+
+// 	if (pos != 	string::npos) {
+// 		result.emplace_back(s.substr(pos + 1));
+// 	}
+
+// 	return result;
+// }
 
 vector<string> commaSplit(string str) {
 	vector<string> result;
@@ -59,7 +79,7 @@ int	Server::PONG(cmd cmd, User &user) {
 * ERR_NEEDMOREPARAMS		ERR_ALREADYREGISTRED
 */
 int	Server::PASS(cmd cmd, User &user) {
-	cout << "[" << cmd.arguments << "]" <<endl;
+	// cout << "[" << cmd.arguments << "]" <<endl;
 	if (cmd.arguments.empty()) {
 		return (ERR_NEEDMOREPARAMS);
 	} else if (cmd.arguments != this->_password) {
@@ -82,8 +102,8 @@ bool	Server::_nickIsUsed(string nick) {
 }
 
 bool	Server::_userIsUsed(string username) {
-	for (auto &[fd, user] : this->users) {
-		if (user.getUsername() == username) {
+	for (auto &it : this->users) {
+		if (it.second.getUsername() == username) {
 			return (true);
 		}
 	}
@@ -191,7 +211,7 @@ int	Server::JOIN(cmd cmd, User &user) {
 	if (keys.size() > channels.size()) {
 		return (ERR_NEEDMOREPARAMS);
 	}
-	// crate pairs:
+
 	for (size_t index = 0; index < channels.size(); ++index) {
 		if (!isValidChannelName(channels[index])) {
 			return (ERR_BADCHANMASK);
@@ -218,22 +238,101 @@ int	Server::JOIN(cmd cmd, User &user) {
 	return (0);
 }
 
-int	Server::PRIVMSG(cmd cmd, User &user) {
-(void)cmd;
-(void) user;
-return 0;
+bool matchesWildcard(const string &pattern, const string &target) {
+    string regexPattern = "^" + regex_replace(pattern, regex("\\*"), ".*") + "$";
+    regex re(regexPattern);
+    return regex_match(target, re);
 }
 
-int	Server::OPER(cmd cmd, User &user) {
-(void)cmd;
-(void) user;
-return 0;
+bool targetIsUser(char c) {
+	if (c == '#' || c == '&' || c == '+' || c == '!')
+		return (false);
+	return (true);
 }
+
+/*
+* Numeric Replies:
+         ERR_NORECIPIENT                 ERR_NOTEXTTOSEND
+          ERR_CANNOTSENDTOCHAN            ERR_NOTOPLEVEL
+           ERR_WILDTOPLEVEL                ERR_TOOMANYTARGETS
+           ERR_NOSUCHNICK
+           RPL_AWAY
+*/
+int	Server::PRIVMSG(cmd cmd, User &user) {
+	if (cmd.arguments.empty()) {
+		return (ERR_NORECIPIENT);
+	} else if (countWords(cmd.arguments) < 2) {
+		return (ERR_NEEDMOREPARAMS);
+	}
+
+	istringstream 	argSS(cmd.arguments);
+	string			target, message;
+
+	getline(argSS, target, ' ');
+	getline(argSS, message);
+
+	if (message.empty()) {
+		argSS.clear();  // clear any error status
+		argSS.seekg(0); // move the pointer to the beginning
+		argSS >> target >> message; // If there is more than one space, it will skip over the remaining words.
+	}
+	if (message.empty())
+		return (ERR_NOTEXTTOSEND);
+
+	if (target.find(',') != string::npos) {
+		return (ERR_TOOMANYTARGETS);
+	} else if (targetIsUser(target[0])) {
+		string nickName;
+		size_t pos = target.find('!');
+		if (pos != string::npos) {
+			nickName = target.substr(0, pos);
+		} else {
+			nickName = target;
+		}
+		User *targetUser = findUserByNickName(nickName);
+		if (targetUser == nullptr) {
+			return (ERR_NOSUCHNICK);
+		} else {
+			return(user.privmsg(*targetUser, message));
+		}
+	} else {
+		Channel *targetChannel = findChannelByName(target);
+
+		if (targetChannel == nullptr) {
+			return (ERR_NOSUCHNICK);
+		} else {
+			return (user.privmsg(*targetChannel, message));
+		}
+	}
+}
+
+// int	Server::OPER(cmd cmd, User &user) {
+// (void)cmd;
+// (void) user;
+// return 0;
+// }
 
 
 int	Server::QUIT(cmd cmd, User &user) {
-	if (user.quit(cmd.arguments) == -1) {
+	size_t pos = cmd.arguments.find(':');
+	string message;
+	string temp;
+
+	message = ":" + user.getFullIdentifier() + " QUIT :";
+	if (pos != string::npos) {
+		temp = cmd.arguments.substr(pos + 1);
+	} else {
+		istringstream ss(cmd.arguments);
+		ss >> temp;
+	}
+
+	if (temp.empty()) {
+		temp = "Client quit";
+	}
+	message += temp;
+	if (user.quit(message) == -1) {
 		cerr << "Sending messages failes" <<endl;
+		return (-1);
 	}
 	return 0;
 }
@@ -251,16 +350,25 @@ int	Server::PART(cmd cmd, User &user) {
 	if (cmd.arguments.empty())
 		return (ERR_NEEDMOREPARAMS);
 
-	istringstream ss(cmd.arguments);
-	string channelList;
-	string	message;
-	getline(ss, channelList, ':');
-	getline(ss, message);
+	istringstream 	argSS(cmd.arguments);
+	string			channelList;
+	string			message;
+
+	getline(argSS, channelList, ':');
+	getline(argSS, message);
+
+	if (message.empty()) {
+		argSS.clear();  // clear any error status
+		argSS.seekg(0); // move the pointer to the beginning
+		argSS >> channelList >> message; // If there is more than one space, it will skip over the remaining words.
+	}
 
 	istringstream channel_ss(channelList);
 	string channelName;
 
-	while (channel_ss >> channelName) {
+	while (getline(channel_ss, channelName, ',')) {
+		if (channelName.empty())
+			continue;
 		Channel *channel = this->findChannelByName(channelName);
 		if (channel == nullptr) {
 			return (ERR_NOSUCHCHANNEL);
@@ -268,6 +376,7 @@ int	Server::PART(cmd cmd, User &user) {
 			return (ERR_NOTONCHANNEL);
 		} else if (user.part(*channel, message) == -1) {
 			cerr << "Sending messages failes" <<endl;
+			return (-1);
 		}
 	}
 	return 0;
