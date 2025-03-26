@@ -45,15 +45,27 @@ string	Server::commandResponses(int code, cmd cmd, User &user) {
 	} else if (code == ERR_BADCHANMASK) {
 		message += cmd.arguments + " :Bad Channel Mask"; //need a channel name, not arguments
 	} else if (code == ERR_UNKNOWNMODE) {
-		message += cmd.arguments +":Unknown mode";
-	}else if (code == ERR_CHANOPRIVSNEEDED) {
-		message += cmd.arguments +":You're not channel operator";
-	}else if (code == ERR_NOSUCHCHANNEL) {
-		message += cmd.arguments +":No such channel";
-	}else if (code == ERR_NOSUCHNICK) {
-		message += cmd.arguments +":No such nick/channel";
-	}else if (code == ERR_NOTREGISTERED) {
-		message += cmd.arguments +":You have not registered";
+		message += cmd.arguments + " :Unknown mode";
+	} else if (code == ERR_CHANOPRIVSNEEDED) {
+		message += cmd.arguments + " :You're not channel operator";
+	} else if (code == ERR_NOSUCHCHANNEL) {
+		message += cmd.arguments + " :No such channel";
+	} else if (code == ERR_NOSUCHNICK) {
+		message += cmd.arguments + " :No such nick/channel";
+	// } else if (code == ERR_NOTREGISTERED) {
+	// 	message += cmd.arguments + " :You have not registered";
+	} else if (code == ERR_NORECIPIENT) {
+		message += ":No recipient given";
+	} else if (code == ERR_NOTEXTTOSEND) {
+		message += ":No text to send";
+	} else if (code == ERR_NOTOPLEVEL) {
+		message += cmd.arguments + " :No toplevel domain specified";
+	} else if (code == ERR_WILDTOPLEVEL) {
+		message += cmd.arguments + " :Wildcard in toplevel domain";
+	} else if (code == ERR_CANNOTSENDTOCHAN) {
+		message += cmd.arguments + " :Cannot send to channel";  //need a channel name, not arguments
+	} else if (code == ERR_TOOMANYTARGETS) {
+		message += cmd.arguments + " :Too many targets";  //<target> :<error code> recipients. <abort message>
 	}
 	message += "\r\n";
 
@@ -78,8 +90,8 @@ void Server::execute_command(cmd cmd, User &user)
 		code = MODE(cmd, user); 
 	} else if (!user.getIsRegistered()) {
 		code = ERR_NOTREGISTERED; 
-	} else if (cmd.command == "OPER") {
-		code = OPER(cmd, user);
+	// } else if (cmd.command == "OPER") {
+	// 	code = OPER(cmd, user);
 	} else if (cmd.command == "INVITE") {
 		code = INVITE(cmd, user); 
 	} else if (cmd.command == "PRIVMSG") {
@@ -290,6 +302,14 @@ Channel* Server::findChannelByName(const string& channelName) {
 	auto it = this->channels.find(channelName);
 	if (it != this->channels.end()) {
 		return &it->second;
+	}
+	return nullptr;
+}
+
+User* Server::findUserByNickName(const string& nickName) {
+	for (auto &it : this->users) {
+		if (it.second.getNickname() == nickName)
+			return (&it.second);
 	}
 	return nullptr;
 }
