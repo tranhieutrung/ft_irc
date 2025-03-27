@@ -19,26 +19,6 @@ int countWords(const 	string &s) {
 	return count;
 }
 
-// vector <string> parsing(const 	string &s) {
-// 	size_t pos = s.find(":");
-	
-// 	vector <string> result;
-// 	string beforeColon = (pos != string::npos) ? s.substr(0, pos) : s;
-		
-// 	istringstream ss(beforeColon);
-// 	string word;
-
-// 	while (ss >> word) {
-// 		result.emplace_back(word);
-// 	}
-
-// 	if (pos != 	string::npos) {
-// 		result.emplace_back(s.substr(pos + 1));
-// 	}
-
-// 	return result;
-// }
-
 vector<string> commaSplit(string str) {
 	vector<string> result;
 
@@ -128,6 +108,7 @@ int	Server::NICK(cmd cmd, User &user) {
 		user.setIsRegistered(true);
 		return (RPL_WELCOME);
 	}
+	sendMessage(RPL_WHOISUSER, cmd, user);
 	return (0);
 }
 
@@ -141,6 +122,7 @@ int	Server::USER(cmd cmd, User &user) {
 	// 	return (ERR_ALREADYREGISTRED); //only setup user to register
 	}
 	user.setInfo(cmd.arguments);
+	sendMessage(RPL_WHOISUSER, cmd, user);
 	user.setUserIsSet(true);
 	if (user.getNickIsSet() && !user.getIsRegistered()) {
 		user.setIsRegistered(true);
@@ -158,26 +140,24 @@ int Server::createChannel(User user, string channelName, string key) {
 	channel.addOperator(user);
 
 	this->channels.emplace(channelName, channel);
-	user.join(channel, key);
-	//if creation failed, return error code
-	return (0);
+	return (user.join(channel, key));
 }
 
 /*
-*  Channels names are strings (beginning with a '&', '#', '+' or '!'
-   character) of length up to fifty (50) characters.  Apart from the
-   requirement that the first character is either '&', '#', '+' or '!',
-   the only restriction on a channel name is that it SHALL NOT contain
-   any spaces (' '), a control G (^G or ASCII 7), a comma (',').  Space
-   is used as parameter separator and command is used as a list item
-   separator by the protocol).  A colon (':') can also be used as a
-   delimiter for the channel mask.  Channel names are case insensitive.
+* Channels names are strings (beginning with a '&', '#', '+' or '!'
+ character) of length up to fifty (50) characters. Apart from the
+ requirement that the first character is either '&', '#', '+' or '!',
+ the only restriction on a channel name is that it SHALL NOT contain
+ any spaces (' '), a control G (^G or ASCII 7), a comma (','). Space
+ is used as parameter separator and command is used as a list item
+ separator by the protocol). A colon (':') can also be used as a
+ delimiter for the channel mask. Channel names are case insensitive.
 */
 bool isValidChannelName(const string& channelName) {
 	if (channelName.empty() || channelName.size() > 50)
 		return (false);
-    regex channelRegex(R"(^[&#+!][^[:space:],^G,]*$)");
-    return regex_match(channelName, channelRegex);
+	regex channelRegex(R"(^[&#+!][^[:space:],^G,]*$)");
+	return regex_match(channelName, channelRegex);
 }
 
 /** Numeric Replies:
@@ -186,7 +166,7 @@ bool isValidChannelName(const string& channelName) {
 * ERR_CHANNELISFULL	- 		ERR_BADCHANMASK -
 * ERR_NOSUCHCHANNEL			ERR_TOOMANYCHANNELS
 * ERR_TOOMANYTARGETS		ERR_UNAVAILRESOURCE
-* RPL_TOPIC
+* RPL_TOPIC					RPL_NAMREPLY
 */
 int	Server::JOIN(cmd cmd, User &user) {
 
@@ -213,35 +193,38 @@ int	Server::JOIN(cmd cmd, User &user) {
 	}
 
 	for (size_t index = 0; index < channels.size(); ++index) {
-		if (!isValidChannelName(channels[index])) {
-			return (ERR_BADCHANMASK);
-		}
-		string keyValue = "";
-
-		if (index < keys.size()) {
-			keyValue = keys[index];
-		}
-
-		Channel *channel = this->findChannelByName(channels[index]);
 		int		code = 0;
+		Channel *channel;
 
-		if (channel == nullptr) {
-			code = createChannel(user, channels[index], keyValue);
+		if (!isValidChannelName(channels[index])) {
+			code = ERR_BADCHANMASK;
 		} else {
-			code = user.join(*channel, keyValue);
+			string keyValue = (index < keys.size()) ? keys[index] : "";
+			channel = this->findChannelByName(channels[index]);
+			code = (channel == nullptr) ? 
+					createChannel(user, channels[index], keyValue) : 
+					user.join(*channel, keyValue);
 		}
 
-		if (code)
+		if (code) {
+			cmd.arguments = channels[index]; //update to print proper message
 			return (code);
+		} else {
+			if (channel == nullptr) {
+				channel = findChannelByName(channels[index]);
+			}
+			sendMessage(0, cmd, user);
+			sendMessage(RPL_TOPIC, cmd, user, *channel);
+			sendMessage(RPL_NAMREPLY, cmd, user, *channel);
+		}
 	}
-
 	return (0);
 }
 
 bool matchesWildcard(const string &pattern, const string &target) {
-    string regexPattern = "^" + regex_replace(pattern, regex("\\*"), ".*") + "$";
-    regex re(regexPattern);
-    return regex_match(target, re);
+	string regexPattern = "^" + regex_replace(pattern, regex("\\*"), ".*") + "$";
+	regex re(regexPattern);
+	return regex_match(target, re);
 }
 
 bool targetIsUser(char c) {
@@ -252,11 +235,11 @@ bool targetIsUser(char c) {
 
 /*
 * Numeric Replies:
-         ERR_NORECIPIENT                 ERR_NOTEXTTOSEND
-          ERR_CANNOTSENDTOCHAN            ERR_NOTOPLEVEL
-           ERR_WILDTOPLEVEL                ERR_TOOMANYTARGETS
-           ERR_NOSUCHNICK
-           RPL_AWAY
+		ERR_NORECIPIENT				ERR_NOTEXTTOSEND
+		ERR_CANNOTSENDTOCHAN		ERR_NOTOPLEVEL
+		ERR_WILDTOPLEVEL			ERR_TOOMANYTARGETS
+		ERR_NOSUCHNICK
+		RPL_AWAY
 */
 int	Server::PRIVMSG(cmd cmd, User &user) {
 	if (cmd.arguments.empty()) {
@@ -272,13 +255,14 @@ int	Server::PRIVMSG(cmd cmd, User &user) {
 	getline(argSS, message);
 
 	if (message.empty()) {
-		argSS.clear();  // clear any error status
+		argSS.clear(); // clear any error status
 		argSS.seekg(0); // move the pointer to the beginning
 		argSS >> target >> message; // If there is more than one space, it will skip over the remaining words.
 	}
 	if (message.empty())
 		return (ERR_NOTEXTTOSEND);
 
+	cmd.arguments = target;
 	if (target.find(',') != string::npos) {
 		return (ERR_TOOMANYTARGETS);
 	} else if (targetIsUser(target[0])) {
@@ -358,7 +342,7 @@ int	Server::PART(cmd cmd, User &user) {
 	getline(argSS, message);
 
 	if (message.empty()) {
-		argSS.clear();  // clear any error status
+		argSS.clear(); // clear any error status
 		argSS.seekg(0); // move the pointer to the beginning
 		argSS >> channelList >> message; // If there is more than one space, it will skip over the remaining words.
 	}

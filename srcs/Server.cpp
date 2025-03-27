@@ -3,74 +3,6 @@
 volatile sig_atomic_t Server::running = 1;
 
 // Private members:
-string	Server::commandResponses(int code, cmd cmd, User &user) {
-	string message;
-
-	message = ":" + this->_name + " ";
-	if (code <= 5) {
-		message += "00";
-	}
-	message += to_string(code) + " " + user.getNickname() + " ";
-	
-	if (code == RPL_WELCOME) {
-		message += ":Welcome to the Internet Relay Network " + user.getFullIdentifier();
-	} else if (code == ERR_NEEDMOREPARAMS) {
-		message += cmd.command + " :Not enough parameters";
-	} else if (code == ERR_PASSWDMISMATCH) {
-		message += ":Password incorrect";
-	} else if (code == ERR_ALREADYREGISTRED) {
-		message += ":Unauthorized command (already registered)";
-	} else if (code == ERR_NOLOGIN) {
-		message += user.getUsername() + " :User not logged in";
-	} else if (code == ERR_NONICKNAMEGIVEN) {
-		message += ":No nickname given";
-	} else if (code == ERR_NICKNAMEINUSE) {
-		message += cmd.arguments + " :Nickname is already in use";
-	} else if (code == ERR_ERRONEUSNICKNAME) {
-		message += cmd.arguments + " :Erroneous nickname";
-	} else if (code == ERR_UNKNOWNCOMMAND) {
-		message += cmd.command + " :Unknown command";
-	} else if (code == ERR_NOTREGISTERED) {
-		message += ":You have not registered";
-	} else if (code == ERR_NOORIGIN) {
-		message += ":No origin specified";
-	} else if (code == ERR_NOSUCHSERVER) {
-		message += cmd.arguments + " :No such server";
-	} else if (code == ERR_INVITEONLYCHAN) {
-		message += cmd.arguments + " :Cannot join channel (+i)"; //need a channel name, not arguments
-	} else if (code == ERR_CHANNELISFULL) {
-		message += cmd.arguments + " :Cannot join channel (+l)"; //need a channel name, not arguments
-	} else if (code == ERR_BADCHANNELKEY) {
-		message += cmd.arguments + " :Cannot join channel (+k)"; //need a channel name, not arguments
-	} else if (code == ERR_BADCHANMASK) {
-		message += cmd.arguments + " :Bad Channel Mask"; //need a channel name, not arguments
-	} else if (code == ERR_UNKNOWNMODE) {
-		message += cmd.arguments + " :Unknown mode";
-	} else if (code == ERR_CHANOPRIVSNEEDED) {
-		message += cmd.arguments + " :You're not channel operator";
-	} else if (code == ERR_NOSUCHCHANNEL) {
-		message += cmd.arguments + " :No such channel";
-	} else if (code == ERR_NOSUCHNICK) {
-		message += cmd.arguments + " :No such nick/channel";
-	// } else if (code == ERR_NOTREGISTERED) {
-	// 	message += cmd.arguments + " :You have not registered";
-	} else if (code == ERR_NORECIPIENT) {
-		message += ":No recipient given";
-	} else if (code == ERR_NOTEXTTOSEND) {
-		message += ":No text to send";
-	} else if (code == ERR_NOTOPLEVEL) {
-		message += cmd.arguments + " :No toplevel domain specified";
-	} else if (code == ERR_WILDTOPLEVEL) {
-		message += cmd.arguments + " :Wildcard in toplevel domain";
-	} else if (code == ERR_CANNOTSENDTOCHAN) {
-		message += cmd.arguments + " :Cannot send to channel";  //need a channel name, not arguments
-	} else if (code == ERR_TOOMANYTARGETS) {
-		message += cmd.arguments + " :Too many targets";  //<target> :<error code> recipients. <abort message>
-	}
-	message += "\r\n";
-
-	return (message);
-}
 
 void Server::execute_command(cmd cmd, User &user)
 {
@@ -109,9 +41,8 @@ void Server::execute_command(cmd cmd, User &user)
 	} else {
 		code = ERR_UNKNOWNCOMMAND;
 	}
-	string message = commandResponses(code, cmd, user);
-	if (code && send(user.getFd(), message.c_str(), message.length(), 0) == -1)
-		cerr << "send() error: " << strerror(errno) << endl;
+	if (code)
+		sendMessage(code, cmd, user);
 }
 
 string Server::client_info(struct sockaddr_in &client_addr)

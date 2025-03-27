@@ -20,3 +20,12 @@
 
 #define RPL_AWAY 301
 // "<nick> :<away message>"
+
+#define RPL_NAMREPLY 353
+// "( "=" / "*" / "@" ) <channel>
+//:[ "@" / "+" ] <nick> *( " " [ "@" / "+" ] <nick> )
+// - "@" is used for secret channels, "*" for private
+//  channels, and "=" for others (public channels).
+
+#define RPL_WHOISUSER 311
+//              "<nick> <user> <host> * :<real name>"

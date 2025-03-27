@@ -36,6 +36,7 @@ class Channel
         std::string getChannelTopic() const { return ChannelTopic; }
         std::string getPassword() const { return password; }
         const std::map<string, User>& getUserList() const { return UserList; }
+        const std::vector<User>& getOperators() const { return operators; }
         bool isInviteOnly() const { return inviteOnly; }
         bool isTopicRestricted() const { return topic_restriction; }
         unsigned int  getUserLimit() const { return userLimit; }
