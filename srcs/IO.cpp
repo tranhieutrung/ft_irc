@@ -25,27 +25,23 @@ std::vector<cmd> IO::recvCommands(int fd)
     if (bytesReceived < 0)
         return {{"", "ERROR", ""}};
     buf[bytesReceived] = '\0';
-    log(DEBUG, "RECV", string(buf));
-
-
+    
+    
     istringstream stream(buf);
     std::string line;
     std::vector<cmd> list;
-
+    
     while (getline(stream, line))
     {
         cmd cmd = {"", "", ""};
         istringstream lstream(line);
         if (line[0] == ':')
-        {
             getline(lstream, cmd.prefix, ' ');
-        }
         getline(lstream, cmd.command, ' ');
         getline(lstream, cmd.arguments, '\r');
-        std::cout << "p[" << cmd.prefix << "]" << std::endl;
-        std::cout << "c[" << cmd.command << "]" << std::endl;
-        std::cout << "a[" << cmd.arguments << "]" << std::endl;
 
+        log(DEBUG, "RECV", line.substr(0, line.size() - 1) + " [" + cmd.prefix + "] [" + cmd.command + "] [" + cmd.arguments + "]");
+        
         list.push_back(cmd);
     }
     return list;
