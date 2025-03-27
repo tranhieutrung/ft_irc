@@ -64,8 +64,8 @@ string	Server::commandResponses(int code, cmd cmd, User &user) {
 		message += cmd.arguments + " :Wildcard in toplevel domain";
 	} else if (code == ERR_CANNOTSENDTOCHAN) {
 		message += cmd.arguments + " :Cannot send to channel";  //need a channel name, not arguments
-	// } else if (code == ERR_TOOMANYTARGETS) {
-	// 	message += cmd.arguments + " :Cannot send to channel";  //<target> :<error code> recipients. <abort message>
+	} else if (code == ERR_TOOMANYTARGETS) {
+		message += cmd.arguments + " :Too many targets";  //<target> :<error code> recipients. <abort message>
 	}
 	message += "\r\n";
 
