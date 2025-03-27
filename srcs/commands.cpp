@@ -136,11 +136,12 @@ int	Server::USER(cmd cmd, User &user) {
 int Server::createChannel(User user, string channelName, string key) {
 	Channel channel(channelName); //should have a channel(name, password)
 	channel.setPassword(key);
-	channel.addUser(user.getUsername(), user);
-	channel.addOperator(user);
-
-	this->channels.emplace(channelName, channel);
-	return (user.join(channel, key));
+	int code = user.join(channel, key);
+	if (!code) {
+		channel.addOperator(user);
+		this->channels.emplace(channelName, channel);
+	}
+	return (code);
 }
 
 /*
