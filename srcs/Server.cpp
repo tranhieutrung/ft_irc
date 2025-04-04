@@ -103,6 +103,7 @@ void Server::handleClientMessages(size_t *index)
 		throw runtime_error("recv() failed");
 	}
 
+	execute_command({"", "QUIT", "disconnected"}, users[fd]);
 	close(fd);
 	users.erase(fd);
 	fds.erase(fds.begin() + *index);
