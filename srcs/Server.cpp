@@ -46,6 +46,7 @@ void Server::execute_command(cmd cmd, User &user)
 	if (code) {
 		sendMessage(code, cmd, user);
 	}
+	log(INFO, "COMMAND", user.getNickname() + " executed command " + cmd.command + " with code " + to_string(code));
 }
 
 string Server::client_info(struct sockaddr_in &client_addr)
