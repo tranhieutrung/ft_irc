@@ -41,7 +41,7 @@ int	Server::PING(cmd cmd, User &user) {
 	} else if (cmd.arguments != this->_name) {
 		return (ERR_NOSUCHSERVER);
 	} else {
-		return (0);
+		return (RPL_PONG);
 	}
 }
 

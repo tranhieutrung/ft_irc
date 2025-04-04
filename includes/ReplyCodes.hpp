@@ -29,3 +29,7 @@
 
 #define RPL_WHOISUSER 311
 //              "<nick> <user> <host> * :<real name>"
+
+#define RPL_PONG 399
+// define for replying PING commands
+// PONG message
