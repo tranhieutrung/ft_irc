@@ -103,7 +103,7 @@ std::vector<cmd> IO::recvCommands(int fd)
         getline(lstream, cmd.command, ' ');
         getline(lstream, cmd.arguments, '\r');
 
-        log(DEBUG, "RECV", line.substr(0, line.size() - 1) + " [" + cmd.prefix + "] [" + cmd.command + "] [" + cmd.arguments + "]");
+        log(DEBUG, "RECV", line.substr(0, line.size() - 1));
         
         list.push_back(cmd);
     }

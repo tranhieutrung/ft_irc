@@ -10,7 +10,7 @@
 User::User() :
 	nickname("Unknown"),
 	username(""),
-	hostname(""),
+	hostname("localhost"),
 	servername(""),
 	realname(""),
 	fd(-1),
@@ -23,7 +23,7 @@ User::User() :
 User::User(const int fd) :
 	nickname("User" + to_string(fd -3)),
 	username(""),
-	hostname(""),
+	hostname("localhost"),
 	servername(""),
 	realname(""),
 	fd(fd),
@@ -85,6 +85,7 @@ int User::setUsername(const std::string &username)
 
 int User::setHostname(const std::string &hostname)
 {
+	return 0;
 	regex host_regex(R"(^(?=.{1,255}$)([a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(\.[a-zA-Z0-9]{1,})*)$)");
 	if (regex_match(hostname, host_regex) == false)
 		return 1;
@@ -221,7 +222,7 @@ int User::part(Channel &channel, const std::string &message) // leaves a channel
 	{
 		User u = pair.second;
 		if (IO::sendCommand(u.fd, {getFullIdentifier(),
-			"PART", "#" + channel.getChannelName() + " :" + message}) < 0)
+			"PART", channel.getChannelName() + (message.empty() ? "" : " :" + message)}) < 0)
 			return -1;
 	}
 	joinedChannels.erase(channel.getChannelName());
