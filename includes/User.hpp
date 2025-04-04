@@ -1,10 +1,11 @@
 #ifndef USER_HPP
 #define USER_HPP
 
+#include "Server.hpp"
 #include <string>
 #include <poll.h>
 #include <iostream>
-#include "Server.hpp"
+#include <map>
 
 class Channel;
 

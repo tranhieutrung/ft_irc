@@ -2,18 +2,81 @@
 #include "../includes/Server.hpp"
 #include <sstream>
 #include <sys/socket.h>
+#include <map>
 
-ssize_t IO::sendCommand(int fd, cmd cmd)
+ssize_t IO::sendCommand(int fd, const cmd &cmd)
 {
     stringstream stream;
-    stream << cmd.prefix << " ";
-    stream << cmd.command << " ";
-    stream << cmd.arguments << "\r\n";
+    if (!cmd.prefix.empty())
+        stream << cmd.prefix << " ";
+    stream << cmd.command;
+    if (!cmd.arguments.empty())
+        stream << " " << cmd.arguments;
     std::string sbuf = stream.str();
 
-    log(DEBUG, "SEND", sbuf);
+    return IO::sendString(fd, sbuf);
+}
 
-    return send(fd, sbuf.c_str(), sbuf.size(), 0);
+ssize_t IO::sendString(int fd, const std::string &s)
+{
+    log(DEBUG, "SEND", s);
+    
+    std::string message = s;
+    message += "\r\n";
+
+    return send(fd, message.c_str(), message.size(), 0);
+}
+
+ssize_t IO::sendCommandAll(const std::map<int, User> m, const cmd &cmd)
+{
+    ssize_t ret, result = 0;
+    for (const auto &pair : m)
+    {
+        ret = sendCommand(pair.second.getFd(), cmd);
+        if (ret < 0)
+            return -1;
+        result += ret;
+    }
+    return result;
+}
+
+ssize_t IO::sendCommandAll(const std::map<std::string, User> m, const cmd &cmd)
+{
+    ssize_t ret, result = 0;
+    for (const auto &pair : m)
+    {
+        ret = sendCommand(pair.second.getFd(), cmd);
+        if (ret < 0)
+            return -1;
+        result += ret;
+    }
+    return result;
+}
+
+ssize_t IO::sendStringAll(const std::map<int, User> m, const std::string &s)
+{
+    ssize_t ret, result = 0;
+    for (const auto &pair : m)
+    {
+        ret = sendString(pair.second.getFd(), s);
+        if (ret < 0)
+            return -1;
+        result += ret;
+    }
+    return result;
+}
+
+ssize_t IO::sendStringAll(const std::map<std::string, User> m, const std::string &s)
+{
+    ssize_t ret, result = 0;
+    for (const auto &pair : m)
+    {
+        ret = sendString(pair.second.getFd(), s);
+        if (ret < 0)
+            return -1;
+        result += ret;
+    }
+    return result;
 }
 
 std::vector<cmd> IO::recvCommands(int fd)
