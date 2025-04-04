@@ -147,7 +147,7 @@ int	Server::USER(cmd cmd, User &user) {
 
 
 //user create and join a new channel
-int Server::createChannel(User user, string channelName, string key) {
+int Server::createChannel(User &user, string channelName, string key) {
 	Channel channel(channelName); //should have a channel(name, password)
 	channel.setPassword(key);
 	int code = user.join(channel, key);
@@ -345,65 +345,67 @@ bool isJoinedChannel(User &user, Channel &channel) {
 	return (false);
 }
 
-int Server::PART(cmd cmd, User &user)
-{
-	string chan, chans, message;
+// int Server::PART(cmd cmd, User &user)
+// {
+// 	string chan, chans, message;
 
-	istringstream stream(cmd.arguments);
-	stream >> chans;
-	stream.ignore(2);
-	getline(stream, message);
+// 	istringstream stream(cmd.arguments);
+// 	stream >> chans;
+// 	stream.ignore(2);
+// 	getline(stream, message);
 
-	if (chans.empty())
-		return ERR_NEEDMOREPARAMS;
+// 	if (chans.empty())
+// 		return ERR_NEEDMOREPARAMS;
 	
-	istringstream chanstream(chans);
-	while (getline(chanstream, chan, ','))
-	{
-		Channel *channel = findChannelByName(chan);
-		if (channel == nullptr)
-			return ERR_NOSUCHCHANNEL;
-		user.part(*channel, message);
-	}
-	return 0;
-}
-
-
-// int	Server::PART(cmd cmd, User &user) {
-// 	if (cmd.arguments.empty())
-// 		return (ERR_NEEDMOREPARAMS);
-
-// 	istringstream 	argSS(cmd.arguments);
-// 	string			channelList;
-// 	string			message;
-
-// 	getline(argSS, channelList, ':');
-// 	getline(argSS, message);
-
-// 	if (message.empty()) {
-// 		argSS.clear(); // clear any error status
-// 		argSS.seekg(0); // move the pointer to the beginning
-// 		argSS >> channelList >> message; // If there is more than one space, it will skip over the remaining words.
-// 	}
-
-// 	istringstream channel_ss(channelList);
-// 	string channelName;
-
-// 	while (getline(channel_ss, channelName, ',')) {
-// 		if (channelName.empty())
-// 			continue;
-// 		Channel *channel = this->findChannelByName(channelName);
-// 		if (channel == nullptr) {
-// 			return (ERR_NOSUCHCHANNEL);
-// 		} else if (!isJoinedChannel(user, *channel)) {
-// 			return (ERR_NOTONCHANNEL);
-// 		} else if (user.part(*channel, message) == -1) {
-// 			cerr << "Sending messages failes" <<endl;
-// 			return (-1);
-// 		}
+// 	istringstream chanstream(chans);
+// 	while (getline(chanstream, chan, ','))
+// 	{
+// 		log(DEBUG, "PART", "Leaving channel " + chan);
+// 		chanstream.ignore(1); // skip '#'
+// 		Channel *channel = findChannelByName(chan);
+// 		if (channel == nullptr)
+// 			return ERR_NOSUCHCHANNEL;
+// 		user.part(*channel, message);
 // 	}
 // 	return 0;
 // }
+
+
+int	Server::PART(cmd cmd, User &user) {
+	if (cmd.arguments.empty())
+		return (ERR_NEEDMOREPARAMS);
+
+	istringstream 	argSS(cmd.arguments);
+	string			channelList;
+	string			message;
+
+	getline(argSS, channelList, ':');
+	getline(argSS, message);
+
+	if (message.empty()) {
+		argSS.clear(); // clear any error status
+		argSS.seekg(0); // move the pointer to the beginning
+		argSS >> channelList >> message; // If there is more than one space, it will skip over the remaining words.
+	}
+
+	istringstream channel_ss(channelList);
+	string channelName;
+
+	while (getline(channel_ss, channelName, ',')) {
+		if (channelName.empty())
+			continue;
+		Channel *channel = this->findChannelByName(channelName);
+		if (channel == nullptr) {
+			return (ERR_NOSUCHCHANNEL);
+		} else if (!isJoinedChannel(user, *channel)) {
+			return (ERR_NOTONCHANNEL);
+		} else if (user.part(*channel, message) == -1) {
+			cerr << "Sending messages failes" <<endl;
+			return (-1);
+		}
+	}
+	return 0;
+}
 
 /*
 ERR_NOSUCHSERVER	ERR_NONICKNAMEGIVEN

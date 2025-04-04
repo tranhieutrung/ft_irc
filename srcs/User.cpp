@@ -233,13 +233,16 @@ bool User::getIsRegistered() const
 
 int User::part(Channel &channel, const std::string &message) // leaves a channel with a goodbye message
 {
+	log(DEBUG, "PART", "Checking if in this channel");
 	if (!isInChannel(channel.getChannelName()))
 		return ERR_NOTONCHANNEL;
+	log(DEBUG, "PART", "Starting the loop");
 	for (const auto &pair : channel.getUserList())
 	{
 		User u = pair.second;
 		// if (pair.second.getFd() == fd)
 		// 	continue;
+		log(DEBUG, "PART", "Looping channel users");
 		if (IO::sendCommand(u.fd, {getFullIdentifier(),
 			"PART", channel.getChannelName() + (message.empty() ? "" : " :" + message)}) < 0)
 			return -1;
