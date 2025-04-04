@@ -6,7 +6,7 @@ volatile sig_atomic_t Server::running = 1;
 
 void Server::execute_command(cmd cmd, User &user)
 {
-	int code;
+	int code = 0;
 
 	if (cmd.command == "PING") {
 		code = PING(cmd, user);
@@ -38,11 +38,14 @@ void Server::execute_command(cmd cmd, User &user)
 		code = QUIT(cmd, user); 
 	} else if (cmd.command == "PART") {
 		code = PART(cmd, user);
+	} else if (cmd.command == "WHOIS") {
+		code = WHOIS(cmd, user);
 	} else {
 		code = ERR_UNKNOWNCOMMAND;
 	}
-	if (code)
+	if (code) {
 		sendMessage(code, cmd, user);
+	}
 }
 
 string Server::client_info(struct sockaddr_in &client_addr)

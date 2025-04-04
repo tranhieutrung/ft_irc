@@ -72,6 +72,7 @@ class Server
 		int	PRIVMSG(cmd cmd, User &user);
 		int	QUIT(cmd cmd, User &user);
 		int	PART(cmd cmd, User &user);
+		int	WHOIS(cmd cmd, User &user);
 
 		//channel commands
 		int	KICK(cmd cmd, User &user);
