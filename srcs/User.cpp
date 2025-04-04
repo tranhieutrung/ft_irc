@@ -6,6 +6,7 @@
 #include <sstream>
 #include <regex>
 #include <vector>
+#include <optional>
 
 User::User() :
 	nickname("Unknown"),
@@ -143,10 +144,22 @@ int User::privmsg(const User &recipient, const std::string &message) const
 	return 0;
 }
 
+bool User::isInChannel(const std::string &channelName) const
+{
+	for (const auto &pair : joinedChannels)
+	{
+		if (pair.first == channelName)
+			return true;
+	}
+	return false;
+}
+
 int User::privmsg(const Channel &channel, const std::string &message) const
 {
-	// if channel.getMode... +m or +b mode
-	//	return ERR_CANNOTSENDTOCHAN;
+	// if (channel.findUser(username) == std::nullopt) i cant get this to work
+	// 	return ERR_NOTONCHANNEL;
+	if (!isInChannel(channel.getChannelName()))
+		return ERR_NOTONCHANNEL;
 	for (const auto &pair : channel.getUserList())
 	{
 		log(DEBUG, "PRIVMSG", pair.second.getNickname() + " is in channel " + channel.getChannelName());
@@ -176,6 +189,8 @@ int User::join(Channel &channel, const string &password)
 		return ERR_CHANNELISFULL;
 	channel.addUser(username, *this);
 	joinedChannels[channel.getChannelName()] = channel;
+	if (IO::sendCommandAll(channel.getUserList(), {getFullIdentifier(), "JOIN", channel.getChannelName()}) < 0)
+		throw runtime_error("send failed");
 	return 0;
 }
 
@@ -221,12 +236,14 @@ int User::part(Channel &channel, const std::string &message) // leaves a channel
 	for (const auto &pair : channel.getUserList())
 	{
 		User u = pair.second;
+		if (pair.second.getFd() == fd)
+			continue;
 		if (IO::sendCommand(u.fd, {getFullIdentifier(),
 			"PART", channel.getChannelName() + (message.empty() ? "" : " :" + message)}) < 0)
 			return -1;
 	}
 	joinedChannels.erase(channel.getChannelName());
-	channel.removeUser(nickname);
+	channel.removeUser(username);
 	return 0;
 }
 
@@ -244,4 +261,8 @@ int User::quit(const std::string &message) // leaves all joined channels
 
 bool operator==(const User &lhs, const User &rhs) {
 	return lhs.getFd() == rhs.getFd();
+}
+
+bool operator!=(const User &lhs, const User &rhs) {
+	return lhs.getFd() != rhs.getFd();
 }

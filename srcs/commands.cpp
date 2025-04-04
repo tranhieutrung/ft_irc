@@ -345,6 +345,11 @@ bool isJoinedChannel(User &user, Channel &channel) {
 	return (false);
 }
 
+// int Server::PART(cmd cmd, User &user)
+// {
+
+// }
+
 int	Server::PART(cmd cmd, User &user) {
 	if (cmd.arguments.empty())
 		return (ERR_NEEDMOREPARAMS);

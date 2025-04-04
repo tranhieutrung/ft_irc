@@ -28,6 +28,7 @@ class User
 		User(const User &other);
 		User &operator=(const User &other);
 
+		bool isInChannel(const std::string &channelName) const;
 		int privmsg(const User &recipient, const std::string &message) const;
 		int privmsg(const Channel &reci_chan, const std::string &message) const;
 		int join(Channel &channel);
@@ -63,6 +64,7 @@ class User
 		void setIsRegistered(const bool status);
 
 		friend bool operator==(const User &lhs, const User &rhs);
+		friend bool operator!=(const User &lhs, const User &rhs);
 };
 
 
