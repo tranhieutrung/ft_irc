@@ -62,7 +62,7 @@ string	Server::createMessage(int code, cmd cmd, User &user) {
 	} else if (code == ERR_TOOMANYTARGETS) {
 		message += cmd.arguments + " :Too many targets";
 	} else if (code == RPL_WHOISUSER) {
-		message += user.getNickname() + " " + user.getUsername() + " " + user.getHostname() + " :" + user.getRealname();
+		message += cmd.arguments;
 	} else if (code == RPL_PONG) {
 		message = ":" + this->_name + " PONG "+ this->_name;
 	//last
@@ -75,6 +75,8 @@ string	Server::createMessage(int code, cmd cmd, User &user) {
 }
 
 void Server::sendMessage(int code, cmd cmd, User &user) {
+	if (!code)
+		return ;
 	string message = createMessage(code, cmd, user);
 	if (code && send(user.getFd(), message.c_str(), message.length(), 0) == -1)
 		cerr << "send() error: " << strerror(errno) << endl;
@@ -101,13 +103,18 @@ string	Server::createMessage(int code, cmd cmd, User &user, Channel &channel) {
 			message += (isOp) ? "@" : "+";
 			message += it.second.getNickname() + " ";
 		}
+		if (!message.empty() && message.back() == ' ')
+			message.pop_back();
 	}
  	message += "\r\n";
 	return (message);
 }
 
 void Server::sendMessage(int code, cmd cmd, User &user, Channel &channel) {
+	if (!code)
+		return ;
 	string message = createMessage(code, cmd, user, channel);
 	if (code && send(user.getFd(), message.c_str(), message.length(), 0) == -1)
 		cerr << "send() error: " << strerror(errno) << endl;
+	log(DEBUG, "SEND", message);
 }

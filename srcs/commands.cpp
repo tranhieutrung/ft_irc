@@ -228,7 +228,7 @@ int	Server::JOIN(cmd cmd, User &user) {
 			if (channel == nullptr) {
 				channel = findChannelByName(channels[index]);
 			}
-			sendMessage(0, cmd, user);
+			// sendMessage(0, cmd, user);
 			sendMessage(RPL_TOPIC, cmd, user, *channel);
 			sendMessage(RPL_NAMREPLY, cmd, user, *channel);
 		}
@@ -384,4 +384,45 @@ int	Server::PART(cmd cmd, User &user) {
 		}
 	}
 	return 0;
+}
+
+/*
+ERR_NOSUCHSERVER	ERR_NONICKNAMEGIVEN
+RPL_WHOISUSER		RPL_WHOISCHANNELS
+RPL_WHOISCHANNELS	RPL_WHOISSERVER
+RPL_AWAY			RPL_WHOISOPERATOR
+RPL_WHOISIDLE		ERR_NOSUCHNICK
+RPL_ENDOFWHOIS
+*/
+int	Server::WHOIS(cmd cmd, User &user) {
+	if (cmd.arguments.empty()) {
+		return (ERR_NONICKNAMEGIVEN);
+	}
+
+	istringstream 	argSS(cmd.arguments);
+	string			target;
+
+	argSS >> target;
+
+
+	if (targetIsUser(target[0])) {
+		User *targetUser = findUserByNickName(target);
+
+		if (targetUser == nullptr) {
+			return (ERR_NOSUCHNICK);
+		} else {
+			cmd.arguments = targetUser->getNickname() + " " + targetUser->getUsername() + " " + targetUser->getHostname() + " * :" + targetUser->getRealname();
+			sendMessage(RPL_WHOISUSER, cmd, user);
+			return (0);
+		}
+	// } else {
+	// 	Channel *targetChannel = findChannelByName(target);
+
+	// 	if (targetChannel == nullptr) {
+	// 		return (ERR_NOSUCHCHANNEL);
+	// 	} else {
+	// 		return (0); // not ready
+	// 	}
+	}
+	return (0);
 }
