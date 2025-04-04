@@ -149,6 +149,8 @@ int User::privmsg(const Channel &channel, const std::string &message) const
 	for (const auto &pair : channel.getUserList())
 	{
 		log(DEBUG, "PRIVMSG", pair.second.getNickname() + " is in channel " + channel.getChannelName());
+		if (pair.second.getFd() == fd)
+			continue;
 		int ret = IO::sendCommand(pair.second.getFd(), {getFullIdentifier(), "PRIVMSG", channel.getChannelName() + " " + message});
 		if (ret < 0)
 			return ret;

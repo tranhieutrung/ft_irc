@@ -116,14 +116,28 @@ int	Server::NICK(cmd cmd, User &user) {
 * ERR_NEEDMOREPARAMS		ERR_ALREADYREGISTRED
 */
 int	Server::USER(cmd cmd, User &user) {
-	if (countWords(cmd.arguments) < 4) {
-		return (ERR_NEEDMOREPARAMS);
-	// } else if (user.getUserIsSet()) {
-	// 	return (ERR_ALREADYREGISTRED); //only setup user to register
+	std::string username, hostname, servername, realname;
+	istringstream stream(cmd.arguments);
+	stream >> username;
+	stream >> hostname;
+	stream >> servername;
+	stream.ignore(2); // skip space and ':'
+	getline(stream, realname);
+
+	while (_userIsUsed(username))
+	{
+		username += "1";
 	}
-	user.setInfo(cmd.arguments);
+
+	if (user.setUsername(username) == 1 // these will return 1 if empty
+		|| user.setHostname(hostname) == 1
+		|| user.setServername(servername) == 1
+		|| user.setRealname(realname) == 1)
+		return ERR_NEEDMOREPARAMS;
+
 	sendMessage(RPL_WHOISUSER, cmd, user);
 	user.setUserIsSet(true);
+
 	if (user.getNickIsSet() && !user.getIsRegistered()) {
 		user.setIsRegistered(true);
 		return (RPL_WELCOME);
