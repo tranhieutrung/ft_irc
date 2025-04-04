@@ -62,7 +62,7 @@ string	Server::createMessage(int code, cmd cmd, User &user) {
 	} else if (code == ERR_TOOMANYTARGETS) {
 		message += cmd.arguments + " :Too many targets";
 	} else if (code == RPL_WHOISUSER) {
-		message += user.getNickname() + " " + user.getUsername() + " " + user.getHostname() + "* :" + user.getRealname();
+		message += user.getNickname() + " " + user.getUsername() + " " + user.getHostname() + " :" + user.getRealname();
 	} else if (code == RPL_PONG) {
 		message = ":" + this->_name + " PONG "+ this->_name;
 	//last
