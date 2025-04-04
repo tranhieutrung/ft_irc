@@ -233,6 +233,8 @@ bool User::getIsRegistered() const
 
 int User::part(Channel &channel, const std::string &message) // leaves a channel with a goodbye message
 {
+	if (!isInChannel(channel.getChannelName()))
+		return ERR_NOTONCHANNEL;
 	for (const auto &pair : channel.getUserList())
 	{
 		User u = pair.second;
