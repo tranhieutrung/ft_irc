@@ -58,8 +58,7 @@ void Server::handleNewClient()
 		socklen_t client_len = sizeof(client_addr);
 		int clientSocket = accept(fds[0].fd, (struct sockaddr *)&client_addr, &client_len);
 
-		if (clientSocket == -1)
-		{
+		if (clientSocket == -1) {
 			log(ERROR, "Connection", "Error accepting connection " + client_info(client_addr));
 			cerr << "Error accepting connection" << endl;
 			return;
@@ -171,8 +170,7 @@ void Server::signal_handler(int signal) {
 }
 
 const User* Server::getUser(const string &nickname) {
-	for (const auto &pair : users)
-	{
+	for (const auto &pair : users) {
 		if (pair.second.getNickname() == nickname)
 			return &pair.second;
 	}
@@ -210,14 +208,14 @@ bool	Server::_nickIsUsed(string nick) {
 	return (false);
 }
 
-bool	Server::_userIsUsed(string username) {
-	for (auto &it : this->users) {
-		if (it.second.getUsername() == username) {
-			return (true);
-		}
-	}
-	return (false);
-}
+// bool	Server::_userIsUsed(string username) {
+// 	for (auto &it : this->users) {
+// 		if (it.second.getUsername() == username) {
+// 			return (true);
+// 		}
+// 	}
+// 	return (false);
+// }
 
 //user create and join a new channel
 int Server::createChannel(User &user, string channelName, string key) {

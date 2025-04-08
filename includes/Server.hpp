@@ -53,7 +53,7 @@ class Server
 
 		// helper functions:
 		bool	_nickIsUsed(string nick);
-		bool	_userIsUsed(string username);
+		// bool	_userIsUsed(string username);
 
 		// Commands
 		int		PASS(cmd cmd, User &user);
@@ -62,7 +62,7 @@ class Server
 		int		JOIN(cmd cmd, User &user);
 		int		PING(cmd cmd, User &user);
 		int		PONG(cmd cmd, User &user);
-		int		OPER(cmd cmd, User &user);
+		// int		OPER(cmd cmd, User &user);
 		int		PRIVMSG(cmd cmd, User &user);
 		int		QUIT(cmd cmd, User &user);
 		int		PART(cmd cmd, User &user);

@@ -65,6 +65,8 @@ string	Server::createMessage(int code, cmd cmd, User &user) {
 		message += cmd.arguments;
 	} else if (code == RPL_PONG) {
 		message = ":" + this->_name + " PONG "+ this->_name;
+	} else if (code == ERR_ERRONEUSUSER) {
+		message += cmd.arguments + " :Erroneous format";
 	//last
 	} else {
 		message += cmd.command + " " + cmd.arguments;

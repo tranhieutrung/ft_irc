@@ -9,6 +9,12 @@ enum log_level { DEBUG, INFO, WARN, ERROR };
 #define ORANGE	"\033[38;5;214m";
 #define GREEN	"\033[32m";
 
+struct parsedArgs {
+	vector <string>	args;
+	string			trailing;
+	int				size;
+};
+
 int 			countWords(const 	string &s);
 vector<string>	commaSplit(string str);
 bool			isValidChannelName(const string& channelName);
@@ -16,3 +22,4 @@ bool			matchesWildcard(const string &pattern, const string &target);
 bool			targetIsUser(char c);
 bool			isJoinedChannel(User &user, Channel &channel);
 void 			log(log_level level, const string &event, const string &details);
+parsedArgs		parseArgs(const std::string& args, int words, bool withTrailing);
