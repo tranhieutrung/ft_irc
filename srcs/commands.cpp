@@ -1,39 +1,5 @@
 #include "Server.hpp"
 
-int countWords(const 	string &s) {
-	size_t pos = s.find(":");
-	string beforeColon = (pos != 	string::npos) ? s.substr(0, pos) : s;
-	
-	istringstream ss(beforeColon);
-	string word;
-	int count = 0;
-
-	while (ss >> word) {
-		count++;
-	}
-
-	if (pos != 	string::npos) {
-		count++;
-	}
-
-	return count;
-}
-
-vector<string> commaSplit(string str) {
-	vector<string> result;
-
-	if (str.empty()) {
-		return result;
-	}
-
-	istringstream ss(str);
-	string word;
-	while (getline(ss, word, ',')) {
-		result.push_back(word);
-	}
-	return (result);
-}
-
 int	Server::PING(cmd cmd, User &user) {
 	(void)user;
 	if (cmd.arguments.empty()) {
@@ -72,24 +38,6 @@ int	Server::PASS(cmd cmd, User &user) {
 	}
 }
 
-bool	Server::_nickIsUsed(string nick) {
-	for (auto &[fd, user] : this->users) {
-		if (user.getNickname() == nick) {
-			return (true);
-		}
-	}
-	return (false);
-}
-
-bool	Server::_userIsUsed(string username) {
-	for (auto &it : this->users) {
-		if (it.second.getUsername() == username) {
-			return (true);
-		}
-	}
-	return (false);
-}
-
 /** Numeric Replies:
 * ERR_NONICKNAMEGIVEN		ERR_ERRONEUSNICKNAME
 * ERR_NICKNAMEINUSE			ERR_NICKCOLLISION
@@ -124,8 +72,7 @@ int	Server::USER(cmd cmd, User &user) {
 	stream.ignore(2); // skip space and ':'
 	getline(stream, realname);
 
-	while (_userIsUsed(username))
-	{
+	while (_userIsUsed(username)) {
 		username += "1";
 	}
 
@@ -143,36 +90,6 @@ int	Server::USER(cmd cmd, User &user) {
 		return (RPL_WELCOME);
 	}
 	return (0);
-}
-
-
-//user create and join a new channel
-int Server::createChannel(User &user, string channelName, string key) {
-	Channel channel(channelName); //should have a channel(name, password)
-	channel.setPassword(key);
-	int code = user.join(channel, key);
-	if (!code) {
-		channel.addOperator(user);
-		this->channels.emplace(channelName, channel);
-	}
-	return (code);
-}
-
-/*
-* Channels names are strings (beginning with a '&', '#', '+' or '!'
- character) of length up to fifty (50) characters. Apart from the
- requirement that the first character is either '&', '#', '+' or '!',
- the only restriction on a channel name is that it SHALL NOT contain
- any spaces (' '), a control G (^G or ASCII 7), a comma (','). Space
- is used as parameter separator and command is used as a list item
- separator by the protocol). A colon (':') can also be used as a
- delimiter for the channel mask. Channel names are case insensitive.
-*/
-bool isValidChannelName(const string& channelName) {
-	if (channelName.empty() || channelName.size() > 50)
-		return (false);
-	regex channelRegex(R"(^[&#+!][^[:space:],^G,]*$)");
-	return regex_match(channelName, channelRegex);
 }
 
 /** Numeric Replies:
@@ -228,24 +145,11 @@ int	Server::JOIN(cmd cmd, User &user) {
 			if (channel == nullptr) {
 				channel = findChannelByName(channels[index]);
 			}
-			// sendMessage(0, cmd, user);
 			sendMessage(RPL_TOPIC, cmd, user, *channel);
 			sendMessage(RPL_NAMREPLY, cmd, user, *channel);
 		}
 	}
 	return (0);
-}
-
-bool matchesWildcard(const string &pattern, const string &target) {
-	string regexPattern = "^" + regex_replace(pattern, regex("\\*"), ".*") + "$";
-	regex re(regexPattern);
-	return regex_match(target, re);
-}
-
-bool targetIsUser(char c) {
-	if (c == '#' || c == '&' || c == '+' || c == '!')
-		return (false);
-	return (true);
 }
 
 /*
@@ -305,11 +209,11 @@ int	Server::PRIVMSG(cmd cmd, User &user) {
 	}
 }
 
-// int	Server::OPER(cmd cmd, User &user) {
-// (void)cmd;
-// (void) user;
-// return 0;
-// }
+int	Server::OPER(cmd cmd, User &user) {
+	(void)cmd;
+	(void) user;
+	return 0;
+}
 
 
 int	Server::QUIT(cmd cmd, User &user) {
@@ -335,41 +239,6 @@ int	Server::QUIT(cmd cmd, User &user) {
 	}
 	return 0;
 }
-
-bool isJoinedChannel(User &user, Channel &channel) {
-	for (const auto &it : channel.getUserList()) {
-		if (it.first == user.getUsername()) {
-			return (true);
-		}
-	}
-	return (false);
-}
-
-// int Server::PART(cmd cmd, User &user)
-// {
-// 	string chan, chans, message;
-
-// 	istringstream stream(cmd.arguments);
-// 	stream >> chans;
-// 	stream.ignore(2);
-// 	getline(stream, message);
-
-// 	if (chans.empty())
-// 		return ERR_NEEDMOREPARAMS;
-	
-// 	istringstream chanstream(chans);
-// 	while (getline(chanstream, chan, ','))
-// 	{
-// 		log(DEBUG, "PART", "Leaving channel " + chan);
-// 		chanstream.ignore(1); // skip '#'
-// 		Channel *channel = findChannelByName(chan);
-// 		if (channel == nullptr)
-// 			return ERR_NOSUCHCHANNEL;
-// 		user.part(*channel, message);
-// 	}
-// 	return 0;
-// }
-
 
 int	Server::PART(cmd cmd, User &user) {
 	if (cmd.arguments.empty())
@@ -436,14 +305,6 @@ int	Server::WHOIS(cmd cmd, User &user) {
 			sendMessage(RPL_WHOISUSER, cmd, user);
 			return (0);
 		}
-	// } else {
-	// 	Channel *targetChannel = findChannelByName(target);
-
-	// 	if (targetChannel == nullptr) {
-	// 		return (ERR_NOSUCHCHANNEL);
-	// 	} else {
-	// 		return (0); // not ready
-	// 	}
 	}
 	return (0);
 }

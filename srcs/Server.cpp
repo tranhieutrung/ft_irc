@@ -2,8 +2,6 @@
 
 volatile sig_atomic_t Server::running = 1;
 
-// Private members:
-
 void Server::execute_command(cmd cmd, User &user)
 {
 	int code = 0;
@@ -12,8 +10,6 @@ void Server::execute_command(cmd cmd, User &user)
 		code = PING(cmd, user);
 	} else if (cmd.command == "PASS") {
 		code = PASS(cmd, user); 
-	//} else if (!user.getAuth()) {
-	// 	code = ERR_NOLOGIN;
 	} else if (cmd.command == "NICK") {
 		code = NICK(cmd, user);
 	} else if (cmd.command == "USER") {
@@ -72,13 +68,11 @@ void Server::handleNewClient()
 		fds.push_back(new_pfd);
 		users[new_pfd.fd] = User(new_pfd.fd);
 
-		// sendMessageToClient(RPL_WELCOME, "", users[new_pfd.fd]);
 		log(INFO, "Connection", "New client connected: " + client_info(client_addr));
 	}
 }
 
-void Server::handleClientMessages(size_t *index)
-{
+void Server::handleClientMessages(size_t *index) {
 
 	if ((fds[*index].revents & POLLIN) == false)
 		return;
@@ -86,19 +80,16 @@ void Server::handleClientMessages(size_t *index)
 	int fd = fds[*index].fd;
 	vector<cmd> commands = IO::recvCommands(fd);
 
-	if (commands[0].command != "DISCONNECT" && commands[0].command != "ERROR")
-	{
-		for (const auto &c : commands)
-		{
+	if (commands[0].command != "DISCONNECT" && commands[0].command != "ERROR") {
+		for (const auto &c : commands) {
 			execute_command(c, users[fd]);
 		}
 		return;
 	}
 
-	if (commands[0].command == "DISCONNECT")
+	if (commands[0].command == "DISCONNECT") {
 		log(INFO, "Connection", "Client disconnected: " + users[fd].getNickname());
-	else // "ERROR"
-	{
+	} else {// "ERROR"
 		close(fd);
 		throw runtime_error("recv() failed");
 	}
@@ -110,10 +101,22 @@ void Server::handleClientMessages(size_t *index)
 	*index -= 1;
 }
 
-void Server::cleanup()
-{
-	for (pollfd pfd : fds) {
-		close(pfd.fd); // also close socket (fds[0]) here
+void Server::start() {
+
+	signal(SIGINT, signal_handler);
+	signal(SIGTERM, signal_handler);
+
+	while (this->running)
+	{
+		if (poll(fds.data(), fds.size(), -1) < 0 && errno != EINTR)
+			throw runtime_error("Poll error");
+		for (size_t index = 0; index < this->fds.size(); index++) {
+			if (index == 0) { // fds[0] = serverSocket
+				handleNewClient();
+			} else {
+				handleClientMessages(&index);
+			}
+		}
 	}
 }
 
@@ -147,10 +150,14 @@ int Server::createSocket() {
 	return serverSocket;
 }
 
-// Public members
-
 Server::Server(const string port, const string password): _port(stoi(port)), _password(password) {
 	fds.push_back({createSocket(), POLLIN, 0});
+}
+
+void Server::cleanup() {
+	for (pollfd pfd : fds) {
+		close(pfd.fd); // also close socket (fds[0]) here
+	}
 }
 
 Server::~Server() {
@@ -158,34 +165,12 @@ Server::~Server() {
 	log(INFO, "Server", "Shutting down server");
 }
 
-void Server::start()
-{
-
-	signal(SIGINT, signal_handler);
-	signal(SIGTERM, signal_handler);
-
-	while (this->running)
-	{
-		if (poll(fds.data(), fds.size(), -1) < 0 && errno != EINTR)
-			throw runtime_error("Poll error");
-		for (size_t index = 0; index < this->fds.size(); index++) {
-			if (index == 0) { // fds[0] = serverSocket
-				handleNewClient();
-			} else {
-				handleClientMessages(&index);
-			}
-		}
-	}
-}
-
-void Server::signal_handler(int signal)
-{
+void Server::signal_handler(int signal) {
 	if (signal == SIGINT || signal == SIGTERM)
 		running = 0;
 }
 
-const User* Server::getUser(const string &nickname)
-{
+const User* Server::getUser(const string &nickname) {
 	for (const auto &pair : users)
 	{
 		if (pair.second.getNickname() == nickname)
@@ -194,44 +179,10 @@ const User* Server::getUser(const string &nickname)
 	return nullptr;
 }
 
-const User* Server::getUser(int fd)
-{
+const User* Server::getUser(int fd) {
 	if (users.find(fd) != users.end())
 		return &users[fd];
 	return nullptr;
-}
-
-void log(log_level level, const string &event, const string &details)
-{
-	time_t now = time(nullptr);
-	tm *ltm = localtime(&now);
-
-	const string RESET = "\033[0m";
-	const string RED = "\033[31m";
-	const string ORANGE = "\033[38;5;214m";
-	const string GREEN = "\033[32m";
-
-	cout << "[" << put_time(ltm, "%d.%m.%Y %H:%M:%S") << "] ";
-	switch (level)
-	{
-		case INFO:
-			cout << GREEN;
-			cout << "[INFO] ";
-			break;
-		case WARN:
-			cout << ORANGE;
-			cout << "[WARN] ";
-			break;
-		case ERROR:
-			cout << RED;
-			cout << "[ERROR] "; //cerr?
-			break;
-		case DEBUG:
-			cout << "[DEBUG]";
-			break;
-	}
-	cout << RESET;
-	cout << "[" << event << "] " << details << endl;
 }
 
 Channel* Server::findChannelByName(const string& channelName) {
@@ -248,4 +199,34 @@ User* Server::findUserByNickName(const string& nickName) {
 			return (&it.second);
 	}
 	return nullptr;
+}
+
+bool	Server::_nickIsUsed(string nick) {
+	for (auto &[fd, user] : this->users) {
+		if (user.getNickname() == nick) {
+			return (true);
+		}
+	}
+	return (false);
+}
+
+bool	Server::_userIsUsed(string username) {
+	for (auto &it : this->users) {
+		if (it.second.getUsername() == username) {
+			return (true);
+		}
+	}
+	return (false);
+}
+
+//user create and join a new channel
+int Server::createChannel(User &user, string channelName, string key) {
+	Channel channel(channelName); //should have a channel(name, password)
+	channel.setPassword(key);
+	int code = user.join(channel, key);
+	if (!code) {
+		channel.addOperator(user);
+		this->channels.emplace(channelName, channel);
+	}
+	return (code);
 }

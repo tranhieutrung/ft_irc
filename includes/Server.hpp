@@ -6,7 +6,6 @@
 #include <vector>
 #include <cstring>
 #include <csignal>
-#include <memory>  // unique_ptr
 #include <iostream>
 #include <cstring>
 #include <vector>
@@ -25,72 +24,65 @@
 #include "ErrorCodes.hpp"
 #include "ReplyCodes.hpp"
 #include <regex>
+#include "Utils.hpp"
 
 using namespace std;
 
 class User;
 
-enum log_level { DEBUG, INFO, WARN, ERROR };
-
 class Server
 {
 	private:
-		map<int, User> users;
-		map<string, Channel> channels;
-		vector<pollfd> fds;
-		// const int port; trung
-		// const int max_clients; trung
-		static volatile sig_atomic_t running;
-		
-		const string	_name = "IRCS";
-		const int		_port;
-		const string 	_password;
-		const int		_maxClients = 1024;
-		// int				_serverSocket;
+		map<int, User>					users;
+		map<string, Channel>			channels;
+		vector<pollfd>					fds;
+		static volatile sig_atomic_t	running;
+		const string					_name = "IRCS";
+		const int						_port;
+		const string					_password;
+		const int						_maxClients = 1024;
 
-		void handleNewClient();
-		void handleClientMessages(size_t *index);
-		void cleanup();
-		void process_message(int clientFd, string buffer);
-		// int create_socket();
-		int createSocket();
-		void execute_command(cmd cmd, User &user);
-		void process_privmsg(cmd cmd, const User &user);
-		string client_info(struct sockaddr_in &client_addr);
+		void 	handleNewClient();
+		void 	handleClientMessages(size_t *index);
+		void 	cleanup();
+		void 	process_message(int clientFd, string buffer);
+		int		createSocket();
+		void 	execute_command(cmd cmd, User &user);
+		void 	process_privmsg(cmd cmd, const User &user);
+		string 	client_info(struct sockaddr_in &client_addr);
 
 		// helper functions:
 		bool	_nickIsUsed(string nick);
 		bool	_userIsUsed(string username);
+
 		// Commands
-		int	PASS(cmd cmd, User &user);
-		int	NICK(cmd cmd, User &user);
-		int	USER(cmd cmd, User &user);
-		int	JOIN(cmd cmd, User &user);
-		int	PING(cmd cmd, User &user);
-		int	PONG(cmd cmd, User &user);
-		// int	OPER(cmd cmd, User &user);
-		int	PRIVMSG(cmd cmd, User &user);
-		int	QUIT(cmd cmd, User &user);
-		int	PART(cmd cmd, User &user);
-		int	WHOIS(cmd cmd, User &user);
+		int		PASS(cmd cmd, User &user);
+		int		NICK(cmd cmd, User &user);
+		int		USER(cmd cmd, User &user);
+		int		JOIN(cmd cmd, User &user);
+		int		PING(cmd cmd, User &user);
+		int		PONG(cmd cmd, User &user);
+		int		OPER(cmd cmd, User &user);
+		int		PRIVMSG(cmd cmd, User &user);
+		int		QUIT(cmd cmd, User &user);
+		int		PART(cmd cmd, User &user);
+		int		WHOIS(cmd cmd, User &user);
 
 		//channel commands
-		int	KICK(cmd cmd, User &user);
-		int	INVITE(cmd cmd, User &user);
-		int	TOPIC(cmd cmd, User &user);
-		int	MODE(cmd cmd, User &user);
+		int		KICK(cmd cmd, User &user);
+		int		INVITE(cmd cmd, User &user);
+		int		TOPIC(cmd cmd, User &user);
+		int		MODE(cmd cmd, User &user);
 
 		string	createMessage(int code, cmd cmd, User &user);
 		string	createMessage(int code, cmd cmd, User &user, Channel &channel);
-		// bool	existChannel(string channel);
-		int createChannel(User &user, string channelName, string key);
-		Channel* findChannelByName(const std::string& channelName);
-		User* findUserByNickName(const string& nickName);
-		void sendMessage(int code, cmd cmd, User &user);
-		void sendMessage(int code, cmd cmd, User &user, Channel &channel);
+		int		createChannel(User &user, string channelName, string key);
+		Channel*	findChannelByName(const std::string& channelName);
+		User* 	findUserByNickName(const string& nickName);
+		void 	sendMessage(int code, cmd cmd, User &user);
+		void 	sendMessage(int code, cmd cmd, User &user, Channel &channel);
 
 	public:
-		// Server(const int port); Trung
 		Server(std::string port, std::string password);
 		~Server();
 
@@ -99,11 +91,8 @@ class Server
 
 		const User*		getUser(int fd);
 		const User*		getUser(const string &nickname);
-
 		
-		void			print_status();
 		std::optional<std::map<string, Channel>::iterator> findChannel(string channel);
-	};
-	void			log(log_level level, const string &event, const string &details);
+};
 	
 #endif
