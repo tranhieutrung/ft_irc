@@ -16,6 +16,8 @@ void Server::execute_command(cmd cmd, User &user)
 		code = USER(cmd, user);
 	} else if (cmd.command == "MODE") {
 		code = MODE(cmd, user); 
+	} else if (cmd.command == "QUIT") {
+		code = QUIT(cmd, user); 
 	} else if (!user.getIsRegistered()) {
 		code = ERR_NOTREGISTERED; 
 	// } else if (cmd.command == "OPER") {
@@ -30,8 +32,7 @@ void Server::execute_command(cmd cmd, User &user)
 		code = TOPIC(cmd, user); 
 	} else if (cmd.command == "KICK") {
 		code = KICK(cmd, user); 
-	} else if (cmd.command == "QUIT") {
-		code = QUIT(cmd, user); 
+
 	} else if (cmd.command == "PART") {
 		code = PART(cmd, user);
 	} else if (cmd.command == "WHOIS") {
@@ -218,13 +219,13 @@ bool	Server::_nickIsUsed(string nick) {
 // }
 
 //user create and join a new channel
-int Server::createChannel(User &user, string channelName, string key) {
-	Channel channel(channelName); //should have a channel(name, password)
-	channel.setPassword(key);
-	int code = user.join(channel, key);
+int Server::createChannel(Channel*& channel, User &user, const std::string &channelName, const std::string &key) {
+	auto [it, inserted] = this->channels.emplace(channelName, Channel(channelName, key));
+	channel = &it->second;
+
+	int code = user.join(*channel, key);
 	if (!code) {
-		channel.addOperator(user);
-		this->channels.emplace(channelName, channel);
+		channel->addOperator(user);
 	}
-	return (code);
+	return code;
 }

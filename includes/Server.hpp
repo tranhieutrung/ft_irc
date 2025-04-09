@@ -76,7 +76,7 @@ class Server
 
 		string	createMessage(int code, cmd cmd, User &user);
 		string	createMessage(int code, cmd cmd, User &user, Channel &channel);
-		int		createChannel(User &user, string channelName, string key);
+		int 	createChannel(Channel*& channel, User &user, const std::string &channelName, const std::string &key);
 		Channel*	findChannelByName(const std::string& channelName);
 		User* 	findUserByNickName(const string& nickName);
 		void 	sendMessage(int code, cmd cmd, User &user);

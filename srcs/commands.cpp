@@ -81,55 +81,50 @@ int	Server::JOIN(cmd cmd, User &user) {
 		return (0);
 	}
 	parsedArgs 		joinArgs = parseArgs(cmd.arguments, 2, false);
-	vector<string>	channels = commaSplit(joinArgs.args[0]);
-	vector<string>	keys = commaSplit(joinArgs.args[1]);
+	vector<string>	channels, keys;
 
-	if (keys.size() > channels.size()) {
+	channels = commaSplit(joinArgs.args[0]);
+	if (joinArgs.size == 2) {
+		keys = commaSplit(joinArgs.args[1]);
+	}
+
+	size_t	keySize = (joinArgs.size == 2) ? keys.size() : 0;
+	size_t	channelSize = channels.size();
+	if (keySize > channelSize) {
 		return (ERR_NEEDMOREPARAMS);
 	}
 
-	for (size_t index = 0; index < channels.size(); ++index) {
+	for (size_t index = 0; index < channelSize; ++index) {
 		int		code = 0;
 		Channel *channel;
 
 		if (!isValidChannelName(channels[index])) {
 			code = ERR_BADCHANMASK;
 		} else {
-			string keyValue = (index < keys.size()) ? keys[index] : "";
+			string keyValue = (index < keySize) ? keys[index] : "";
 			channel = this->findChannelByName(channels[index]);
 			code = (channel == nullptr) ? 
-					createChannel(user, channels[index], keyValue) : 
+					createChannel(channel, user, channels[index], keyValue) :
 					user.join(*channel, keyValue);
 		}
 
 		if (code) {
 			cmd.arguments = channels[index];
 			return (code);
-		} else {
-			if (channel == nullptr) {
-				channel = findChannelByName(channels[index]);
-			}
-			sendMessage(RPL_TOPIC, cmd, user, *channel);
-			sendMessage(RPL_NAMREPLY, cmd, user, *channel);
 		}
+		sendMessage(RPL_TOPIC, cmd, user, *channel);
+		sendMessage(RPL_NAMREPLY, cmd, user, *channel);
 	}
 	return (0);
 }
 
-/*
-* Numeric Replies:
-		ERR_NORECIPIENT				ERR_NOTEXTTOSEND
-		ERR_CANNOTSENDTOCHAN		ERR_NOTOPLEVEL
-		ERR_WILDTOPLEVEL			ERR_TOOMANYTARGETS
-		ERR_NOSUCHNICK
-		RPL_AWAY
-*/
 int	Server::PRIVMSG(cmd cmd, User &user) {
 	if (cmd.arguments.empty()) {
 		return (ERR_NORECIPIENT);
 	}
 
 	parsedArgs priArgs = parseArgs(cmd.arguments, 2, true);
+	cout << priArgs.size;
 	if (priArgs.size < 2) {
 		return (ERR_NOTEXTTOSEND);
 	}
@@ -150,7 +145,7 @@ int	Server::PRIVMSG(cmd cmd, User &user) {
 		if (targetUser == nullptr) {
 			return (ERR_NOSUCHNICK);
 		} else {
-			return(user.privmsg(*targetUser, priArgs.args[1]));
+			return(user.privmsg(*targetUser, priArgs.trailing));
 		}
 	} else {
 		Channel *targetChannel = findChannelByName(target);
@@ -158,7 +153,7 @@ int	Server::PRIVMSG(cmd cmd, User &user) {
 		if (targetChannel == nullptr) {
 			return (ERR_NOSUCHNICK);
 		} else {
-			return (user.privmsg(*targetChannel, priArgs.args[1]));
+			return (user.privmsg(*targetChannel, priArgs.trailing));
 		}
 	}
 }
@@ -196,6 +191,8 @@ int	Server::PART(cmd cmd, User &user) {
 
 	if (partArgs.trailing.empty()) {
 		message += user.getNickname() + " left";
+	} else {
+		message += partArgs.trailing;
 	}
 
 	vector<string> channelList = commaSplit(partArgs.args[0]);
@@ -217,14 +214,6 @@ int	Server::PART(cmd cmd, User &user) {
 	return 0;
 }
 
-/*
-ERR_NOSUCHSERVER	ERR_NONICKNAMEGIVEN
-RPL_WHOISUSER		RPL_WHOISCHANNELS
-RPL_WHOISCHANNELS	RPL_WHOISSERVER
-RPL_AWAY			RPL_WHOISOPERATOR
-RPL_WHOISIDLE		ERR_NOSUCHNICK
-RPL_ENDOFWHOIS
-*/
 int	Server::WHOIS(cmd cmd, User &user) {
 	if (cmd.arguments.empty()) {
 		return (ERR_NONICKNAMEGIVEN);

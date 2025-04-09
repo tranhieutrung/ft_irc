@@ -116,7 +116,7 @@ parsedArgs		parseArgs(const std::string& args, int argNum, bool withTrailing) {
 	int 				limit = withTrailing ? (argNum - 1) : argNum;
 
 	result.size = 0;
-	while (iss >> temp && result.size < limit) {
+	while (result.size < limit && iss >> temp) {
 		result.args.push_back(temp);
 		result.size++;
 	}
@@ -126,9 +126,10 @@ parsedArgs		parseArgs(const std::string& args, int argNum, bool withTrailing) {
 		if (pos != std::string::npos) {
 			result.trailing = args.substr(pos + 1);
 		} else {
-			result.trailing = temp;
+			iss >> result.trailing;
 		}
 		if (!result.trailing.empty()) {
+			cout << result.trailing <<endl;
 			result.size++;
 		}
 	}
