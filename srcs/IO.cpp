@@ -4,7 +4,7 @@
 #include <sys/socket.h>
 #include <map>
 
-ssize_t IO::sendCommand(int fd, const cmd &cmd)
+ssize_t IO::sendCommand(const int fd, const cmd &cmd)
 {
     stringstream stream;
     if (!cmd.prefix.empty())
@@ -19,6 +19,8 @@ ssize_t IO::sendCommand(int fd, const cmd &cmd)
 
 ssize_t IO::sendString(int fd, const std::string &s)
 {
+    if (fd < 0)
+        return 0;
     log(DEBUG, "SEND " + to_string(fd), s);
     
     std::string message = s;
@@ -27,7 +29,7 @@ ssize_t IO::sendString(int fd, const std::string &s)
     return send(fd, message.c_str(), message.size(), 0);
 }
 
-ssize_t IO::sendCommandAll(const std::map<int, User> m, const cmd &cmd)
+ssize_t IO::sendCommandAll(const std::map<int, User> &m, const cmd &cmd)
 {
     ssize_t ret, result = 0;
     for (const auto &pair : m)
@@ -40,7 +42,7 @@ ssize_t IO::sendCommandAll(const std::map<int, User> m, const cmd &cmd)
     return result;
 }
 
-ssize_t IO::sendCommandAll(const std::map<std::string, User> m, const cmd &cmd)
+ssize_t IO::sendCommandAll(const std::map<std::string, User> &m, const cmd &cmd)
 {
     ssize_t ret, result = 0;
     for (const auto &pair : m)
@@ -53,7 +55,7 @@ ssize_t IO::sendCommandAll(const std::map<std::string, User> m, const cmd &cmd)
     return result;
 }
 
-ssize_t IO::sendStringAll(const std::map<int, User> m, const std::string &s)
+ssize_t IO::sendStringAll(const std::map<int, User> &m, const std::string &s)
 {
     ssize_t ret, result = 0;
     for (const auto &pair : m)
@@ -66,7 +68,7 @@ ssize_t IO::sendStringAll(const std::map<int, User> m, const std::string &s)
     return result;
 }
 
-ssize_t IO::sendStringAll(const std::map<std::string, User> m, const std::string &s)
+ssize_t IO::sendStringAll(const std::map<std::string, User> &m, const std::string &s)
 {
     ssize_t ret, result = 0;
     for (const auto &pair : m)
@@ -79,7 +81,7 @@ ssize_t IO::sendStringAll(const std::map<std::string, User> m, const std::string
     return result;
 }
 
-std::vector<cmd> IO::recvCommands(int fd)
+std::vector<cmd> IO::recvCommands(const int fd)
 {
     static std::string message[42]; // replace with some max limit of clients
     char buf[512];

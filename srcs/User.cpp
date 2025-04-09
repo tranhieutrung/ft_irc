@@ -192,43 +192,6 @@ int User::join(Channel &channel, const string &password)
 	return 0;
 }
 
-void User::setAuth(const bool status) {
-	isAuth = status;
-}
-
-void User::setNickIsSet(const bool status) {
-	nickIsSet = status;
-}
-
-void User::setUserIsSet(const bool status) {
-	userIsSet = status;
-}
-
-void User::setIsRegistered(const bool status) {
-	isRegistered = status;
-}
-
-
-bool User::getAuth() const
-{
-	return isAuth;
-}
-
-bool User::getNickIsSet() const
-{
-	return nickIsSet;
-}
-
-bool User::getUserIsSet() const
-{
-	return userIsSet;
-}
-
-bool User::getIsRegistered() const
-{
-	return isRegistered;
-}
-
 int User::part(Channel &channel, const std::string &message) // leaves a channel with a goodbye message
 {
 	if (!isInChannel(channel.getChannelName()))
