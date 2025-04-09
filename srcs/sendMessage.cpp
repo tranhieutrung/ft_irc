@@ -102,7 +102,7 @@ string	Server::createMessage(int code, cmd cmd, User &user, Channel &channel) {
 					isOp = true;
 				}
 			}
-			message += (isOp) ? "@" : "+";
+			message += (isOp) ? "@" : "";
 			message += it.second.getNickname() + " ";
 		}
 		if (!message.empty() && message.back() == ' ')

@@ -239,7 +239,7 @@ int User::part(Channel &channel, const std::string &message) // leaves a channel
 		// if (pair.second.getFd() == fd)
 		// 	continue;
 		if (IO::sendCommand(u.fd, {getFullIdentifier(),
-			"PART", channel.getChannelName() + (message.empty() ? "" : " :" + message)}) < 0)
+			"PART", channel.getChannelName() + (message.empty() ? "" : " " + message)}) < 0)
 			return -1;
 	}
 	joinedChannels.erase(channel.getChannelName());

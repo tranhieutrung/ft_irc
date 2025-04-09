@@ -6,6 +6,9 @@ void Server::execute_command(cmd cmd, User &user)
 {
 	int code = 0;
 
+	if (cmd.command != "PASS" && user.getAuth() == false)
+		return;
+
 	if (cmd.command == "PING") {
 		code = PING(cmd, user);
 	} else if (cmd.command == "PASS") {

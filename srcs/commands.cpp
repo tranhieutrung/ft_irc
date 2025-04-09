@@ -55,7 +55,6 @@ int	Server::NICK(cmd cmd, User &user) {
 int	Server::USER(cmd cmd, User &user) {
 	parsedArgs userArgs = parseArgs(cmd.arguments, 4, true);
 
-
 	if (_userIsUsed(userArgs.args[0])) { // add unique number to end so things will work with irssi
 		log(DEBUG, "USER", "Username " + userArgs.args[0] + " is taken");
 		for (int i = 1;; ++i)
@@ -181,18 +180,20 @@ int	Server::PRIVMSG(cmd cmd, User &user) {
 
 
 int	Server::QUIT(cmd cmd, User &user) {
-	string message = ":" + user.getFullIdentifier() + " QUIT :";
+	if (user.quit(cmd.arguments) == -1)
+		throw runtime_error("QUIT: send error");
+	// string message = user.getFullIdentifier() + " QUIT :";
 
-	if (cmd.arguments.empty()) {
-		message += user.getNickname() + " quit";
-	} else {
-		parsedArgs quitArgs = parseArgs(cmd.arguments, 1, true);
-		message += quitArgs.trailing;
-	}
-	if (user.quit(message) == -1) { //to leave all joined channels
-		cerr << "Sending messages failes" <<endl;
-		return (-1);
-	}
+	// if (cmd.arguments.empty()) {
+	// 	message += user.getNickname() + " quit";
+	// } else {
+	// 	parsedArgs quitArgs = parseArgs(cmd.arguments, 1, true);
+	// 	message += quitArgs.trailing;
+	// }
+	// if (user.quit(message) == -1) { //to leave all joined channels
+	// 	cerr << "Sending messages failes" <<endl;
+	// 	return (-1);
+	// }
 	removeUser(user.getFd());
 	return 0;
 }
