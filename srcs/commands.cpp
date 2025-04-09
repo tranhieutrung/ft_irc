@@ -55,8 +55,8 @@ int	Server::NICK(cmd cmd, User &user) {
 int	Server::USER(cmd cmd, User &user) {
 	parsedArgs userArgs = parseArgs(cmd.arguments, 4, true);
 
-	if (_userIsUsed(userArgs.args[0])) { // add unique number to end so things will work with irssi
-		log(DEBUG, "USER", "Username " + userArgs.args[0] + " is taken");
+	if (_userIsUsed(userArgs.args[0])) { // add unique number to end so things will work with irssi.
+		log(DEBUG, "USER", "Username " + userArgs.args[0] + " is taken. Creating unique username...");
 		for (int i = 1;; ++i)
 		{
 			if (!_userIsUsed(userArgs.args[0] + to_string(i))) {

@@ -7,7 +7,7 @@ void Server::execute_command(cmd cmd, User &user)
 	int code = 0;
 
 	if (cmd.command != "QUIT" && cmd.command != "PASS" && user.getAuth() == false)
-		return; // if not authenticated, ignore silently
+		return; // if not authenticated, ignore silently. Could send 444 instead?
 
 	if (cmd.command == "PING") {
 		code = PING(cmd, user);
@@ -101,7 +101,7 @@ void Server::handleClientMessages(size_t *index) {
 		throw runtime_error("recv() failed");
 	}
 
-	execute_command({"", "QUIT", "disconnected"}, users[fd]);
+	//execute_command({"", "QUIT", "disconnected"}, users[fd]);
 	*index -= 1;
 }
 

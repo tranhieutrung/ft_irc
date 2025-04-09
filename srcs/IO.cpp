@@ -19,7 +19,7 @@ ssize_t IO::sendCommand(int fd, const cmd &cmd)
 
 ssize_t IO::sendString(int fd, const std::string &s)
 {
-    log(DEBUG, "SEND", s);
+    log(DEBUG, "SEND " + to_string(fd), s);
     
     std::string message = s;
     message += "\r\n";
@@ -112,7 +112,7 @@ std::vector<cmd> IO::recvCommands(int fd)
         getline(lstream, cmd.command, ' ');
         getline(lstream, cmd.arguments, '\r');
 
-        log(DEBUG, "RECV", line);
+        log(DEBUG, "RECV " + to_string(fd), line);
         
         commands.push_back(cmd);
     }

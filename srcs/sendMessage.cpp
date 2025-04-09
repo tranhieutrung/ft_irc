@@ -80,9 +80,8 @@ void Server::sendMessage(int code, cmd cmd, User &user) {
 	if (!code)
 		return ;
 	string message = createMessage(code, cmd, user);
-	if (code && send(user.getFd(), message.c_str(), message.length(), 0) == -1)
+	if (code && IO::sendString(user.getFd(), message) == -1)
 		cerr << "send() error: " << strerror(errno) << endl;
-	log(DEBUG, "SEND", message);
 }
 
 string	Server::createMessage(int code, cmd cmd, User &user, Channel &channel) {
@@ -116,7 +115,6 @@ void Server::sendMessage(int code, cmd cmd, User &user, Channel &channel) {
 	if (!code)
 		return ;
 	string message = createMessage(code, cmd, user, channel);
-	if (code && send(user.getFd(), message.c_str(), message.length(), 0) == -1)
+	if (code && IO::sendString(user.getFd(), message) == -1)
 		cerr << "send() error: " << strerror(errno) << endl;
-	log(DEBUG, "SEND", message);
 }
