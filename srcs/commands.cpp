@@ -127,6 +127,7 @@ int	Server::JOIN(cmd cmd, User &user) {
 		}
 		sendMessage(RPL_TOPIC, cmd, user, *channel);
 		sendMessage(RPL_NAMREPLY, cmd, user, *channel);
+		IO::sendString(user.getFd(), ":" + _name + " 366 " + user.getNickname() + " " + channel->getChannelName() + " :End of /NAMES list.");
 	}
 	return (0);
 }
