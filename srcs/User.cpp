@@ -161,7 +161,6 @@ int User::privmsg(const Channel &channel, const std::string &message) const
 		return ERR_NOTONCHANNEL;
 	for (const auto &pair : channel.getUserList())
 	{
-		log(DEBUG, "PRIVMSG", pair.second.getNickname() + " is in channel " + channel.getChannelName());
 		if (pair.second.getFd() == fd)
 			continue;
 		int ret = IO::sendCommand(pair.second.getFd(), {getFullIdentifier(), "PRIVMSG", channel.getChannelName() + " " + message});
@@ -232,16 +231,13 @@ bool User::getIsRegistered() const
 
 int User::part(Channel &channel, const std::string &message) // leaves a channel with a goodbye message
 {
-	log(DEBUG, "PART", "Checking if in this channel");
 	if (!isInChannel(channel.getChannelName()))
 		return ERR_NOTONCHANNEL;
-	log(DEBUG, "PART", "Starting the loop");
 	for (const auto &pair : channel.getUserList())
 	{
 		User u = pair.second;
 		// if (pair.second.getFd() == fd)
 		// 	continue;
-		log(DEBUG, "PART", "Looping channel users");
 		if (IO::sendCommand(u.fd, {getFullIdentifier(),
 			"PART", channel.getChannelName() + (message.empty() ? "" : " :" + message)}) < 0)
 			return -1;
