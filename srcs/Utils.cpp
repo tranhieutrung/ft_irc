@@ -73,6 +73,17 @@ bool isJoinedChannel(User &user, Channel &channel) {
 	return (false);
 }
 
+// trims \r off the end. if its not there, trims \n if it exists
+string trim(string str)
+{
+	size_t rn = str.find("\r");
+	if (rn == string::npos)
+		rn = str.find("\n");
+	if (rn == string::npos)
+		return str;
+	return str.substr(0, rn);
+}
+
 void log(const log_level level, const string &event, const string &details)
 {
 	time_t now = time(nullptr);
@@ -98,7 +109,7 @@ void log(const log_level level, const string &event, const string &details)
 			break;
 	}
 	cout << RESET;
-	cout << "[" << event << "] " << details << endl;
+	cout << "[" << event << "] " << trim(details) << endl;
 }
 
 /*

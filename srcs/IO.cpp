@@ -97,10 +97,12 @@ std::vector<cmd> IO::recvCommands(int fd)
     buf[bytesReceived] = '\0';
     message[fd] += string(buf);
 
+    log(DEBUG, "RECV", "Currently received bytes: " + message[fd]);
+
     if (message[fd].find("\r\n") == std::string::npos)
         return {{"", "PARTIAL", ""}};
     
-    log(DEBUG, "RECV", "Received full message: " + message[fd]);
+    log(DEBUG, "RECV", "Received full message");
 
     istringstream stream(message[fd]);
     std::string line;
