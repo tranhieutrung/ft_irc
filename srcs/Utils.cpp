@@ -100,3 +100,38 @@ void log(log_level level, const string &event, const string &details)
 	cout << RESET;
 	cout << "[" << event << "] " << details << endl;
 }
+
+/*
+Formats:
+USER username hostname * [:]realname
+PRIVMSG target [:]message
+JOIN target1,target2... pw1,pw2...
+QUIT [:][message]
+PART target1,target2 [:][message]
+*/
+parsedArgs		parseArgs(const std::string& args, int argNum, bool withTrailing) {
+	parsedArgs			result;
+	std::istringstream	iss(args);
+	std::string			temp;
+	int 				limit = withTrailing ? (argNum - 1) : argNum;
+
+	result.size = 0;
+	while (result.size < limit && iss >> temp) {
+		result.args.push_back(temp);
+		result.size++;
+	}
+
+	if (withTrailing) {
+		size_t 	pos = args.find(":");
+		if (pos != std::string::npos) {
+			result.trailing = args.substr(pos + 1);
+		} else {
+			iss >> result.trailing;
+		}
+		if (!result.trailing.empty()) {
+			cout << result.trailing <<endl;
+			result.size++;
+		}
+	}
+	return (result);
+}

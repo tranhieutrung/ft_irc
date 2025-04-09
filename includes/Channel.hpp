@@ -30,6 +30,7 @@ class Channel
     public:
         Channel() : ChannelName(""), ChannelTopic(""), password(""), inviteOnly(false), topic_restriction(false), userLimit(999) {}
         Channel(const std::string& name) : ChannelName(name), inviteOnly(false), topic_restriction(false), userLimit(999) {}
+        Channel(const std::string& name, const std::string& pw) : ChannelName(name), ChannelTopic(""), password(pw), inviteOnly(false), topic_restriction(false), userLimit(999) {}
 
         // Getters
         std::string getChannelName() const { return ChannelName; }

@@ -194,4 +194,8 @@
 // Returned by the server whenever a client tries to perform a channel affecting 
 // command for which the client isn't a member.
 
+# define ERR_ERRONEUSUSER 434
+// "<client> <nick> :Erroneous user format"
+// Returned when the given USER's args is invalid (e.g., contains forbidden characters).
+
 #endif // IRC_ERROR_CODES_HPP

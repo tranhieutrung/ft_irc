@@ -71,7 +71,6 @@ int	User::setNickname(const std::string &nickname)
 	if (regex_match(nickname, nick_regex) == false)
 		return ERR_ERRONEUSNICKNAME;
 	this->nickname = nickname;
-	// this->nickIsSet = true;
 	return 0;
 }
 
