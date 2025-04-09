@@ -81,6 +81,7 @@ class Server
 		User* 	findUserByNickName(const string& nickName);
 		void 	sendMessage(int code, cmd cmd, User &user);
 		void 	sendMessage(int code, cmd cmd, User &user, Channel &channel);
+		void 	removeUser(int UserFd);
 
 	public:
 		Server(std::string port, std::string password);

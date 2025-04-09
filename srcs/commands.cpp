@@ -175,10 +175,11 @@ int	Server::QUIT(cmd cmd, User &user) {
 		parsedArgs quitArgs = parseArgs(cmd.arguments, 1, true);
 		message += quitArgs.trailing;
 	}
-	if (user.quit(message) == -1) {
+	if (user.quit(message) == -1) { //to leave all joined channels
 		cerr << "Sending messages failes" <<endl;
 		return (-1);
 	}
+	removeUser(user.getFd());
 	return 0;
 }
 

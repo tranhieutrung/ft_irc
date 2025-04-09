@@ -32,7 +32,6 @@ void Server::execute_command(cmd cmd, User &user)
 		code = TOPIC(cmd, user); 
 	} else if (cmd.command == "KICK") {
 		code = KICK(cmd, user); 
-
 	} else if (cmd.command == "PART") {
 		code = PART(cmd, user);
 	} else if (cmd.command == "WHOIS") {
@@ -228,4 +227,18 @@ int Server::createChannel(Channel*& channel, User &user, const std::string &chan
 		channel->addOperator(user);
 	}
 	return code;
+}
+
+void Server::removeUser(int UserFd) {
+	shutdown(UserFd, SHUT_RDWR);
+	close(UserFd);
+	this->users.erase(UserFd);
+	this->fds.erase(
+		std::remove_if(this->fds.begin(), this->fds.end(),
+			[UserFd](const struct pollfd &pfd) {
+				return pfd.fd == UserFd;
+			}),
+			this->fds.end()
+	);
+	log(INFO, "Connection", "Client disconnected: fd " + std::to_string(UserFd));
 }
