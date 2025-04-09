@@ -53,7 +53,7 @@ class Server
 
 		// helper functions:
 		bool	_nickIsUsed(string nick);
-		// bool	_userIsUsed(string username);
+		bool	_userIsUsed(string username);
 
 		// Commands
 		int		PASS(cmd cmd, User &user);

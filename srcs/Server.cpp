@@ -18,8 +18,8 @@ void Server::execute_command(cmd cmd, User &user)
 		code = MODE(cmd, user); 
 	} else if (cmd.command == "QUIT") {
 		code = QUIT(cmd, user); 
-	} else if (!user.getIsRegistered()) {
-		code = ERR_NOTREGISTERED; 
+	// } else if (!user.getIsRegistered()) {
+	// 	code = ERR_NOTREGISTERED; 
 	// } else if (cmd.command == "OPER") {
 	// 	code = OPER(cmd, user);
 	} else if (cmd.command == "INVITE") {
@@ -36,6 +36,8 @@ void Server::execute_command(cmd cmd, User &user)
 		code = PART(cmd, user);
 	} else if (cmd.command == "WHOIS") {
 		code = WHOIS(cmd, user);
+	} else if (cmd.command == "CAP") {
+		return; // ignore CAP
 	} else {
 		code = ERR_UNKNOWNCOMMAND;
 	}
@@ -109,13 +111,11 @@ void Server::start() {
 	{
 		if (poll(fds.data(), fds.size(), -1) < 0 && errno != EINTR)
 			throw runtime_error("Poll error");
-		for (size_t index = 0; index < this->fds.size(); index++) {
-			if (index == 0) { // fds[0] = serverSocket
-				handleNewClient();
-			} else {
-				handleClientMessages(&index);
-			}
-		}
+
+		handleNewClient();
+
+		for (size_t index = 1; index < this->fds.size(); index++)
+			handleClientMessages(&index);
 	}
 }
 
@@ -208,14 +208,14 @@ bool	Server::_nickIsUsed(string nick) {
 	return (false);
 }
 
-// bool	Server::_userIsUsed(string username) {
-// 	for (auto &it : this->users) {
-// 		if (it.second.getUsername() == username) {
-// 			return (true);
-// 		}
-// 	}
-// 	return (false);
-// }
+bool	Server::_userIsUsed(string username) {
+	for (auto &it : this->users) {
+		if (it.second.getUsername() == username) {
+			return (true);
+		}
+	}
+	return (false);
+}
 
 //user create and join a new channel
 int Server::createChannel(Channel*& channel, User &user, const std::string &channelName, const std::string &key) {

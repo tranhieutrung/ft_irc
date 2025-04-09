@@ -94,7 +94,7 @@ string	Server::createMessage(int code, cmd cmd, User &user, Channel &channel) {
 	if (code == RPL_TOPIC) {
 		message += channel.getChannelName() + " :" + channel.getChannelTopic();
 	} else if (code == RPL_NAMREPLY) {
-		message += channel.getChannelName() + " :";
+		message += "= " + channel.getChannelName() + " :";
 		for (auto &it : channel.getUserList()) {
 			bool isOp = false;
 			for (auto &op : channel.getOperators()) {

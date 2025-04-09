@@ -86,6 +86,9 @@ string trim(string str)
 
 void log(const log_level level, const string &event, const string &details)
 {
+	if (details.find("PING") != string::npos || details.find("PONG") != string::npos)
+		return; // no more flood in terminal
+		
 	time_t now = time(nullptr);
 	tm *ltm = localtime(&now);
 
@@ -105,6 +108,7 @@ void log(const log_level level, const string &event, const string &details)
 			cout << "[ERROR] ";
 			break;
 		case DEBUG:
+			cout << BLUE;
 			cout << "[DEBUG]";
 			break;
 	}

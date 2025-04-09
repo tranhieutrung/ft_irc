@@ -54,6 +54,19 @@ int	Server::NICK(cmd cmd, User &user) {
 
 int	Server::USER(cmd cmd, User &user) {
 	parsedArgs userArgs = parseArgs(cmd.arguments, 4, true);
+
+
+	if (_userIsUsed(userArgs.args[0])) { // add unique number to end so things will work with irssi
+		log(DEBUG, "USER", "Username " + userArgs.args[0] + " is taken");
+		for (int i = 1;; ++i)
+		{
+			if (!_userIsUsed(userArgs.args[0] + to_string(i))) {
+				userArgs.args[0] += to_string(i);
+				break;
+			}
+		}
+	}
+	
 	if (userArgs.size < 4) {
 		return (ERR_NEEDMOREPARAMS);
 	} else if (user.setUsername(userArgs.args[0])
@@ -188,7 +201,7 @@ int	Server::PART(cmd cmd, User &user) {
 		return (ERR_NEEDMOREPARAMS);
 	}
 	parsedArgs partArgs = parseArgs(cmd.arguments, 2, true);
-	string message = ":" + user.getFullIdentifier() + " PART :";
+	string message = "";
 
 	if (partArgs.trailing.empty()) {
 		message += user.getNickname() + " left";

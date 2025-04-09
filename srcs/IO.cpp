@@ -81,7 +81,7 @@ ssize_t IO::sendStringAll(const std::map<std::string, User> m, const std::string
 
 std::vector<cmd> IO::recvCommands(int fd)
 {
-    static std::string message[42];
+    static std::string message[42]; // replace with some max limit of clients
     char buf[512];
     ssize_t bytesReceived = recv(fd, buf, sizeof(buf), 0);
 
@@ -96,14 +96,9 @@ std::vector<cmd> IO::recvCommands(int fd)
 
     buf[bytesReceived] = '\0';
     message[fd] += string(buf);
-
-    log(DEBUG, "RECV", "Currently received bytes: " + message[fd]);
-
     if (message[fd].find("\r\n") == std::string::npos)
         return {{"", "PARTIAL", ""}};
     
-    log(DEBUG, "RECV", "Received full message");
-
     istringstream stream(message[fd]);
     std::string line;
     std::vector<cmd> commands;
