@@ -6,8 +6,8 @@ void Server::execute_command(cmd cmd, User &user)
 {
 	int code = 0;
 
-	if (cmd.command != "PASS" && user.getAuth() == false)
-		return;
+	if (cmd.command != "QUIT" && cmd.command != "PASS" && user.getAuth() == false)
+		return; // if not authenticated, ignore silently
 
 	if (cmd.command == "PING") {
 		code = PING(cmd, user);
