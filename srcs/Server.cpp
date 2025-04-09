@@ -79,6 +79,9 @@ void Server::handleClientMessages(size_t *index) {
 	int fd = fds[*index].fd;
 	vector<cmd> commands = IO::recvCommands(fd);
 
+	if (commands[0].command == "PARTIAL")
+		return;
+
 	if (commands[0].command != "DISCONNECT" && commands[0].command != "ERROR") {
 		for (const auto &c : commands) {
 			execute_command(c, users[fd]);
@@ -94,9 +97,6 @@ void Server::handleClientMessages(size_t *index) {
 	}
 
 	execute_command({"", "QUIT", "disconnected"}, users[fd]);
-	close(fd);
-	users.erase(fd);
-	fds.erase(fds.begin() + *index);
 	*index -= 1;
 }
 

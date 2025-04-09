@@ -124,7 +124,7 @@ int	Server::PRIVMSG(cmd cmd, User &user) {
 	}
 
 	parsedArgs priArgs = parseArgs(cmd.arguments, 2, true);
-	cout << priArgs.size;
+	//cout << priArgs.size;
 	if (priArgs.size < 2) {
 		return (ERR_NOTEXTTOSEND);
 	}

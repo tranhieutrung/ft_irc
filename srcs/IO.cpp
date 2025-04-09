@@ -81,18 +81,30 @@ ssize_t IO::sendStringAll(const std::map<std::string, User> m, const std::string
 
 std::vector<cmd> IO::recvCommands(int fd)
 {
+    static std::string message[42];
     char buf[512];
     ssize_t bytesReceived = recv(fd, buf, sizeof(buf), 0);
-    if (bytesReceived == 0)
-        return {{"", "DISCONNECT", ""}};
-    if (bytesReceived < 0)
-        return {{"", "ERROR", ""}};
+
+    if (bytesReceived <= 0)
+    {
+        message[fd] = "";
+        if (bytesReceived == 0)
+            return {{"", "DISCONNECT", ""}};
+        else
+            return {{"", "ERROR", ""}};
+    }
+
     buf[bytesReceived] = '\0';
+    message[fd] += string(buf);
+
+    if (message[fd].find("\r\n") == std::string::npos)
+        return {{"", "PARTIAL", ""}};
     
-    
-    istringstream stream(buf);
+    log(DEBUG, "RECV", "Received full message: " + message[fd]);
+
+    istringstream stream(message[fd]);
     std::string line;
-    std::vector<cmd> list;
+    std::vector<cmd> commands;
     
     while (getline(stream, line))
     {
@@ -105,7 +117,8 @@ std::vector<cmd> IO::recvCommands(int fd)
 
         log(DEBUG, "RECV", line);
         
-        list.push_back(cmd);
+        commands.push_back(cmd);
     }
-    return list;
+    message[fd] = "";
+    return commands;
 }

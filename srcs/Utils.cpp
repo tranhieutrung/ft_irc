@@ -73,7 +73,7 @@ bool isJoinedChannel(User &user, Channel &channel) {
 	return (false);
 }
 
-void log(log_level level, const string &event, const string &details)
+void log(const log_level level, const string &event, const string &details)
 {
 	time_t now = time(nullptr);
 	tm *ltm = localtime(&now);
@@ -129,7 +129,7 @@ parsedArgs		parseArgs(const std::string& args, int argNum, bool withTrailing) {
 			iss >> result.trailing;
 		}
 		if (!result.trailing.empty()) {
-			cout << result.trailing <<endl;
+			//cout << result.trailing <<endl;
 			result.size++;
 		}
 	}
