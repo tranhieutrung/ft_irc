@@ -46,6 +46,8 @@ int	Server::TOPIC(cmd cmd, User &user)
 	else
 	{
 		it->second.setChannelTopic(topic);
+		message = user.getNickname() + " has set topic to " + topic + "\r\n";
+		user.privmsg(channel, message);
 	}
 	return (0);
 
@@ -135,7 +137,7 @@ int	Server::MODE(cmd cmd, User &user)
 	{
 		if (extra.empty())
 		{
-            it->second.setPassword(nullptr);
+            it->second.setPassword("");
 		}
         else
 		{
