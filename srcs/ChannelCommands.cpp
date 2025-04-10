@@ -77,12 +77,12 @@ int	Server::KICK(cmd cmd, User &user)
 	{
 		return (ERR_CHANOPRIVSNEEDED);
 	}
-	std::optional<std::map<string, User>::iterator> it2 = it->second.findUser(target);
+	std::optional<std::map<int, User>::iterator> it2 = it->second.findUserByNickname(target);
 	if (!it2)
 	{
 		return (ERR_NOSUCHNICK);
 	}
-	it->second.removeUser(user.getUsername());
+	it->second.removeUser(user.getFd());
 	return (0);
 }
 
@@ -151,7 +151,7 @@ int	Server::MODE(cmd cmd, User &user)
 	if (mode == "-o")
 	{
 
-		if (it->second.findUser(extra))
+		if (it->second.findUserByNickname(extra))
 		{
             const User *opp =  getUser(extra);
 			it->second.addOperator(*opp);
@@ -223,7 +223,7 @@ int	Server::INVITE(cmd cmd, User &user)
 	message2= "You have been invited by " + user.getNickname() + "to channel " + channel + "\r\n";
 	if (send(invited->getFd(), message2.c_str(), message2.length(), 0) == -1)
 		cerr << "send() error: " << strerror(errno) << endl;
-	it->second.addUser(invited->getNickname(), *invited);
+	it->second.addUser(invited->getFd(), *invited);
 	return (0);
 
 }

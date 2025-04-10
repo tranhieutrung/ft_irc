@@ -66,7 +66,7 @@ bool targetIsUser(char c) {
 
 bool isJoinedChannel(User &user, Channel &channel) {
 	for (const auto &it : channel.getUserList()) {
-		if (it.first == user.getUsername()) {
+		if (it.first == user.getFd()) {
 			return (true);
 		}
 	}
