@@ -185,7 +185,7 @@ int User::join(Channel &channel, const string &password)
 		return ERR_INVITEONLYCHAN;
 	if (channel.getUserLimit() <= channel.getUserList().size())
 		return ERR_CHANNELISFULL;
-	channel.addUser(username, *this);
+	channel.addUser(fd, *this);
 	joinedChannels[channel.getChannelName()] = channel;
 	if (IO::sendCommandAll(channel.getUserList(), {getFullIdentifier(), "JOIN", channel.getChannelName()}) < 0)
 		throw runtime_error("send failed");
@@ -243,7 +243,7 @@ int User::part(Channel &channel, const std::string &message) // leaves a channel
 			return -1;
 	}
 	joinedChannels.erase(channel.getChannelName());
-	channel.removeUser(username);
+	channel.removeUser(fd);
 	return 0;
 }
 
