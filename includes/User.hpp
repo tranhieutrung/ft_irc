@@ -51,7 +51,6 @@ class User
 		bool getIsRegistered() const { return isRegistered; }
 
 		// setters
-		int setInfo(const std::string &args);
 		int setNickname(const std::string &nickname);
 		int setUsername(const std::string &username);
 		int setHostname(const std::string &hostname);

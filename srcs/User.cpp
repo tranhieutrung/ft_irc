@@ -112,24 +112,6 @@ int User::setRealname(const std::string &realname)
 	return 0;
 }
 
-int User::setInfo(const std::string &args)
-{
-	std::string user, host, server, real;
-	istringstream stream(args);
-	stream >> user;
-	stream >> host;
-	stream >> server;
-	stream.ignore(2); // skip space and ':'
-	getline(stream, real);
-	if (setUsername(user) == ERR_ERRONEUSNICKNAME)
-		return ERR_ERRONEUSNICKNAME;
-	if (setHostname(host) == 1)
-		return 1;
-	if (setServername(server) == 1)
-		return 1;
-	return setRealname(real);
-}
-
 string User::getFullIdentifier() const
 {
 	return ":" + nickname + "!" + username + "@" + hostname;

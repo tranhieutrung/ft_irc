@@ -180,20 +180,11 @@ int	Server::PRIVMSG(cmd cmd, User &user) {
 
 
 int	Server::QUIT(cmd cmd, User &user) {
-	if (user.quit(cmd.arguments) == -1)
+	string message = cmd.arguments;
+	if (cmd.arguments.empty())
+		message = user.getNickname() + " quit";
+	if (user.quit(message) == -1)
 		throw runtime_error("QUIT: send error");
-	// string message = user.getFullIdentifier() + " QUIT :";
-
-	// if (cmd.arguments.empty()) {
-	// 	message += user.getNickname() + " quit";
-	// } else {
-	// 	parsedArgs quitArgs = parseArgs(cmd.arguments, 1, true);
-	// 	message += quitArgs.trailing;
-	// }
-	// if (user.quit(message) == -1) { //to leave all joined channels
-	// 	cerr << "Sending messages failes" <<endl;
-	// 	return (-1);
-	// }
 	removeUser(user.getFd());
 	return 0;
 }
