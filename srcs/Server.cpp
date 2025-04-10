@@ -7,7 +7,7 @@ void Server::execute_command(cmd cmd, User &user)
 	int code = 0;
 
 	if (cmd.command != "QUIT" && cmd.command != "PASS" && user.getAuth() == false)
-		return; // if not authenticated, ignore silently. Could send 444 instead?
+		return; // if not authenticated, ignore silently. Not sending any message because it doesnt look good with irssi
 
 	if (cmd.command == "PING") {
 		code = PING(cmd, user);

@@ -183,7 +183,7 @@ int	Server::QUIT(cmd cmd, User &user) {
 	string message = cmd.arguments;
 	if (cmd.arguments.empty())
 		message = user.getNickname() + " quit";
-	if (user.quit(message) == -1)
+	if (user.quit(":" + message) == -1)
 		throw runtime_error("QUIT: send error");
 	removeUser(user.getFd());
 	return 0;
