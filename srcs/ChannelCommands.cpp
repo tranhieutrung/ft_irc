@@ -116,6 +116,8 @@ int	Server::MODE(cmd cmd, User &user)
 			modes += "i";
 		if (c.isTopicRestricted())
 			modes += "t";
+		if (!c.getPassword().empty())
+			modes += "k";
 		IO::sendString(user.getFd(), ":" + _name + " 324 " + user.getNickname() + " " + c.getChannelName() + (modes == "+" ? "" : " " + modes));
 		return 0;
 	}
