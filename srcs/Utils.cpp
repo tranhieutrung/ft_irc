@@ -73,10 +73,10 @@ bool isJoinedChannel(User &user, Channel &channel) {
 	return (false);
 }
 
-// trims spaces from end
+// trims spaces and : from end
 string trim(const string &str)
 {
-	const string spaces = " \r\n\t\f\v";
+	const string spaces = " \r\n\t\f\v:";
 	size_t end;
 
 	if (str.find_first_not_of(spaces) == string::npos)
