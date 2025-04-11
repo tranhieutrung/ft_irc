@@ -54,6 +54,7 @@ public:
     void addUser(int fd, const User& user);
     void removeUser(int fd);
     std::optional<std::map<int, User>::iterator> findUser(int fd);
+    std::optional<std::map<int, User>::const_iterator> findUser(int fd) const;
     void addOperator(const User& user);
     void removeOperator(const User& user);
     bool isOperator(const User& user) const;

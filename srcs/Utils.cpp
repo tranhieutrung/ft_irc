@@ -73,15 +73,20 @@ bool isJoinedChannel(User &user, Channel &channel) {
 	return (false);
 }
 
-// trims \r off the end. if its not there, trims \n if it exists
-string trim(string str)
+// trims spaces and : from end
+string trim(const string &str)
 {
-	size_t rn = str.find("\r");
-	if (rn == string::npos)
-		rn = str.find("\n");
-	if (rn == string::npos)
-		return str;
-	return str.substr(0, rn);
+	const string spaces = " \r\n\t\f\v:";
+	size_t end;
+
+	if (str.find_first_not_of(spaces) == string::npos)
+		return ""; // if contains only spaces
+
+	for (end = str.size() - 1;; --end)
+		if (spaces.find(str[end]) == string::npos) // non-space char
+			break;
+
+	return str.substr(0, end + 1);
 }
 
 void log(const log_level level, const string &event, const string &details)
@@ -105,7 +110,7 @@ void log(const log_level level, const string &event, const string &details)
 			break;
 		case ERROR:
 			cout << RED;
-			cout << "[ERROR] ";
+			cout << "[ERROR]";
 			break;
 		case DEBUG:
 			cout << BLUE;

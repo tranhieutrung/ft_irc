@@ -2,12 +2,31 @@
 
 volatile sig_atomic_t Server::running = 1;
 
+static bool ignoreCommand(const cmd &cmd, const User &user)
+{
+	if (cmd.command != "QUIT" && cmd.command != "PASS" && user.getAuth() == false)
+		return true; // if not authenticated
+	if (cmd.command == "MODE" && cmd.arguments.find("#") == string::npos)
+		return true; // if MODE for user
+	if (cmd.command == "CAP")
+		return true;
+	if (cmd.command == "WHO")
+		return true;
+	return false;
+}
+
 void Server::execute_command(cmd cmd, User &user)
 {
 	int code = 0;
+	const string nick = user.getNickname(); // for that DEBUG log. if QUIT, then its invalid read
 
-	if (cmd.command != "QUIT" && cmd.command != "PASS" && user.getAuth() == false)
-		return; // if not authenticated, ignore silently. Not sending any message because it doesnt look good with irssi
+	if (ignoreCommand(cmd, user))
+	{
+		log(DEBUG, "EXEC", "Command " + cmd.command + " ignored");
+		return;
+	}
+
+	log(DEBUG, "EXEC", "Executing command: " + cmd.prefix + " | " + cmd.command + " | " + cmd.arguments);
 
 	if (cmd.command == "PING") {
 		code = PING(cmd, user);
@@ -39,15 +58,16 @@ void Server::execute_command(cmd cmd, User &user)
 		code = PART(cmd, user);
 	} else if (cmd.command == "WHOIS") {
 		code = WHOIS(cmd, user);
-	} else if (cmd.command == "CAP") {
-		return; // ignore CAP
 	} else {
 		code = ERR_UNKNOWNCOMMAND;
 	}
 	if (code) {
 		sendMessage(code, cmd, user);
 	}
-	log(INFO, "COMMAND", user.getNickname() + " executed command " + cmd.command + " with code " + to_string(code));
+	log_level level = INFO;
+	if (code > 400)
+		level = ERROR;
+	log(level, "COMMAND", nick + " executed command " + cmd.command + " with code " + to_string(code));
 }
 
 string Server::client_info(struct sockaddr_in &client_addr)

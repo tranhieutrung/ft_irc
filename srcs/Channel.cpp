@@ -33,6 +33,14 @@ std::optional<std::map<int, User>::iterator> Channel::findUser(int fd) {
     return std::nullopt;
 }
 
+std::optional<std::map<int, User>::const_iterator> Channel::findUser(int fd) const {
+    auto it = UserList.find(fd);
+    if (it != UserList.end()) {
+        return it;
+    }
+    return std::nullopt;
+}
+
 void Channel::addUser(int fd, const User& user) {
     UserList[fd] = user;
 }

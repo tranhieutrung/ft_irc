@@ -1,5 +1,6 @@
 #include "../includes/IO.hpp"
 #include "../includes/Server.hpp"
+#include "../includes/Utils.hpp"
 #include <sstream>
 #include <sys/socket.h>
 #include <map>
@@ -42,33 +43,7 @@ ssize_t IO::sendCommandAll(const std::map<int, User> &m, const cmd &cmd)
     return result;
 }
 
-ssize_t IO::sendCommandAll(const std::map<std::string, User> &m, const cmd &cmd)
-{
-    ssize_t ret, result = 0;
-    for (const auto &pair : m)
-    {
-        ret = sendCommand(pair.second.getFd(), cmd);
-        if (ret < 0)
-            return -1;
-        result += ret;
-    }
-    return result;
-}
-
 ssize_t IO::sendStringAll(const std::map<int, User> &m, const std::string &s)
-{
-    ssize_t ret, result = 0;
-    for (const auto &pair : m)
-    {
-        ret = sendString(pair.second.getFd(), s);
-        if (ret < 0)
-            return -1;
-        result += ret;
-    }
-    return result;
-}
-
-ssize_t IO::sendStringAll(const std::map<std::string, User> &m, const std::string &s)
 {
     ssize_t ret, result = 0;
     for (const auto &pair : m)
@@ -115,7 +90,11 @@ std::vector<cmd> IO::recvCommands(const int fd)
         getline(lstream, cmd.arguments, '\r');
 
         log(DEBUG, "RECV " + to_string(fd), line);
-        
+
+        cmd.prefix = trim(cmd.prefix);
+        cmd.command = trim(cmd.command);
+        cmd.arguments = trim(cmd.arguments);
+
         commands.push_back(cmd);
     }
     message[fd] = "";
