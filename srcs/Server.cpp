@@ -5,9 +5,12 @@ volatile sig_atomic_t Server::running = 1;
 void Server::execute_command(cmd cmd, User &user)
 {
 	int code = 0;
-
+	
+	log(DEBUG, "EXEC", "Executing command: " + cmd.prefix + " | " + cmd.command + " | " + cmd.arguments);
+	
 	if (cmd.command != "QUIT" && cmd.command != "PASS" && user.getAuth() == false)
-		return; // if not authenticated, ignore silently. Not sending any message because it doesnt look good with irssi
+		return; // if not authenticated, ignore silently.
+	
 
 	if (cmd.command == "PING") {
 		code = PING(cmd, user);

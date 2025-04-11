@@ -74,7 +74,7 @@ bool isJoinedChannel(User &user, Channel &channel) {
 }
 
 // trims \r off the end. if its not there, trims \n if it exists
-string trim(string str)
+string trim(const string &str)
 {
 	size_t rn = str.find("\r");
 	if (rn == string::npos)
