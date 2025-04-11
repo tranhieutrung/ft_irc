@@ -53,13 +53,11 @@ int	Server::TOPIC(cmd cmd, User &user)
 
 }
 
-
-
 int	Server::KICK(cmd cmd, User &user)
 {
 	string channel;
 	string target;
-	string		res;
+	string res;
 	istringstream stream(cmd.arguments);
 
 	stream >> channel >> target;

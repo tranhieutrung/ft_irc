@@ -87,8 +87,10 @@ std::vector<cmd> IO::recvCommands(const int fd)
         if (line[0] == ':')
             getline(lstream, cmd.prefix, ' ');
         getline(lstream, cmd.command, ' ');
-        cmd.command = trim_crlf(cmd.command);
+        cmd.command = trim(cmd.command);
         getline(lstream, cmd.arguments, '\r');
+        if (trim(cmd.arguments) == ":")
+            cmd.arguments = "";
 
         log(DEBUG, "RECV " + to_string(fd), line);
         
