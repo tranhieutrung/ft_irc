@@ -82,6 +82,7 @@ class Server
 		void 	sendMessage(int code, cmd cmd, User &user);
 		void 	sendMessage(int code, cmd cmd, User &user, Channel &channel);
 		void 	removeUser(int UserFd);
+		void	partAll(const User &user);
 
 	public:
 		Server(std::string port, std::string password);
