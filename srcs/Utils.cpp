@@ -105,7 +105,7 @@ void log(const log_level level, const string &event, const string &details)
 			break;
 		case ERROR:
 			cout << RED;
-			cout << "[ERROR] ";
+			cout << "[ERROR]";
 			break;
 		case DEBUG:
 			cout << BLUE;
