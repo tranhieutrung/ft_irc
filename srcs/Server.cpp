@@ -2,16 +2,26 @@
 
 volatile sig_atomic_t Server::running = 1;
 
+static bool ignoreCommand(const cmd &cmd, const User &user)
+{
+	if (cmd.command != "QUIT" && cmd.command != "PASS" && user.getAuth() == false)
+		return true; // if not authenticated
+	if (cmd.command == "MODE" && cmd.arguments.find("#") == string::npos)
+		return true; // if MODE for user
+	if (cmd.command == "CAP")
+		return true;
+	return false;
+}
+
 void Server::execute_command(cmd cmd, User &user)
 {
 	int code = 0;
 	const string nick = user.getNickname(); // for that DEBUG log. if QUIT, then its invalid read
 
+	if (ignoreCommand(cmd, user))
+		return;
+
 	log(DEBUG, "EXEC", "Executing command: " + cmd.prefix + " | " + cmd.command + " | " + cmd.arguments);
-	
-	if (cmd.command != "QUIT" && cmd.command != "PASS" && user.getAuth() == false)
-		return; // if not authenticated, ignore silently.
-	
 
 	if (cmd.command == "PING") {
 		code = PING(cmd, user);
@@ -43,8 +53,6 @@ void Server::execute_command(cmd cmd, User &user)
 		code = PART(cmd, user);
 	} else if (cmd.command == "WHOIS") {
 		code = WHOIS(cmd, user);
-	} else if (cmd.command == "CAP") {
-		return; // ignore CAP
 	} else {
 		code = ERR_UNKNOWNCOMMAND;
 	}
