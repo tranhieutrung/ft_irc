@@ -73,8 +73,22 @@ bool isJoinedChannel(User &user, Channel &channel) {
 	return (false);
 }
 
-void log(log_level level, const string &event, const string &details)
+// trims \r off the end. if its not there, trims \n if it exists
+string trim(string str)
 {
+	size_t rn = str.find("\r");
+	if (rn == string::npos)
+		rn = str.find("\n");
+	if (rn == string::npos)
+		return str;
+	return str.substr(0, rn);
+}
+
+void log(const log_level level, const string &event, const string &details)
+{
+	if (details.find("PING") != string::npos || details.find("PONG") != string::npos)
+		return; // no more flood in terminal
+
 	time_t now = time(nullptr);
 	tm *ltm = localtime(&now);
 
@@ -94,11 +108,12 @@ void log(log_level level, const string &event, const string &details)
 			cout << "[ERROR] ";
 			break;
 		case DEBUG:
+			cout << BLUE;
 			cout << "[DEBUG]";
 			break;
 	}
 	cout << RESET;
-	cout << "[" << event << "] " << details << endl;
+	cout << "[" << event << "] " << trim(details) << endl;
 }
 
 /*
@@ -129,7 +144,7 @@ parsedArgs		parseArgs(const std::string& args, int argNum, bool withTrailing) {
 			iss >> result.trailing;
 		}
 		if (!result.trailing.empty()) {
-			cout << result.trailing <<endl;
+			//cout << result.trailing <<endl;
 			result.size++;
 		}
 	}

@@ -45,23 +45,22 @@ class User
 		int getFd() const { return fd; }
 		bool getIsOperator() const { return isOperator; }
 		std::string getFullIdentifier() const;
-		bool getAuth() const;
-		bool getNickIsSet() const;
-		bool getUserIsSet() const;
-		bool getIsRegistered() const;
+		bool getAuth() const { return isAuth; }
+		bool getNickIsSet() const { return nickIsSet; }
+		bool getUserIsSet() const { return userIsSet; }
+		bool getIsRegistered() const { return isRegistered; }
 
 		// setters
-		int setInfo(const std::string &args);
 		int setNickname(const std::string &nickname);
 		int setUsername(const std::string &username);
 		int setHostname(const std::string &hostname);
 		int setServername(const std::string &servername);
 		int setRealname(const std::string &realname);
 		void setIsOperator(const bool isOperator) { this->isOperator = isOperator; }
-		void setAuth(const bool status);
-		void setNickIsSet(const bool status);
-		void setUserIsSet(const bool status);
-		void setIsRegistered(const bool status);
+		void setAuth(const bool status) { isAuth = status; }
+		void setNickIsSet(const bool status) { nickIsSet = status; }
+		void setUserIsSet(const bool status) { userIsSet = status; }
+		void setIsRegistered(const bool status) { isRegistered = status; }
 
 		friend bool operator==(const User &lhs, const User &rhs);
 		friend bool operator!=(const User &lhs, const User &rhs);

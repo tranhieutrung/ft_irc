@@ -112,24 +112,6 @@ int User::setRealname(const std::string &realname)
 	return 0;
 }
 
-int User::setInfo(const std::string &args)
-{
-	std::string user, host, server, real;
-	istringstream stream(args);
-	stream >> user;
-	stream >> host;
-	stream >> server;
-	stream.ignore(2); // skip space and ':'
-	getline(stream, real);
-	if (setUsername(user) == ERR_ERRONEUSNICKNAME)
-		return ERR_ERRONEUSNICKNAME;
-	if (setHostname(host) == 1)
-		return 1;
-	if (setServername(server) == 1)
-		return 1;
-	return setRealname(real);
-}
-
 string User::getFullIdentifier() const
 {
 	return ":" + nickname + "!" + username + "@" + hostname;
@@ -192,43 +174,6 @@ int User::join(Channel &channel, const string &password)
 	return 0;
 }
 
-void User::setAuth(const bool status) {
-	isAuth = status;
-}
-
-void User::setNickIsSet(const bool status) {
-	nickIsSet = status;
-}
-
-void User::setUserIsSet(const bool status) {
-	userIsSet = status;
-}
-
-void User::setIsRegistered(const bool status) {
-	isRegistered = status;
-}
-
-
-bool User::getAuth() const
-{
-	return isAuth;
-}
-
-bool User::getNickIsSet() const
-{
-	return nickIsSet;
-}
-
-bool User::getUserIsSet() const
-{
-	return userIsSet;
-}
-
-bool User::getIsRegistered() const
-{
-	return isRegistered;
-}
-
 int User::part(Channel &channel, const std::string &message) // leaves a channel with a goodbye message
 {
 	if (!isInChannel(channel.getChannelName()))
@@ -239,7 +184,7 @@ int User::part(Channel &channel, const std::string &message) // leaves a channel
 		// if (pair.second.getFd() == fd)
 		// 	continue;
 		if (IO::sendCommand(u.fd, {getFullIdentifier(),
-			"PART", channel.getChannelName() + (message.empty() ? "" : " :" + message)}) < 0)
+			"PART", channel.getChannelName() + (message.empty() ? "" : " " + message)}) < 0)
 			return -1;
 	}
 	joinedChannels.erase(channel.getChannelName());

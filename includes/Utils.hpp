@@ -8,6 +8,7 @@ enum log_level { DEBUG, INFO, WARN, ERROR };
 #define RED		"\033[31m";
 #define ORANGE	"\033[38;5;214m";
 #define GREEN	"\033[32m";
+#define BLUE	"\033[34m"
 
 struct parsedArgs {
 	vector <string>	args;

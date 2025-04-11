@@ -33,3 +33,6 @@
 #define RPL_PONG 399
 // define for replying PING commands
 // PONG message
+
+#define RPL_ENDOFNAMES 366
+// after RPL_NAMREPLY is complete, send a message signifying that was all

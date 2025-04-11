@@ -80,9 +80,8 @@ void Server::sendMessage(int code, cmd cmd, User &user) {
 	if (!code)
 		return ;
 	string message = createMessage(code, cmd, user);
-	if (code && send(user.getFd(), message.c_str(), message.length(), 0) == -1)
+	if (code && IO::sendString(user.getFd(), message) == -1)
 		cerr << "send() error: " << strerror(errno) << endl;
-	log(DEBUG, "SEND", message);
 }
 
 string	Server::createMessage(int code, cmd cmd, User &user, Channel &channel) {
@@ -94,7 +93,7 @@ string	Server::createMessage(int code, cmd cmd, User &user, Channel &channel) {
 	if (code == RPL_TOPIC) {
 		message += channel.getChannelName() + " :" + channel.getChannelTopic();
 	} else if (code == RPL_NAMREPLY) {
-		message += channel.getChannelName() + " :";
+		message += "= " + channel.getChannelName() + " :";
 		for (auto &it : channel.getUserList()) {
 			bool isOp = false;
 			for (auto &op : channel.getOperators()) {
@@ -102,7 +101,7 @@ string	Server::createMessage(int code, cmd cmd, User &user, Channel &channel) {
 					isOp = true;
 				}
 			}
-			message += (isOp) ? "@" : "+";
+			message += (isOp) ? "@" : "";
 			message += it.second.getNickname() + " ";
 		}
 		if (!message.empty() && message.back() == ' ')
@@ -116,7 +115,6 @@ void Server::sendMessage(int code, cmd cmd, User &user, Channel &channel) {
 	if (!code)
 		return ;
 	string message = createMessage(code, cmd, user, channel);
-	if (code && send(user.getFd(), message.c_str(), message.length(), 0) == -1)
+	if (code && IO::sendString(user.getFd(), message) == -1)
 		cerr << "send() error: " << strerror(errno) << endl;
-	log(DEBUG, "SEND", message);
 }

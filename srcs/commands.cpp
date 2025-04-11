@@ -54,6 +54,18 @@ int	Server::NICK(cmd cmd, User &user) {
 
 int	Server::USER(cmd cmd, User &user) {
 	parsedArgs userArgs = parseArgs(cmd.arguments, 4, true);
+
+	if (_userIsUsed(userArgs.args[0])) { // add unique number to end so things will work with irssi.
+		log(DEBUG, "USER", "Username " + userArgs.args[0] + " is taken. Creating unique username...");
+		for (int i = 1;; ++i)
+		{
+			if (!_userIsUsed(userArgs.args[0] + to_string(i))) {
+				userArgs.args[0] += to_string(i);
+				break;
+			}
+		}
+	}
+	
 	if (userArgs.size < 4) {
 		return (ERR_NEEDMOREPARAMS);
 	} else if (user.setUsername(userArgs.args[0])
@@ -114,6 +126,7 @@ int	Server::JOIN(cmd cmd, User &user) {
 		}
 		sendMessage(RPL_TOPIC, cmd, user, *channel);
 		sendMessage(RPL_NAMREPLY, cmd, user, *channel);
+		IO::sendString(user.getFd(), ":" + _name + " 366 " + user.getNickname() + " " + channel->getChannelName() + " :End of /NAMES list.");
 	}
 	return (0);
 }
@@ -124,7 +137,7 @@ int	Server::PRIVMSG(cmd cmd, User &user) {
 	}
 
 	parsedArgs priArgs = parseArgs(cmd.arguments, 2, true);
-	cout << priArgs.size;
+	//cout << priArgs.size;
 	if (priArgs.size < 2) {
 		return (ERR_NOTEXTTOSEND);
 	}
@@ -167,18 +180,11 @@ int	Server::PRIVMSG(cmd cmd, User &user) {
 
 
 int	Server::QUIT(cmd cmd, User &user) {
-	string message = ":" + user.getFullIdentifier() + " QUIT :";
-
-	if (cmd.arguments.empty()) {
-		message += user.getNickname() + " quit";
-	} else {
-		parsedArgs quitArgs = parseArgs(cmd.arguments, 1, true);
-		message += quitArgs.trailing;
-	}
-	if (user.quit(message) == -1) { //to leave all joined channels
-		cerr << "Sending messages failes" <<endl;
-		return (-1);
-	}
+	string message = cmd.arguments;
+	if (cmd.arguments.empty())
+		message = user.getNickname() + " quit";
+	if (user.quit(":" + message) == -1)
+		throw runtime_error("QUIT: send error");
 	removeUser(user.getFd());
 	return 0;
 }
@@ -188,7 +194,7 @@ int	Server::PART(cmd cmd, User &user) {
 		return (ERR_NEEDMOREPARAMS);
 	}
 	parsedArgs partArgs = parseArgs(cmd.arguments, 2, true);
-	string message = ":" + user.getFullIdentifier() + " PART :";
+	string message = "";
 
 	if (partArgs.trailing.empty()) {
 		message += user.getNickname() + " left";
