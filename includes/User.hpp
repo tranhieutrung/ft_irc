@@ -20,7 +20,7 @@ class User
 		bool userIsSet;
 		bool isRegistered;
 
-		std::map<std::string, Channel> joinedChannels;
+		// std::map<std::string, Channel> joinedChannels;
 	public:
 		// constructors
 		User();

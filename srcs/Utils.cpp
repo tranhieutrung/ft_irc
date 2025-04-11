@@ -74,7 +74,7 @@ bool isJoinedChannel(User &user, Channel &channel) {
 }
 
 // trims \r off the end. if its not there, trims \n if it exists
-string trim(const string &str)
+string trim_crlf(const string &str)
 {
 	size_t rn = str.find("\r");
 	if (rn == string::npos)
@@ -113,7 +113,7 @@ void log(const log_level level, const string &event, const string &details)
 			break;
 	}
 	cout << RESET;
-	cout << "[" << event << "] " << trim(details) << endl;
+	cout << "[" << event << "] " << trim_crlf(details) << endl;
 }
 
 /*

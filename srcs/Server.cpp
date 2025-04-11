@@ -5,7 +5,8 @@ volatile sig_atomic_t Server::running = 1;
 void Server::execute_command(cmd cmd, User &user)
 {
 	int code = 0;
-	
+	const string nick = user.getNickname(); // for that DEBUG log. if QUIT, then its invalid read
+
 	log(DEBUG, "EXEC", "Executing command: " + cmd.prefix + " | " + cmd.command + " | " + cmd.arguments);
 	
 	if (cmd.command != "QUIT" && cmd.command != "PASS" && user.getAuth() == false)
@@ -50,7 +51,7 @@ void Server::execute_command(cmd cmd, User &user)
 	if (code) {
 		sendMessage(code, cmd, user);
 	}
-	log(INFO, "COMMAND", user.getNickname() + " executed command " + cmd.command + " with code " + to_string(code));
+	log(INFO, "COMMAND", nick + " executed command " + cmd.command + " with code " + to_string(code));
 }
 
 string Server::client_info(struct sockaddr_in &client_addr)

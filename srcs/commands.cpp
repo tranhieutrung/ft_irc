@@ -89,7 +89,8 @@ int	Server::JOIN(cmd cmd, User &user) {
 	if (cmd.arguments.empty()) {
 		return (ERR_NEEDMOREPARAMS);
 	} else if (cmd.arguments == "0") {
-		user.quit(user.getNickname() + " left"); //part all joined channels
+		QUIT({"", "QUIT", ""}, user);
+		// user.quit(user.getNickname() + " left"); //part all joined channels
 		return (0);
 	}
 	parsedArgs 		joinArgs = parseArgs(cmd.arguments, 2, false);
@@ -180,12 +181,17 @@ int	Server::PRIVMSG(cmd cmd, User &user) {
 
 
 int	Server::QUIT(cmd cmd, User &user) {
-	string message = cmd.arguments;
-	if (cmd.arguments.empty())
-		message = user.getNickname() + " quit";
-	if (user.quit(message) == -1)
-		throw runtime_error("QUIT: send error");
-	removeUser(user.getFd());
+	string message = cmd.arguments.empty() ? 
+		user.getNickname() + " quit" : 
+		cmd.arguments;
+	for (const auto &pair : channels)
+	{
+		Channel c = pair.second;
+		auto u = c.findUser(user.getFd());
+		if (u)
+			c.removeUser(user.getFd());
+	}
+	Server::removeUser(user.getFd());
 	return 0;
 }
 

@@ -24,4 +24,4 @@ bool			targetIsUser(char c);
 bool			isJoinedChannel(User &user, Channel &channel);
 void 			log(log_level level, const string &event, const string &details);
 parsedArgs		parseArgs(const std::string& args, int words, bool withTrailing);
-string			trim(const string &str);
+string			trim_crlf(const string &str);

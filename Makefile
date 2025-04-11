@@ -22,7 +22,7 @@ OBJS		=	$(SRCS:$(SRC_DIR)/%.cpp=$(OBJ_DIR)/%.o)
 
 # Compiler and flags
 CXX 		=	g++
-CXXFLAGS 	=	-Wall -Wextra -Werror -std=c++20
+CXXFLAGS 	=	-Wall -Wextra -Werror -std=c++20 -g
 RM			=	rm -rf
 
 # Targets

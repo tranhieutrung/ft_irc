@@ -1,1 +1,1 @@
-./ircserv 6667 pass
+valgrind -q --leak-check=full ./ircserv 6667 pass
