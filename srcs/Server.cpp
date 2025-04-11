@@ -10,6 +10,8 @@ static bool ignoreCommand(const cmd &cmd, const User &user)
 		return true; // if MODE for user
 	if (cmd.command == "CAP")
 		return true;
+	if (cmd.command == "WHO")
+		return true;
 	return false;
 }
 
@@ -19,7 +21,10 @@ void Server::execute_command(cmd cmd, User &user)
 	const string nick = user.getNickname(); // for that DEBUG log. if QUIT, then its invalid read
 
 	if (ignoreCommand(cmd, user))
+	{
+		log(DEBUG, "EXEC", "Command " + cmd.command + " ignored");
 		return;
+	}
 
 	log(DEBUG, "EXEC", "Executing command: " + cmd.prefix + " | " + cmd.command + " | " + cmd.arguments);
 

@@ -96,16 +96,30 @@ int	Server::MODE(cmd cmd, User &user)
 
 	stream >> channel >> mode >> extra;
 
-	if (channel.empty() || mode.empty())
+	if (channel.empty())
     {
         return (ERR_NEEDMOREPARAMS);
     }
+
 	auto itOpt = findChannel(channel);
     if (!itOpt.has_value()) {
-        return ERR_NOSUCHCHANNEL;
+		return ERR_NOSUCHCHANNEL;
     }
 
-    std::map<string, Channel>::iterator it = *itOpt;
+	std::map<string, Channel>::iterator it = *itOpt;
+	Channel c = it->second;
+
+	if (mode.empty())
+	{
+		std::string modes = "+";
+		if (c.isInviteOnly())
+			modes += "i";
+		if (c.isTopicRestricted())
+			modes += "t";
+		IO::sendString(user.getFd(), ":" + _name + " 324 " + user.getNickname() + " " + c.getChannelName() + (modes == "+" ? "" : " " + modes));
+		return 0;
+	}
+
 	if (!it->second.isOperator(user))
 	{
 		return (ERR_CHANOPRIVSNEEDED);
