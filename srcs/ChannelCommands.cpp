@@ -80,7 +80,8 @@ int	Server::KICK(cmd cmd, User &user)
 	{
 		return (ERR_NOSUCHNICK);
 	}
-	it->second.removeUser(user.getFd());
+    User &targetUser = it2.value()->second;
+    targetUser.part(it->second, target + " was kicked by " + user.getNickname());
 	return (0);
 }
 
