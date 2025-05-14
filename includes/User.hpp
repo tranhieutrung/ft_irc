@@ -19,8 +19,6 @@ class User
 		bool nickIsSet;
 		bool userIsSet;
 		bool isRegistered;
-
-		std::map<std::string, Channel> joinedChannels;
 	public:
 		// constructors
 		User();

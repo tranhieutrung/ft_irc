@@ -125,21 +125,9 @@ int User::privmsg(const User &recipient, const std::string &message) const
 	return 0;
 }
 
-bool User::isInChannel(const std::string &channelName) const
-{
-	for (const auto &pair : joinedChannels)
-	{
-		if (pair.first == channelName)
-			return true;
-	}
-	return false;
-}
-
 int User::privmsg(const Channel &channel, const std::string &message) const
 {
-	// if (channel.findUser(username) == std::nullopt) i cant get this to work
-	// 	return ERR_NOTONCHANNEL;
-	if (!isInChannel(channel.getChannelName()))
+	if(!channel.findUser(fd))
 		return ERR_NOTONCHANNEL;
 	for (const auto &pair : channel.getUserList())
 	{
@@ -154,9 +142,9 @@ int User::privmsg(const Channel &channel, const std::string &message) const
 
 int User::join(Channel &channel)
 {
-	return join(channel, ""); 
 	// if no password is given, try to login with an empty password.
 	// If channel is not password protected, it could have an empty password so this works
+	return join(channel, ""); 
 }
 
 int User::join(Channel &channel, const string &password)
@@ -168,7 +156,6 @@ int User::join(Channel &channel, const string &password)
 	if (channel.getUserLimit() <= channel.getUserList().size())
 		return ERR_CHANNELISFULL;
 	channel.addUser(fd, *this);
-	joinedChannels[channel.getChannelName()] = channel;
 	if (IO::sendCommandAll(channel.getUserList(), {getFullIdentifier(), "JOIN", channel.getChannelName()}) < 0)
 		throw runtime_error("send failed");
 	return 0;
@@ -176,31 +163,16 @@ int User::join(Channel &channel, const string &password)
 
 int User::part(Channel &channel, const std::string &message) // leaves a channel with a goodbye message
 {
-	if (!isInChannel(channel.getChannelName()))
+	if(!channel.findUser(fd))
 		return ERR_NOTONCHANNEL;
 	for (const auto &pair : channel.getUserList())
 	{
 		User u = pair.second;
-		// if (pair.second.getFd() == fd)
-		// 	continue;
 		if (IO::sendCommand(u.fd, {getFullIdentifier(),
 			"PART", channel.getChannelName() + (message.empty() ? "" : " " + message)}) < 0)
 			return -1;
 	}
-	joinedChannels.erase(channel.getChannelName());
 	channel.removeUser(fd);
-	return 0;
-}
-
-int User::quit(const std::string &message) // leaves all joined channels
-{
-	std::map<string, Channel> channelsCopy = joinedChannels;
-	for (const auto &pair : channelsCopy) // iterate the copy so that the original can be modified at the same time
-	{
-		Channel c = pair.second;
-		if (part(c, message) < 0)
-			return -1; // send error
-	}
 	return 0;
 }
 
