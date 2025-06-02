@@ -128,11 +128,16 @@ int	Server::MODE(cmd cmd, User &user)
 	}
 	if (mode == "-i")
 	{
-		if (!it->second.isInviteOnly())
-			it->second.setInviteOnly(true);
-		else
-			it->second.setInviteOnly(false);
-        res = "Switched Invite only";
+		it->second.setInviteOnly(false);
+        res = "Switched Invite only off";
+        type = INFO;
+        log(type, cmd.command, res);
+        return (0);
+	}
+	if (mode == "+i")
+	{
+		it->second.setInviteOnly(true);
+        res = "Switched Invite only on";
         type = INFO;
         log(type, cmd.command, res);
         return (0);
@@ -143,16 +148,32 @@ int	Server::MODE(cmd cmd, User &user)
 			it->second.setTopicRestriction(true);
 		else
 			it->second.setTopicRestriction(false);
-        res = "Switched topic restriction only";
+        res = "Switched topic restriction off";
+        type = INFO;
+        log(type, cmd.command, res);
+        return (0);
+	}
+	if (mode == "+t")
+	{
+		it->second.setTopicRestriction(true);
+        res = "Switched topic restriction on";
         type = INFO;
         log(type, cmd.command, res);
         return (0);
 	}
 	if (mode == "-k")
 	{
+        it->second.setPassword("");
+        res = "removed password";
+        type = INFO;
+        log(type, cmd.command, res);
+        return (0);
+	}
+	if (mode == "+k")
+	{
 		if (extra.empty())
 		{
-            it->second.setPassword("");
+            return (ERR_NEEDMOREPARAMS);
 		}
         else
 		{
@@ -164,6 +185,22 @@ int	Server::MODE(cmd cmd, User &user)
         return (0);
 	}
 	if (mode == "-o")
+	{
+
+		if (it->second.findUserByNickname(extra))
+		{
+            const User *opp =  getUser(extra);
+			it->second.removeOperator(*opp);
+		}
+		else{
+			return (ERR_NOSUCHNICK);
+		}
+        res = "removed operator";
+        type = INFO;
+        log(type, cmd.command, res);
+        return (0);
+	}
+	if (mode == "+o")
 	{
 
 		if (it->second.findUserByNickname(extra))
@@ -181,9 +218,17 @@ int	Server::MODE(cmd cmd, User &user)
 	}
 	if (mode == "-l")
 	{
+		it->second.setUserLimit(999);
+        res = "removed Userlimit";
+        type = INFO;
+        log(type, cmd.command, res);
+        return (0);
+	}
+	if (mode == "+l")
+	{
 		if (extra.empty())
 		{
-			it->second.setUserLimit(999);
+			return (ERR_NEEDMOREPARAMS);
 		}
 		else
 		{
