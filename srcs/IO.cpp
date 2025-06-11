@@ -58,7 +58,7 @@ ssize_t IO::sendStringAll(const std::map<int, User> &m, const std::string &s)
 
 std::vector<cmd> IO::recvCommands(const int fd)
 {
-    static std::string message[42]; // replace with some max limit of clients
+    static std::string message[1024]; // replace with some max limit of clients
     char buf[512];
     ssize_t bytesReceived = recv(fd, buf, sizeof(buf), 0);
 
@@ -100,3 +100,4 @@ std::vector<cmd> IO::recvCommands(const int fd)
     message[fd] = "";
     return commands;
 }
+
