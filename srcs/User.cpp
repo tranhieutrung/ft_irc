@@ -130,10 +130,13 @@ int User::privmsg(const Channel &channel, const std::string &message) const
 	if(!channel.findUser(fd))
 		return ERR_NOTONCHANNEL;
 	for (const auto &pair : channel.getUserList())
+		log(DEBUG, "User::privmsg", std::to_string(pair.first) + " is on channel " + channel.getChannelName());
+	for (const auto &pair : channel.getUserList())
 	{
-		if (pair.second.getFd() == fd)
+		if (pair.first == fd)
 			continue;
-		int ret = IO::sendCommand(pair.second.getFd(), {getFullIdentifier(), "PRIVMSG", channel.getChannelName() + " " + message});
+		int ret = IO::sendCommand(pair.first, {getFullIdentifier(), "PRIVMSG", channel.getChannelName() + " " + message});
+		log(DEBUG, "User::privmsg", std::to_string(ret));
 		if (ret < 0)
 			return ret;
 	}
@@ -172,6 +175,7 @@ int User::part(Channel &channel, const std::string &message) // leaves a channel
 			"PART", channel.getChannelName() + (message.empty() ? "" : " " + message)}) < 0)
 			return -1;
 	}
+	log(DEBUG, "User::part", "User " + std::to_string(fd) + " parted channel " + channel.getChannelName());
 	channel.removeUser(fd);
 	return 0;
 }

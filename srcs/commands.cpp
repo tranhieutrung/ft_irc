@@ -181,12 +181,15 @@ int	Server::PRIVMSG(cmd cmd, User &user) {
 
 void Server::partAll(User &user, const string &message)
 {
-	for (const auto &pair : channels)
+	for (auto &pair : channels)
 	{
-		Channel c = pair.second;
+		Channel &c = pair.second;
 		auto u = c.findUser(user.getFd());
-		if (u)
+		if (u != std::nullopt)
+		{
+			log(DEBUG, "partAll", "User parted channel");
 			user.part(c, (message.empty() ? user.getNickname() + " left" : message));
+		}
 	}
 }
 
