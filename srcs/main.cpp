@@ -16,6 +16,10 @@ void validate_args(int ac, char **av) {
 		cerr << "Usage: valid port range: 6660-6669 or 6697" << endl;
 		exit (EXIT_FAILURE);
 	}
+	if (av[2][0] == '\0') {
+		cerr << "Error: invalid password!" << endl;
+		exit (EXIT_FAILURE);
+	}
 }
 
 int main(int ac, char **av) {
