@@ -42,8 +42,6 @@ void Server::execute_command(cmd cmd, User &user)
 		code = QUIT(cmd, user); 
 	// } else if (!user.getIsRegistered()) {
 	// 	code = ERR_NOTREGISTERED; 
-	// } else if (cmd.command == "OPER") {
-	// 	code = OPER(cmd, user);
 	} else if (cmd.command == "INVITE") {
 		code = INVITE(cmd, user); 
 	} else if (cmd.command == "PRIVMSG") {
@@ -194,7 +192,7 @@ void Server::signal_handler(int signal) {
 
 const User* Server::getUser(const string &nickname) {
 	for (const auto &pair : users) {
-		if (pair.second.getNickname() == nickname)
+		if (compareIgnoreCase(pair.second.getNickname(),nickname))
 			return &pair.second;
 	}
 	return nullptr;
@@ -216,7 +214,7 @@ Channel* Server::findChannelByName(const string& channelName) {
 
 User* Server::findUserByNickName(const string& nickName) {
 	for (auto &it : this->users) {
-		if (it.second.getNickname() == nickName)
+		if (compareIgnoreCase(it.second.getNickname(), nickName))
 			return (&it.second);
 	}
 	return nullptr;
@@ -224,7 +222,7 @@ User* Server::findUserByNickName(const string& nickName) {
 
 bool	Server::_nickIsUsed(string nick) {
 	for (auto &[fd, user] : this->users) {
-		if (user.getNickname() == nick) {
+		if (compareIgnoreCase(user.getNickname(), nick)) {
 			return (true);
 		}
 	}
@@ -233,7 +231,7 @@ bool	Server::_nickIsUsed(string nick) {
 
 bool	Server::_userIsUsed(string username) {
 	for (auto &it : this->users) {
-		if (it.second.getUsername() == username) {
+		if (compareIgnoreCase(it.second.getUsername(), username)) {
 			return (true);
 		}
 	}

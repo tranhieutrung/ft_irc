@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Channel.cpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: ttero <ttero@student.hive.fi>              +#+  +:+       +#+        */
+/*   By: hitran <hitran@student.hive.fi>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/17 11:47:53 by ttero             #+#    #+#             */
-/*   Updated: 2025/06/12 15:38:21 by amaula           ###   ########.fr       */
+/*   Updated: 2025/06/13 14:53:59 by hitran           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,7 +18,7 @@
 
 std::optional<std::map<int, User>::iterator> Channel::findUserByNickname(const std::string& nickname) {
     for (auto it = UserList.begin(); it != UserList.end(); ++it) {
-        if (it->second.getNickname() == nickname) {
+        if (compareIgnoreCase(it->second.getNickname(),nickname)) {
             return it;
         }
     }

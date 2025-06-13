@@ -26,4 +26,4 @@ bool			isJoinedChannel(User &user, Channel &channel);
 void 			log(log_level level, const string &event, const string &details);
 parsedArgs		parseArgs(const std::string& args, int words, bool withTrailing);
 string			trim(const string &str);
-std::string 	toLowerString(std::string s);
+bool 			compareIgnoreCase(const std::string& a, const std::string& b);

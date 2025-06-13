@@ -160,9 +160,13 @@ parsedArgs		parseArgs(const std::string& args, int argNum, bool withTrailing) {
 }
 
 
-std::string toLowerString(std::string s) {
-	for (char &c : s) {
-		c = tolower(c);
-	}
-	return s;
+std::string toLowerString(const std::string& s) {
+    std::string result = s;
+    std::transform(result.begin(), result.end(), result.begin(),
+                   [](unsigned char c){ return std::tolower(c); });
+    return result;
+}
+
+bool compareIgnoreCase(const std::string& a, const std::string& b) {
+    return toLowerString(a) == toLowerString(b);
 }
