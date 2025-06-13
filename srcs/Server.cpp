@@ -205,7 +205,7 @@ const User* Server::getUser(int fd) {
 }
 
 Channel* Server::findChannelByName(const string& channelName) {
-	auto it = this->channels.find(channelName);
+	auto it = this->channels.find(toLowerString(channelName));
 	if (it != this->channels.end()) {
 		return &it->second;
 	}
@@ -240,7 +240,7 @@ bool	Server::_userIsUsed(string username) {
 
 //user create and join a new channel
 int Server::createChannel(Channel*& channel, User &user, const std::string &channelName, const std::string &key) {
-	auto [it, inserted] = this->channels.emplace(channelName, Channel(channelName, key));
+	auto [it, inserted] = this->channels.emplace(toLowerString(channelName), Channel(channelName, key));
 	channel = &it->second;
 
 	int code = user.join(*channel, key);

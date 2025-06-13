@@ -4,7 +4,7 @@
 
 std::optional<std::map<string, Channel>::iterator> Server:: findChannel(string channel)
 {
-	auto it = channels.find(channel);
+	auto it = channels.find(toLowerString(channel));
     if (it != channels.end()) {
         return it;
     }
