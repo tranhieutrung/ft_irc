@@ -158,3 +158,11 @@ parsedArgs		parseArgs(const std::string& args, int argNum, bool withTrailing) {
 	}
 	return (result);
 }
+
+
+std::string toLowerString(std::string s) {
+	for (char &c : s) {
+		c = tolower(c);
+	}
+	return s;
+}
