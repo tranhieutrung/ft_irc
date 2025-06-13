@@ -3,6 +3,14 @@
 
 using namespace std;
 
+bool isValidPassword(const string& s) {
+	if (s.empty())
+		return false;
+	// Regex: only a-z, A-Z, 0-9, and !@#$%^&*_.-~
+	std::regex pattern("^[a-zA-Z0-9!@#\\$%\\^&\\*_.\\-~]+$");
+	return std::regex_match(s, pattern);
+}
+
 void validate_args(int ac, char **av) {
 
 	if (ac != 3) {
@@ -16,7 +24,7 @@ void validate_args(int ac, char **av) {
 		cerr << "Usage: valid port range: 6660-6669 or 6697" << endl;
 		exit (EXIT_FAILURE);
 	}
-	if (av[2][0] == '\0') {
+	if (!isValidPassword(av[2])) {
 		cerr << "Error: invalid password!" << endl;
 		exit (EXIT_FAILURE);
 	}
