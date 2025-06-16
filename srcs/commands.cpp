@@ -39,16 +39,24 @@ int	Server::NICK(cmd cmd, User &user) {
 		return (ERR_NONICKNAMEGIVEN);
 	} else if (_nickIsUsed(cmd.arguments)) {
 		return (ERR_NICKNAMEINUSE);
-	} else if (user.setNickname(cmd.arguments)) {
+	} 
+	string oldNick = user.getNickname();
+	if (user.setNickname(cmd.arguments)) {
 		return (ERR_ERRONEUSNICKNAME);
 	}
-	user.setNickIsSet(true);
-	sendMessage(RPL_WHOISUSER, cmd, user);
-
+	
+	if (user.getNickIsSet()) {
+		IO::sendString(user.getFd(), ":" + oldNick + "!user@host NICK :" + user.getNickname());
+	} else {
+		user.setNickIsSet(true);
+		sendMessage(RPL_WHOISUSER, cmd, user);
+	}
+	
 	if (user.getUserIsSet() && !user.getIsRegistered()) {
 		user.setIsRegistered(true);
 		return (RPL_WELCOME);
 	}
+
 	return (0);
 }
 
