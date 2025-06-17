@@ -17,6 +17,10 @@ string	Server::createMessage(int code, cmd cmd, User &user) {
 		message += ":Password incorrect";
 	} else if (code == ERR_ALREADYREGISTRED) {
 		message += ":Unauthorized command (already registered)";
+	} else if (code == ERR_NOTONCHANNEL) {
+		message += ":You're not on the channel" ;
+	}  else if (code == ERR_USERONCHANNEL) {
+		message += ":User already in the channel" ;
 	} else if (code == ERR_NOLOGIN) {
 		message += user.getUsername() + " :User not logged in";
 	} else if (code == ERR_NONICKNAMEGIVEN) {

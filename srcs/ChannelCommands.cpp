@@ -255,7 +255,7 @@ int	Server::INVITE(cmd cmd, User &user)
 	string message;
 	string message2;
 
-	stream >> channel >> target;
+	stream >> target >> channel;
 
 	if (channel.empty() || target.empty())
     {
@@ -275,6 +275,16 @@ int	Server::INVITE(cmd cmd, User &user)
 	if (!invited)
 	{
 		return (ERR_NOSUCHNICK);
+	}
+	std::optional<std::map<int, User>::iterator> it2 = it->second.findUserByNickname(user.getNickname());
+	if (!it2)
+	{
+		return (ERR_NOTONCHANNEL);
+	}
+	std::optional<std::map<int, User>::iterator> it3 = it->second.findUserByNickname(target);
+	if (it3)
+	{
+		return (ERR_USERONCHANNEL);
 	}
 	message =  "Invited " + target + "\r\n";
 

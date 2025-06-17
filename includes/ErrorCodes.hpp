@@ -24,6 +24,8 @@
 // "<client> <nick/channel> :Nick/channel is temporarily unavailable"
 // Indicates a nickname or channel is temporarily unavailable due to a conflict or restriction.
 
+#define ERR_USERONCHANNEL 443
+
 // --- Registration & Authentication Errors ---
 #define ERR_NOTREGISTERED 451  
 // "<client> :You have not registered"
