@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Channel.cpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: hitran <hitran@student.hive.fi>            +#+  +:+       +#+        */
+/*   By: ttero <ttero@student.hive.fi>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/17 11:47:53 by ttero             #+#    #+#             */
-/*   Updated: 2025/06/13 14:53:59 by hitran           ###   ########.fr       */
+/*   Updated: 2025/06/23 11:47:15 by ttero            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -64,4 +64,28 @@ void Channel::removeOperator(const User& user){
 }
 bool Channel::isOperator(const User& user) const {
     return std::find(operators.begin(), operators.end(), user) != operators.end();
+}
+
+std::optional<std::map<int, User>::iterator> Channel::IsInvited(int fd) {
+    auto it = InviteList.find(fd);
+    if (it != InviteList.end()) {
+        return it;
+    }
+    return std::nullopt;
+}
+
+std::optional<std::map<int, User>::const_iterator> Channel::IsInvited(int fd) const {
+    auto it = InviteList.find(fd);
+    if (it != InviteList.end()) {
+        return it;
+    }
+    return std::nullopt;
+}
+
+void Channel::addInvate(int fd, const User& user) {
+    InviteList[fd] = user;
+}
+
+void Channel::removeInvate(int fd) {
+    InviteList.erase(fd);
 }

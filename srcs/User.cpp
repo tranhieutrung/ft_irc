@@ -154,7 +154,7 @@ int User::join(Channel &channel, const string &password)
 {
 	if (password != channel.getPassword())
 		return ERR_BADCHANNELKEY;
-	if (channel.isInviteOnly())
+	if (channel.isInviteOnly() && !channel.IsInvited(getFd()))
 		return ERR_INVITEONLYCHAN;
 	if (channel.getUserLimit() <= channel.getUserList().size())
 		return ERR_CHANNELISFULL;

@@ -290,10 +290,10 @@ int	Server::INVITE(cmd cmd, User &user)
 
 	if (send(user.getFd(), message.c_str(), message.length(), 0) == -1)
 		cerr << "send() error: " << strerror(errno) << endl;
-	message2= "You have been invited by " + user.getNickname() + "to channel " + channel + "\r\n";
+	message2= "You have been invited by " + user.getNickname() + " to channel " + channel + "\r\n";
 	if (send(invited->getFd(), message2.c_str(), message2.length(), 0) == -1)
 		cerr << "send() error: " << strerror(errno) << endl;
-	it->second.addUser(invited->getFd(), *invited);
+	it->second.addInvate(invited->getFd(), *invited);
 	return (0);
 
 }

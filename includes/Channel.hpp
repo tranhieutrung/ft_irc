@@ -22,6 +22,7 @@ private:
     std::string ChannelTopic;
     std::string password;
     std::map<int, User> UserList;  // Changed from string to int (fd)
+    std::map<int, User> InviteList;  
     bool inviteOnly;
     bool topic_restriction;
     std::vector<User> operators;
@@ -37,6 +38,7 @@ public:
     std::string getChannelTopic() const { return ChannelTopic; }
     std::string getPassword() const { return password; }
     const std::map<int, User>& getUserList() const { return UserList; }
+    const std::map<int, User>& getInviteList() const { return InviteList; }
     const std::vector<User>& getOperators() const { return operators; }
     bool isInviteOnly() const { return inviteOnly; }
     bool isTopicRestricted() const { return topic_restriction; }
@@ -55,6 +57,10 @@ public:
     void removeUser(int fd);
     std::optional<std::map<int, User>::iterator> findUser(int fd);
     std::optional<std::map<int, User>::const_iterator> findUser(int fd) const;
+    void addInvate(int fd, const User& user);
+    void removeInvate(int fd);
+    std::optional<std::map<int, User>::iterator> IsInvited(int fd);
+    std::optional<std::map<int, User>::const_iterator> IsInvited(int fd) const;
     void addOperator(const User& user);
     void removeOperator(const User& user);
     bool isOperator(const User& user) const;
