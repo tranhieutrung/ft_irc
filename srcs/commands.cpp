@@ -98,7 +98,6 @@ int	Server::JOIN(cmd cmd, User &user) {
 		return (ERR_NEEDMOREPARAMS);
 	} else if (cmd.arguments == "0") {
 		partAll(user, "");
-		// user.quit(user.getNickname() + " left"); //part all joined channels
 		return (0);
 	}
 	parsedArgs 		joinArgs = parseArgs(cmd.arguments, 2, false);
@@ -146,7 +145,6 @@ int	Server::PRIVMSG(cmd cmd, User &user) {
 	}
 
 	parsedArgs priArgs = parseArgs(cmd.arguments, 2, true);
-	//cout << priArgs.size;
 	if (priArgs.size < 2) {
 		return (ERR_NOTEXTTOSEND);
 	}
@@ -179,13 +177,6 @@ int	Server::PRIVMSG(cmd cmd, User &user) {
 		}
 	}
 }
-
-// int	Server::OPER(cmd cmd, User &user) {
-// 	if (countWords(cmd.arguments) < 2) {
-// 		return (ERR_NEEDMOREPARAMS);
-// 	}
-// 	return 0;
-// }
 
 void Server::partAll(User &user, const string &message)
 {
