@@ -188,6 +188,11 @@ void Server::partAll(User &user, const string &message)
 		{
 			log(DEBUG, "partAll", "User parted channel");
 			user.part(c, (message.empty() ? user.getNickname() + " left" : message));
+			if (c.getUserList().empty())
+			{
+				channels.erase(c.getChannelName());
+				log(DEBUG, "Server::partAll", "Channel erased: " + c.getChannelName());
+			}
 		}
 	}
 }
@@ -228,6 +233,11 @@ int	Server::PART(cmd cmd, User &user) {
 		} else if (user.part(*channel, message) == -1) {
 			cerr << "Sending messages failes" <<endl;
 			return (-1);
+		}
+		if (channel->getUserList().empty())
+		{
+			channels.erase(channel->getChannelName());
+			log(DEBUG, "Server::partAll", "Channel erased: " + channel->getChannelName());
 		}
 	}
 	return 0;

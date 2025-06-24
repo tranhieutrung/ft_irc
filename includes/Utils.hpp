@@ -1,7 +1,7 @@
 #pragma once
 
 #include "Server.hpp"
-#define DEBUG_MODE false
+#define DEBUG_MODE true
 
 enum log_level { DEBUG, INFO, WARN, ERROR };
 
