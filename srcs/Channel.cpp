@@ -6,7 +6,7 @@
 /*   By: ttero <ttero@student.hive.fi>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/17 11:47:53 by ttero             #+#    #+#             */
-/*   Updated: 2025/06/23 11:47:15 by ttero            ###   ########.fr       */
+/*   Updated: 2025/06/24 13:07:11 by amaula           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -82,10 +82,10 @@ std::optional<std::map<int, User>::const_iterator> Channel::IsInvited(int fd) co
     return std::nullopt;
 }
 
-void Channel::addInvate(int fd, const User& user) {
+void Channel::addInvite(int fd, const User& user) {
     InviteList[fd] = user;
 }
 
-void Channel::removeInvate(int fd) {
+void Channel::removeInvite(int fd) {
     InviteList.erase(fd);
 }

@@ -293,7 +293,7 @@ int	Server::INVITE(cmd cmd, User &user)
 	message2= "You have been invited by " + user.getNickname() + " to channel " + channel + "\r\n";
 	if (send(invited->getFd(), message2.c_str(), message2.length(), 0) == -1)
 		cerr << "send() error: " << strerror(errno) << endl;
-	it->second.addInvate(invited->getFd(), *invited);
+	it->second.addInvite(invited->getFd(), *invited);
 	return (0);
 
 }

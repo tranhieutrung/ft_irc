@@ -57,8 +57,8 @@ public:
     void removeUser(int fd);
     std::optional<std::map<int, User>::iterator> findUser(int fd);
     std::optional<std::map<int, User>::const_iterator> findUser(int fd) const;
-    void addInvate(int fd, const User& user);
-    void removeInvate(int fd);
+    void addInvite(int fd, const User& user);
+    void removeInvite(int fd);
     std::optional<std::map<int, User>::iterator> IsInvited(int fd);
     std::optional<std::map<int, User>::const_iterator> IsInvited(int fd) const;
     void addOperator(const User& user);
