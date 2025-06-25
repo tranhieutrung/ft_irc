@@ -6,8 +6,8 @@ using namespace std;
 bool isValidPassword(const string& s) {
 	if (s.empty())
 		return false;
-	// Regex: only a-z, A-Z, 0-9, and !@#$%^&*_.-~
-	std::regex pattern("^[a-zA-Z0-9!@#\\$%\\^&\\*_.\\-~]+$");
+	// Regex: only a-z, A-Z, 0-9, and 3 to 20 letters
+	std::regex pattern("^[a-zA-Z0-9]{3,20}$");
 	return std::regex_match(s, pattern);
 }
 
