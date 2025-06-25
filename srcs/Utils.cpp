@@ -47,7 +47,7 @@ vector<string> commaSplit(string str) {
 bool isValidChannelName(const string& channelName) {
 	if (channelName.empty() || channelName.size() > 50)
 		return (false);
-	regex channelRegex(R"(^[&#+!][^[:space:],^G,]*$)");
+	regex channelRegex(R"(^[&#+!][^\x07\s,]*$)");
 	return regex_match(channelName, channelRegex);
 }
 
