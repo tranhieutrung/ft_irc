@@ -21,10 +21,10 @@ class IO
 		static std::vector<cmd> recvCommands(const int fd);
 		static ssize_t sendCommand(const int fd, const cmd &cmd);
 		static ssize_t sendString(const int fd, const std::string &s);
-		static ssize_t sendCommandAll(const std::map<int, User> &m, const cmd &cmd);
-		static ssize_t sendCommandAll(const std::map<std::string, User> &m, const cmd &cmd);
-		static ssize_t sendStringAll(const std::map<int, User> &m, const std::string &s);
-		static ssize_t sendStringAll(const std::map<std::string, User> &m, const std::string &s);
+		static ssize_t sendCommandAll(const std::map<int, User*> &m, const cmd &cmd);
+		static ssize_t sendCommandAll(const std::map<std::string, User*> &m, const cmd &cmd);
+		static ssize_t sendStringAll(const std::map<int, User*> &m, const std::string &s);
+		static ssize_t sendStringAll(const std::map<std::string, User*> &m, const std::string &s);
 };
 
 #endif

@@ -75,13 +75,13 @@ int	Server::KICK(cmd cmd, User &user)
 	{
 		return (ERR_CHANOPRIVSNEEDED);
 	}
-	std::optional<std::map<int, User>::iterator> it2 = it->second.findUserByNickname(target);
+	std::optional<std::map<int, User*>::iterator> it2 = it->second.findUserByNickname(target);
 	if (!it2)
 	{
 		return (ERR_NOSUCHNICK);
 	}
-    User &targetUser = it2.value()->second;
-    targetUser.part(it->second, target + " was kicked by " + user.getNickname());
+    User *targetUser = it2.value()->second;
+    targetUser->part(it->second, target + " was kicked by " + user.getNickname());
 	return (0);
 }
 
@@ -246,54 +246,51 @@ int	Server::MODE(cmd cmd, User &user)
 }
 
 
-int	Server::INVITE(cmd cmd, User &user)
+int Server::INVITE(cmd cmd, User &user)
 {
-	string target;
-	string channel;
-	string		res;
-	istringstream stream(cmd.arguments);
-	string message;
-	string message2;
+    std::string target;
+    std::string channel;
+    std::string res;
+    std::istringstream stream(cmd.arguments);
+    std::string message;
+    std::string message2;
 
-	stream >> target >> channel;
-
-	if (channel.empty() || target.empty())
+    stream >> target >> channel;
+    if (channel.empty() || target.empty())
     {
-        return (ERR_NEEDMOREPARAMS);
+        return ERR_NEEDMOREPARAMS;
     }
-	auto itOpt = findChannel(channel);
-    if (!itOpt.has_value()) {
+    auto itOpt = findChannel(channel);
+    if (!itOpt.has_value())
+    {
         return ERR_NOSUCHCHANNEL;
     }
-
-    std::map<string, Channel>::iterator it = *itOpt;
-	if (!it->second.isOperator(user))
-	{
-		return (ERR_CHANOPRIVSNEEDED);
-	}
-	const User *invited = getUser(target);
-	if (!invited)
-	{
-		return (ERR_NOSUCHNICK);
-	}
-	std::optional<std::map<int, User>::iterator> it2 = it->second.findUserByNickname(user.getNickname());
-	if (!it2)
-	{
-		return (ERR_NOTONCHANNEL);
-	}
-	std::optional<std::map<int, User>::iterator> it3 = it->second.findUserByNickname(target);
-	if (it3)
-	{
-		return (ERR_USERONCHANNEL);
-	}
-	message =  "Invited " + target + "\r\n";
-
-	if (send(user.getFd(), message.c_str(), message.length(), 0) == -1)
-		cerr << "send() error: " << strerror(errno) << endl;
-	message2= "You have been invited by " + user.getNickname() + " to channel " + channel + "\r\n";
-	if (send(invited->getFd(), message2.c_str(), message2.length(), 0) == -1)
-		cerr << "send() error: " << strerror(errno) << endl;
-	it->second.addInvate(invited->getFd(), *invited);
-	return (0);
-
+    std::map<std::string, Channel>::iterator it = *itOpt;
+    if (!it->second.isOperator(user))
+    {
+        return ERR_CHANOPRIVSNEEDED;
+    }
+    const User *invited = getUser(target);
+    if (!invited)
+    {
+        return ERR_NOSUCHNICK;
+    }
+    std::optional<std::map<int, User *>::iterator> it2 = it->second.findUserByNickname(user.getNickname());
+    if (!it2)
+    {
+        return ERR_NOTONCHANNEL;
+    }
+    std::optional<std::map<int, User *>::iterator> it3 = it->second.findUserByNickname(target);
+    if (it3)
+    {
+        return ERR_USERONCHANNEL;
+    }
+    message = "Invited " + target + "\r\n";
+    if (IO::sendString(user.getFd(), message) < 0)
+        std::cerr << "send() error: " << strerror(errno) << std::endl;
+    message2 = "You have been invited by " + user.getNickname() + " to channel " + channel + "\r\n";
+    if (IO::sendString(invited->getFd(), message2) < 0)
+        std::cerr << "send() error: " << strerror(errno) << std::endl;
+    it->second.addInvite(invited->getFd(), invited);
+    return 0;
 }

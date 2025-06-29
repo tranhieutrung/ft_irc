@@ -22,36 +22,44 @@ ssize_t IO::sendString(int fd, const std::string &s)
 {
     if (fd < 0)
         return 0;
-    log(DEBUG, "SEND " + to_string(fd), s);
-    
+    log(DEBUG, "SEND " + std::to_string(fd), s);
+
     std::string message = s;
     message += "\r\n";
 
     return send(fd, message.c_str(), message.size(), 0);
 }
 
-ssize_t IO::sendCommandAll(const std::map<int, User> &m, const cmd &cmd)
+// UPDATED TO USE POINTERS
+ssize_t IO::sendCommandAll(const std::map<int, User *> &m, const cmd &cmd)
 {
     ssize_t ret, result = 0;
     for (const auto &pair : m)
     {
-        ret = sendCommand(pair.second.getFd(), cmd);
-        if (ret < 0)
-            return -1;
-        result += ret;
+        if (pair.second) // Safety check
+        {
+            ret = sendCommand(pair.second->getFd(), cmd);
+            if (ret < 0)
+                return -1;
+            result += ret;
+        }
     }
     return result;
 }
 
-ssize_t IO::sendStringAll(const std::map<int, User> &m, const std::string &s)
+// UPDATED TO USE POINTERS
+ssize_t IO::sendStringAll(const std::map<int, User *> &m, const std::string &s)
 {
     ssize_t ret, result = 0;
     for (const auto &pair : m)
     {
-        ret = sendString(pair.second.getFd(), s);
-        if (ret < 0)
-            return -1;
-        result += ret;
+        if (pair.second) // Safety check
+        {
+            ret = sendString(pair.second->getFd(), s);
+            if (ret < 0)
+                return -1;
+            result += ret;
+        }
     }
     return result;
 }

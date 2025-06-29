@@ -88,31 +88,26 @@ void Server::sendMessage(int code, cmd cmd, User &user) {
 		cerr << "send() error: " << strerror(errno) << endl;
 }
 
-string	Server::createMessage(int code, cmd cmd, User &user, Channel &channel) {
-	string message;
+std::string Server::createMessage(int code, cmd cmd, User &user, Channel &channel) {
+    std::string message;
 
-	(void) cmd;
-	message = ":" + this->_name + " " + to_string(code) + " " + user.getNickname() + " ";
-	
-	if (code == RPL_TOPIC) {
-		message += channel.getChannelName() + " :" + channel.getChannelTopic();
-	} else if (code == RPL_NAMREPLY) {
-		message += "= " + channel.getChannelName() + " :";
-		for (auto &it : channel.getUserList()) {
-			bool isOp = false;
-			for (auto &op : channel.getOperators()) {
-				if (op.getNickname() == it.second.getNickname()) {
-					isOp = true;
-				}
-			}
-			message += (isOp) ? "@" : "";
-			message += it.second.getNickname() + " ";
-		}
-		if (!message.empty() && message.back() == ' ')
-			message.pop_back();
-	}
- 	message += "\r\n";
-	return (message);
+    (void)cmd;
+    message = ":" + this->_name + " " + std::to_string(code) + " " + user.getNickname() + " ";
+
+    if (code == RPL_TOPIC) {
+        message += channel.getChannelName() + " :" + channel.getChannelTopic();
+    } else if (code == RPL_NAMREPLY) {
+        message += "= " + channel.getChannelName() + " :";
+        for (auto &it : channel.getUserList()) {
+            bool isOp = channel.getOperators().count(it.second->getFd()) > 0; 
+            message += (isOp) ? "@" : "";
+            message += it.second->getNickname() + " ";
+        }
+        if (!message.empty() && message.back() == ' ')
+            message.pop_back();
+    }
+    message += "\r\n";
+    return message;
 }
 
 void Server::sendMessage(int code, cmd cmd, User &user, Channel &channel) {

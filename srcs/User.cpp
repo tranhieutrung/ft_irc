@@ -158,25 +158,26 @@ int User::join(Channel &channel, const string &password)
 		return ERR_INVITEONLYCHAN;
 	if (channel.getUserLimit() <= channel.getUserList().size())
 		return ERR_CHANNELISFULL;
-	channel.addUser(fd, *this);
+	channel.addUser(fd, this);
 	if (IO::sendCommandAll(channel.getUserList(), {getFullIdentifier(), "JOIN", channel.getChannelName()}) < 0)
 		throw runtime_error("send failed");
 	return 0;
 }
 
-int User::part(Channel &channel, const std::string &message) // leaves a channel with a goodbye message
+int User::part(Channel &channel, const std::string &message)
 {
-	if(!channel.findUser(fd))
+	if (!channel.findUser(fd).has_value())
 		return ERR_NOTONCHANNEL;
 	for (const auto &pair : channel.getUserList())
 	{
-		User u = pair.second;
-		if (IO::sendCommand(u.fd, {getFullIdentifier(),
+		User* u = pair.second;
+		if (IO::sendCommand(u->fd, {getFullIdentifier(),
 			"PART", channel.getChannelName() + (message.empty() ? "" : " " + message)}) < 0)
 			return -1;
 	}
 	log(DEBUG, "User::part", "User " + std::to_string(fd) + " parted channel " + channel.getChannelName());
 	channel.removeUser(fd);
+	channel.removeOperator(*this); 
 	return 0;
 }
 
