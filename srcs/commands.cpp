@@ -180,9 +180,9 @@ int	Server::PRIVMSG(cmd cmd, User &user) {
 
 void Server::partAll(User &user, const string &message)
 {
-	for (auto &pair : channels)
+	for (auto it = channels.begin(); it != channels.end(); )
 	{
-		Channel &c = pair.second;
+		Channel &c = it->second;
 		auto u = c.findUser(user.getFd());
 		if (u != std::nullopt)
 		{
@@ -191,9 +191,11 @@ void Server::partAll(User &user, const string &message)
 			if (c.getUserList().empty())
 			{
 				log(DEBUG, "Server::partAll", "Channel erased: " + c.getChannelName());
-				channels.erase(c.getChannelName());
+				it = channels.erase(it);
+				continue;
 			}
 		}
+		it++;
 	}
 }
 

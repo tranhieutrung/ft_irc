@@ -21,7 +21,7 @@ SRCS		=	$(addprefix $(SRC_DIR)/, $(SRC_FILES))
 OBJS		=	$(SRCS:$(SRC_DIR)/%.cpp=$(OBJ_DIR)/%.o)
 
 # Compiler and flags
-CXX 		=	g++
+CXX 		=	c++
 CXXFLAGS 	=	-Wall -Wextra -Werror -std=c++20 -g
 RM			=	rm -rf
 
